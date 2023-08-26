@@ -1,3 +1,5 @@
+add_subdirectory(evol)
+
 set( LIB_SOURCES Lib.cpp)
 
 add_library( lib SHARED ${LIB_SOURCES} )

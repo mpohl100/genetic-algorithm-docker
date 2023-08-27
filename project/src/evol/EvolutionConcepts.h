@@ -10,6 +10,7 @@ concept Chromosome = std::semiregular<T> && requires (T t)
 {
     t.crossover(t);
     t.mutate();
+} && requires (const T t){
     {t.toString()} -> std::same_as<std::string>;
 };
 

@@ -1,12 +1,11 @@
 #include <catch2/catch_all.hpp>
 
-#include "Lib.h"
+#include "Math.h"
 
 namespace {
 
-TEST_CASE("Lib", "[lib]"){
+TEST_CASE("Math", "[math]"){
     SECTION("Example"){
-        lib::say_hello("World");
         CHECK(true);
     }
 }

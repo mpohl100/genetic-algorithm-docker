@@ -15,7 +15,7 @@ void XCoordinate::crossover(const XCoordinate& other)
 
 void XCoordinate::mutate()
 {
-    static thread_local const auto rng = evol::Rng{};
+    static thread_local auto rng = evol::Rng{};
     const auto randomNumber = rng.fetchUniform(-10, 10, 1).top();
     _x += randomNumber / 10.0;
 }

@@ -3,13 +3,13 @@
 namespace evol{
 
 Rng::Rng()
-    : rd_()
+    : rd_("hw")
     , gen_(rd_())
 {} 
 
-std::stack<int> Rng::fetchUniform(int from, int to, size_t num) const
+std::stack<int> Rng::fetchUniform(int from, int to, size_t num)
 {
-    static thread_local std::mt19937 gen;
+    std::mt19937 gen(rd_());
     double from_d = double(from);
     double to_d = double(to) - std::numeric_limits<double>::min();
     std::uniform_real_distribution<double> dist{from_d, to_d};

@@ -1,4 +1,5 @@
-#include "evol/EvolutionConcepts.h"
+#include "evol/PartialEvolutionConcepts.h"
+#include "evol/PartialEvolutionChallenge.h"
 
 #include <string>
 
@@ -15,16 +16,17 @@ public:
     void crossover(const XCoordinate& other);
     void mutate();
     std::string toString() const;
+    double magnitude() const;
     double x() const;
 private:
     double _x = 0.0;
 };
-static_assert(evol::Chromosome<XCoordinate>);
+static_assert(evol::partial::PartialChromosome<XCoordinate>);
 
-class MathFunction{
+class MathFunction : public evol::partial::DefaultPartialChallenge<XCoordinate>{
 public:
     double score(XCoordinate xCoordinate) const;
 };
-static_assert(evol::Challenge<MathFunction, XCoordinate>);
+static_assert(evol::partial::PartialChallenge<MathFunction, XCoordinate>);
 
 }

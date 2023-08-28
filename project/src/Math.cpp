@@ -2,6 +2,8 @@
 
 #include "evol/Rng.h"
 
+#include <cmath>
+
 namespace math{
 
 XCoordinate::XCoordinate(double x)
@@ -24,6 +26,13 @@ std::string XCoordinate::toString() const
 {
     return "x: " + std::to_string(_x);
 }
+
+double XCoordinate::magnitude() const
+{
+    // no need to first take the power of two and then the square root
+    return std::abs(_x);
+}
+
 
 double XCoordinate::x() const
 {

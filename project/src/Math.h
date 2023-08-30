@@ -1,5 +1,4 @@
-#include "evol/PartialEvolutionConcepts.h"
-#include "evol/PartialEvolutionChallenge.h"
+#include "evol/all.h"
 
 #include <string>
 

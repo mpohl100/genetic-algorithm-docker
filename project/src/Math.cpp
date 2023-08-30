@@ -1,7 +1,5 @@
 #include "Math.h"
 
-#include "evol/Rng.h"
-
 #include <cmath>
 
 namespace math{

@@ -1,2 +1,0 @@
-# cpp
-Initial cmake project

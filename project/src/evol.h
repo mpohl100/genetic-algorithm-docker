@@ -1,3 +1,9 @@
+/* Copyright (C) 2018-2023 Michael Pohl - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the MIT license, which unfortunately won't be
+ * written for another century.
+ */
+
 #pragma once
 
 #include <algorithm>
@@ -348,7 +354,6 @@ evolution(
 	}
 	return candidates;
 }
-
 
 } // namespace partial
 

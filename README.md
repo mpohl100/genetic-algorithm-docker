@@ -35,6 +35,9 @@ concept Challenge = std::semiregular<T> &&  Chromosome<C> && requires (T const t
 ``` 
 A simple example for implementing a chromosome class and a challenge class can be found in the file src/Math.h.
 
+## How to use the library
+In order to use the library you need to have the C++20 flag activated in your project and you need to copy paste the src/evol.h file to your project and include it where necessary. Have fun using it.
+
 
 
 

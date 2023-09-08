@@ -2,6 +2,7 @@
 
 #include <clara.hpp>
 
+#include <chrono>
 #include <iostream>
 #include <vector>
  
@@ -13,10 +14,12 @@ int main(int argc, char** argv)
     int number_generations = 100;
     double min_magnitude = 0.0;
     double max_magnitude = 1.0;
+    unsigned int random_seed = 0;
     bool help = false;
     auto cli = Opt(number_generations, "number_generations")["-n"]["--number-generations"]("The number of generations to calculate") 
     | Opt(min_magnitude, "min_magnitude")["-b"]["--min"]("The min magnitude of the x choordinates to examine")
     | Opt(max_magnitude, "max_magnitude")["-t"]["--max"]("The max magnitude of the x choordinates to examine")
+    | Opt(random_seed, "random_seed")["-r"]["--rand"]("The random seed of the evolution algorithm, a positive integer") 
     | Help(help);
      
 
@@ -36,10 +39,17 @@ int main(int argc, char** argv)
     evolParams.min_magnitude = min_magnitude;
     evolParams.max_magnitude = max_magnitude;
     double winningFitness = 0.0;
-    const auto winningXCoordinates = evol::partial::evolution<math::XCoordinate>(math::MathFunction{}, winningFitness, evolParams);
+    if(random_seed == 0){
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
+        random_seed = static_cast<unsigned int>(timestamp);
+    }
+    auto rng = evol::Rng{random_seed};
+    const auto winningXCoordinates = evol::partial::evolution<math::XCoordinate>(math::MathFunction{}, winningFitness, evolParams, rng);
 
     std::cout << '\n';
     std::cout << "winning x: " << winningXCoordinates[0].x() <<"; winning f(x): " << winningFitness << '\n';
+    std::cout << "random seed used: " << random_seed << ". Pass this seed with -r to get the same results with a rerun.\n";
     return 0;
 }
 

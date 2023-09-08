@@ -22,10 +22,18 @@ private:
 };
 static_assert(evol::partial::PartialChromosome<XCoordinate, evol::Rng>);
 
-class MathFunction : public evol::partial::DefaultPartialChallenge<XCoordinate, evol::Rng>{
+class MathFunctionPartial : public evol::partial::DefaultPartialChallenge<XCoordinate, evol::Rng>{
 public:
     double score(XCoordinate xCoordinate, evol::Rng& rng) const;
 };
-static_assert(evol::partial::PartialChallenge<MathFunction, XCoordinate, evol::Rng>);
+static_assert(evol::partial::PartialChallenge<MathFunctionPartial, XCoordinate, evol::Rng>);
+
+class MathFunction : public evol::DefaultChallenge<XCoordinate, evol::Rng>{
+public:
+    double score(XCoordinate xCoordinate, evol::Rng& rng) const;
+};
+static_assert(evol::Challenge<MathFunction, XCoordinate, evol::Rng>);
+
+
 
 }

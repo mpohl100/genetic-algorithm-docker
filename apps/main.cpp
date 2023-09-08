@@ -40,15 +40,8 @@ int main(int argc, char** argv)
     }
     auto rng = evol::Rng{random_seed};
 
-    std::vector<math::XCoordinate> initialGeneration;
-    for(size_t i = 0; i < 20; ++i){
-        initialGeneration.push_back(math::XCoordinate{0});
-    }
-    for(auto& xCoordinate : initialGeneration){
-        xCoordinate.mutate(rng);
-    }
     double winningFitness = 0.0;
-    const auto winningXCoordinates = evol::evolution(initialGeneration, math::MathFunction{}, winningFitness, evolParams, rng);
+    const auto winningXCoordinates = evol::evolution<math::XCoordinate>(math::MathFunction{}, winningFitness, evolParams, rng);
 
     std::cout << '\n';
     std::cout << "winning x: " << winningXCoordinates[0].x() <<"; winning f(x): " << winningFitness << '\n';

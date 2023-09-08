@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         random_seed = static_cast<unsigned int>(timestamp);
     }
     auto rng = evol::Rng{random_seed};
-    const auto winningXCoordinates = evol::partial::evolution<math::XCoordinate>(math::MathFunction{}, winningFitness, evolParams, rng);
+    const auto winningXCoordinates = evol::partial::evolution<math::XCoordinate>(math::MathFunctionPartial{}, winningFitness, evolParams, rng);
 
     std::cout << '\n';
     std::cout << "winning x: " << winningXCoordinates[0].x() <<"; winning f(x): " << winningFitness << '\n';

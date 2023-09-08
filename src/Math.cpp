@@ -13,9 +13,8 @@ void XCoordinate::crossover(const XCoordinate& other)
     _x = (_x + other.x()) / 2.0;
 }
 
-void XCoordinate::mutate()
+void XCoordinate::mutate(evol::Rng& rng)
 {
-    static thread_local auto rng = evol::Rng{};
     const auto randomNumber = rng.fetchUniform(-10, 10, 1).top();
     _x += randomNumber / 10.0;
 }
@@ -37,7 +36,7 @@ double XCoordinate::x() const
     return _x; 
 }
 
-double MathFunction::score(XCoordinate xCoordinate) const
+double MathFunction::score(XCoordinate xCoordinate, [[maybe_unused]] evol::Rng& rng) const
 {
     return 1.0 / std::pow(xCoordinate.x() - 2, 2.0);
 }

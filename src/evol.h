@@ -26,20 +26,21 @@ namespace evol{
 // class Rng
 class Rng{
 public:
-    Rng()
+    Rng(unsigned int random_seed)
         : rd_("hw")
-        , gen_(rd_())
-    {} 
+        , gen_()
+    {
+		gen_ = std::mt19937{random_seed};
+	} 
 
     std::stack<int> fetchUniform(int from, int to, size_t num)
     {
-        std::mt19937 gen(rd_());
         double from_d = double(from);
         double to_d = double(to) - std::numeric_limits<double>::min();
         std::uniform_real_distribution<double> dist{from_d, to_d};
         std::stack<int> ret;
         for(size_t i = 0; i < num; ++i)
-            ret.push(int(dist(gen)));
+            ret.push(int(dist(gen_)));
         return ret;
     }
 
@@ -60,36 +61,37 @@ private:
 // -----------------------------------------------------------------------------------------------
 // Evolution concepts
 
-template<class T>
-concept Chromosome = std::semiregular<T> && requires (T t)
+template<class T, class RNG>
+concept Chromosome = std::semiregular<T> && requires (T t, RNG& rng)
 {
     t.crossover(t);
-    t.mutate();
+    t.mutate(rng);
 } && requires (const T t){
     {t.toString()} -> std::same_as<std::string>;
 };
 
-template<class T, class C>
-concept Challenge = std::semiregular<T> &&  Chromosome<C> && requires (T const t, C c)
+template<class T, class C, class RNG>
+concept Challenge = std::semiregular<T> &&  Chromosome<C, RNG> && requires (T const t, C c, RNG& rng)
 {
-    {t.score(c)} -> std::same_as<double>;
+    {t.score(c, rng)} -> std::same_as<double>;
 }; 
 
 // -----------------------------------------------------------------------------------------------
 // Evolution Impl
 
-template<Chromosome Chrom, class Chall>
-requires Challenge<Chall, Chrom>
+template<class Chrom, class Chall, class RNG>
+requires Chromosome<Chrom, RNG> && Challenge<Chall, Chrom, RNG>
 std::multimap<double, const Chrom*>
-fitnessCalculation(std::vector<Chrom> const& candidates, Chall const& challenge)
+fitnessCalculation(std::vector<Chrom> const& candidates, Chall const& challenge, RNG& rng)
 {
 	std::multimap<double, const Chrom*> ret;
 	for (auto& cand : candidates)
-		ret.insert(std::make_pair(challenge.score(cand), &cand));
+		ret.insert(std::make_pair(challenge.score(cand, rng), &cand));
 	return ret;
 }
 
-template<Chromosome Chrom>
+template<class Chrom, class RNG>
+requires Chromosome<Chrom, RNG>
 std::vector<const Chrom*>
 selectMatingPool(std::multimap<double, const Chrom*> const& fitness, int sep = 2)
 {
@@ -104,7 +106,8 @@ selectMatingPool(std::multimap<double, const Chrom*> const& fitness, int sep = 2
 	return ret;
 }
 
-template<Chromosome Chrom>
+template<class Chrom, class RNG>
+requires Chromosome<Chrom, RNG>
 void
 crossover(
 	typename std::vector<Chrom>::iterator parentsBeg,
@@ -123,14 +126,16 @@ crossover(
 	}
 }
 
-template<Chromosome Chrom>
+template<class Chrom, class RNG>
+requires Chromosome<Chrom, RNG>
 void randomMutation(
 	typename std::vector<Chrom>::iterator offspringBeg,
-	typename std::vector<Chrom>::iterator offspringEnd
+	typename std::vector<Chrom>::iterator offspringEnd,
+	RNG& rng
 )
 {
 	for (; offspringBeg != offspringEnd; ++offspringBeg)
-		offspringBeg->mutate();
+		offspringBeg->mutate(rng);
 }
 
 
@@ -161,20 +166,21 @@ struct EvolutionOptions{
 	std::ostream* out; // the ostream to stream the logging to
 };
 
-template<Chromosome Chrom, class Chall> 
-requires Challenge<Chall, Chrom>
+template<class Chrom, class Chall, class RNG> 
+requires Chromosome<Chrom, RNG> && Challenge<Chall, Chrom, RNG>
 std::vector<Chrom>
 evolution(
 	std::vector<Chrom> population, // feed with a few (20 recommended) random chromosomes
 	Chall const& challenge, // the challenge 
 	double& winningAccuracy, // the winning performance is an out parameter
-	EvolutionOptions const& options // the evolution options
+	EvolutionOptions const& options, // the evolution options
+	RNG& rng // the random number generator
 )
 {
 	auto candidates = population;
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// let the chromosomes face the challenge
-		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge);
+		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);
 		// logging
 		if (options.log_level >= 1) {
 			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
@@ -185,7 +191,7 @@ evolution(
 			}
 		}
 		// half of the chromosomes are winners
-		std::vector<const Chrom*> winners = selectMatingPool(fitness, 2);
+		std::vector<const Chrom*> winners = selectMatingPool<Chrom, RNG>(fitness, 2);
 		// return the winner of the last generation
 		if (i >= options.num_generations - 1)
 		{
@@ -203,9 +209,9 @@ evolution(
 				[&ch](const Chrom* address) { return &ch == address; }) != winners.end();
 		});
 		// cross parents
-		crossover<Chrom>(candidates.begin(), sep, sep, candidates.end());
+		crossover<Chrom, RNG>(candidates.begin(), sep, sep, candidates.end());
 		// mutate children
-		randomMutation<Chrom>(sep, candidates.end());
+		randomMutation<Chrom>(sep, candidates.end(), rng);
 	}
 	return candidates;
 }
@@ -215,17 +221,17 @@ namespace partial {
 // -----------------------------------------------------------------------------------------------
 // Partial Evolution concepts 
 
-template<class T>
-concept PartialChromosome = evol::Chromosome<T> && requires (const T t)
+template<class T, class RNG>
+concept PartialChromosome = evol::Chromosome<T, RNG> && requires (const T t)
 {
     {t.magnitude()} -> std::same_as<double>; // the square root of the sum of the squares of all members 
 };
 
-template<class T, class C>
-concept PartialChallenge = std::semiregular<T> &&  PartialChromosome<C> && requires (T const t, C c)
+template<class T, class C, class RNG>
+concept PartialChallenge = std::semiregular<T> &&  PartialChromosome<C, RNG> && requires (T const t, C c, RNG& rng)
 {
-    {t.score(c)} -> std::same_as<double>;
-    {t.grow_generation(c,c, 20 /*the number of partial chromosomes in the next generation*/, 0.0 /*the minimum magnitude of the partial chromosomes*/, 1.0 /*the maximum magnitude of the partial chromosomes*/ )} -> std::same_as<std::vector<C>>;
+    {t.score(c, rng)} -> std::same_as<double>;
+    {t.grow_generation(c,c, rng, 20 /*the number of partial chromosomes in the next generation*/, 0.0 /*the minimum magnitude of the partial chromosomes*/, 1.0 /*the maximum magnitude of the partial chromosomes*/ )} -> std::same_as<std::vector<C>>;
 }; 
 
 
@@ -233,20 +239,21 @@ concept PartialChallenge = std::semiregular<T> &&  PartialChromosome<C> && requi
 // Partial Evolution challenge
 
 // inherit from this type in order to use the default implementation of grow generation
-template<PartialChromosome Chrom>
+template<class Chrom, class RNG>
+requires PartialChromosome<Chrom, RNG>
 struct DefaultPartialChallenge{
-	std::vector<Chrom> grow_generation(Chrom parent1, const Chrom& parent2, size_t num_children /*the number of partial chromosomes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial chromosomes*/, double max_magnitude /*the maximum magnitude of the partial chromosomes*/ ) const
+	std::vector<Chrom> grow_generation(Chrom parent1, const Chrom& parent2, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial chromosomes*/, double max_magnitude /*the maximum magnitude of the partial chromosomes*/ ) const
 	{
 		std::vector<Chrom> ret;
-		const auto develop = [min_magnitude, max_magnitude](Chrom& chrom, bool initialMutate){
+		const auto develop = [min_magnitude, max_magnitude, &rng](Chrom& chrom, bool initialMutate){
 			if(initialMutate){
-				chrom.mutate();
+				chrom.mutate(rng);
 			}
-            const auto try_n_times = [min_magnitude, max_magnitude](Chrom chrom, size_t num) -> std::optional<Chrom>
+            const auto try_n_times = [min_magnitude, max_magnitude, &rng](Chrom chrom, size_t num) -> std::optional<Chrom>
             {
                 size_t i = 0;
 			    while(min_magnitude > chrom.magnitude() || chrom.magnitude() > max_magnitude){
-				    chrom.mutate();
+				    chrom.mutate(rng);
 				    i++;
                     if(i >= num){
                         break;
@@ -316,20 +323,21 @@ struct PartialEvolutionOptions{
 	double max_magnitude = 1.0;
 };
 
-template<PartialChromosome Chrom, class Chall> 
-requires PartialChallenge<Chall, Chrom>
+template<class Chrom, class Chall, class RNG>
+requires PartialChromosome<Chrom, RNG> && PartialChallenge<Chall, Chrom, RNG>
 std::vector<Chrom>
 evolution(
 	Chall const& challenge, // the challenge 
 	double& winningAccuracy, // the winning performance is an out parameter
-	PartialEvolutionOptions const& options // the evolution options
+	PartialEvolutionOptions const& options, // the evolution options
+	RNG& rng // the random number generator
 )
 {
 	size_t num_children = 20;
-	auto candidates = challenge.grow_generation(Chrom{}, Chrom{}, num_children, options.min_magnitude, options.max_magnitude);
+	auto candidates = challenge.grow_generation(Chrom{}, Chrom{}, rng, num_children, options.min_magnitude, options.max_magnitude);
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// let the chromosomes face the challenge
-		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge);
+		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);
 		// logging
 		if (options.log_level >= 1) {
 			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
@@ -340,7 +348,7 @@ evolution(
 			}
 		}
 		// half of the chromosomes are winners
-		std::vector<const Chrom*> winners = selectMatingPool(fitness, 2);
+		std::vector<const Chrom*> winners = selectMatingPool<Chrom, RNG>(fitness, 2);
 		// return the winner of the last generation
 		if (i >= options.num_generations - 1)
 		{
@@ -350,7 +358,7 @@ evolution(
 			winningAccuracy = fitness.rbegin()->first;
 			return ret;
 		}
-		candidates = challenge.grow_generation(*winners[0], *winners[1], num_children, options.min_magnitude, options.max_magnitude);
+		candidates = challenge.grow_generation(*winners[0], *winners[1], rng, num_children, options.min_magnitude, options.max_magnitude);
 	}
 	return candidates;
 }

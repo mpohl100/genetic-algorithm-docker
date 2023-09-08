@@ -2,6 +2,7 @@
 
 #include <clara.hpp>
 
+#include <chrono>
 #include <iostream>
 #include <vector>
  
@@ -11,8 +12,11 @@ int main(int argc, char** argv)
 
 
     int number_generations = 100;
+    unsigned int random_seed = 0;
     bool help = false;
-    auto cli = Opt(number_generations, "number_generations")["-n"]["--number-generations"]("The number of generations to calculate") | Help(help);
+    auto cli = Opt(number_generations, "number_generations")["-n"]["--number-generations"]("The number of generations to calculate") 
+    | Opt(random_seed, "random_seed")["-r"]["--rand"]("The random seed of the evolution algorithm, a positive integer") 
+    | Help(help);
      
 
     auto result = cli.parse(Args(argc, argv));
@@ -28,18 +32,27 @@ int main(int argc, char** argv)
     auto evolParams = evol::EvolutionOptions{};
     evolParams.num_generations = number_generations;
     evolParams.out = &std::cout;
+
+    if(random_seed == 0){
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
+        random_seed = static_cast<unsigned int>(timestamp);
+    }
+    auto rng = evol::Rng{random_seed};
+
     std::vector<math::XCoordinate> initialGeneration;
     for(size_t i = 0; i < 20; ++i){
         initialGeneration.push_back(math::XCoordinate{0});
     }
     for(auto& xCoordinate : initialGeneration){
-        xCoordinate.mutate();
+        xCoordinate.mutate(rng);
     }
     double winningFitness = 0.0;
-    const auto winningXCoordinates = evol::evolution(initialGeneration, math::MathFunction{}, winningFitness, evolParams);
+    const auto winningXCoordinates = evol::evolution(initialGeneration, math::MathFunction{}, winningFitness, evolParams, rng);
 
     std::cout << '\n';
     std::cout << "winning x: " << winningXCoordinates[0].x() <<"; winning f(x): " << winningFitness << '\n';
+    std::cout << "random seed used: " << random_seed << ". Pass this seed with -r to get the same results with a rerun.\n";
     return 0;
 }
 

@@ -12,6 +12,7 @@ int main(int argc, char** argv)
 
 
     int number_generations = 100;
+    size_t log_level = 0;
     double min_magnitude = 0.0;
     double max_magnitude = 1.0;
     unsigned int random_seed = 0;
@@ -20,6 +21,7 @@ int main(int argc, char** argv)
     | Opt(min_magnitude, "min_magnitude")["-b"]["--min"]("The min magnitude of the x choordinates to examine")
     | Opt(max_magnitude, "max_magnitude")["-t"]["--max"]("The max magnitude of the x choordinates to examine")
     | Opt(random_seed, "random_seed")["-r"]["--rand"]("The random seed of the evolution algorithm, a positive integer") 
+    | Opt(log_level, "log_level")["-l"]["--log"]("The level of detail of the output. The higher the integer the more detailed the output.")
     | Help(help);
      
 
@@ -35,6 +37,7 @@ int main(int argc, char** argv)
 
     auto evolParams = evol::partial::PartialEvolutionOptions{};
     evolParams.num_generations = number_generations;
+    evolParams.log_level = log_level;
     evolParams.out = &std::cout;
     evolParams.min_magnitude = min_magnitude;
     evolParams.max_magnitude = max_magnitude;

@@ -13,9 +13,11 @@ int main(int argc, char** argv)
 
     int number_generations = 100;
     unsigned int random_seed = 0;
+    size_t log_level = 0;
     bool help = false;
     auto cli = Opt(number_generations, "number_generations")["-n"]["--number-generations"]("The number of generations to calculate") 
     | Opt(random_seed, "random_seed")["-r"]["--rand"]("The random seed of the evolution algorithm, a positive integer") 
+    | Opt(log_level, "log_level")["-l"]["--log"]("The level of detail of the output. The higher the integer the more detailed the output.") 
     | Help(help);
      
 
@@ -31,6 +33,7 @@ int main(int argc, char** argv)
 
     auto evolParams = evol::EvolutionOptions{};
     evolParams.num_generations = number_generations;
+    evolParams.log_level = log_level;
     evolParams.out = &std::cout;
 
     if(random_seed == 0){

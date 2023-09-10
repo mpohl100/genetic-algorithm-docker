@@ -299,10 +299,7 @@ struct DefaultPartialChallenge{
 //	double score(PatialChromosome const& chromosome); the chromosome faces the challenge and its performance needs to be evaluated with a double (0 means bad, the higher the better the performance)
 //};
 
-struct PartialEvolutionOptions{
-	size_t num_generations = 100; // the number of generations to cross
-	size_t log_level = 1;  // logging level to see how far the algorithm progressed
-	std::ostream* out; // the ostream to stream the logging to
+struct PartialEvolutionOptions : public EvolutionOptions{
 	double min_magnitude = 0.0;
 	double max_magnitude = 1.0;
 };

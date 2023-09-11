@@ -245,7 +245,7 @@ struct DefaultPartialChallenge{
                         break;
                     }
 			    }
-                if(min_magnitude <= chrom.magnitude() && max_magnitude <= max_magnitude){
+                if(min_magnitude <= chrom.magnitude() && chrom.magnitude() <= max_magnitude){
                     return chrom;
                 }
                 else return std::nullopt;

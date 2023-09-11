@@ -196,8 +196,10 @@ evolution(
 		if (options.log_level >= 1) {
 			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
 			if (options.log_level >= 2) {
-				for (auto& f : fitness)
-					if(options.out) *options.out << "  fitness: " << f.first << '\n' << f.second->toString() << '\n';
+				for (auto it = fitness.rbegin(); it != fitness.rend(); ++it){
+					const auto& f = *it;
+					if(options.out) *options.out << "  fitness: " << f.first << ": " << f.second->toString() << '\n';
+				}
 				if(options.out) *options.out << '\n';
 			}
 		}
@@ -323,8 +325,10 @@ evolution(
 		if (options.log_level >= 1) {
 			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
 			if (options.log_level >= 2) {
-				for (auto& f : fitness)
-					if(options.out) *options.out << "  fitness: " << f.first << '\n' << f.second->toString() << '\n';
+				for (auto it = fitness.rbegin(); it != fitness.rend(); ++it){
+					const auto& f = *it;
+					if(options.out) *options.out << "  fitness: " << f.first << ": " << f.second->toString() << '\n';
+				}
 				if(options.out) *options.out << '\n';
 			}
 		}

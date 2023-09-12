@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace path{
 
@@ -11,6 +12,9 @@ struct Point{
     Point(Point&&) = default;
     Point& operator=(Point&&) = default;
     Point(int xx, int yy);
+
+    friend constexpr auto operator<=>(const Point&, const Point&) = default;
+
     int x = 0;
     int y = 0;
 };
@@ -27,8 +31,10 @@ public:
     void draw_rectangle(const Point& tl, const Point& br);
     std::string getPixels() const; 
 private:
+    void draw_line(const Point& start, const Point& end);
     [[maybe_unused]] int _x = 1;
     [[maybe_unused]] int _y = 1;
+    std::vector<std::vector<int>> _pixels;
 };
 
 }

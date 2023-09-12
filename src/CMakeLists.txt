@@ -1,3 +1,5 @@
+add_subdirectory(examples)
+
 set( LIB_SOURCES Math.cpp)
 
 add_library( lib SHARED ${LIB_SOURCES} )

@@ -16,12 +16,14 @@ int main(int argc, char** argv)
     double min_magnitude = 0.0;
     double max_magnitude = 1.0;
     unsigned int random_seed = 0;
+    double starting_value = 0.0;
     bool help = false;
     auto cli = Opt(number_generations, "number_generations")["-n"]["--number-generations"]("The number of generations to calculate") 
     | Opt(min_magnitude, "min_magnitude")["-b"]["--min"]("The min magnitude of the x choordinates to examine")
     | Opt(max_magnitude, "max_magnitude")["-t"]["--max"]("The max magnitude of the x choordinates to examine")
     | Opt(random_seed, "random_seed")["-r"]["--rand"]("The random seed of the evolution algorithm, a positive integer") 
     | Opt(log_level, "log_level")["-l"]["--log"]("The level of detail of the output. The higher the integer the more detailed the output.")
+    | Opt(starting_value, "starting_value")["-s"]["--start"]("The starting value for the x coordinate.") 
     | Help(help);
      
 
@@ -48,7 +50,8 @@ int main(int argc, char** argv)
         random_seed = static_cast<unsigned int>(timestamp);
     }
     auto rng = evol::Rng{random_seed};
-    const auto winningXCoordinates = evol::partial::evolution<math::XCoordinate>(math::MathFunctionPartial{}, winningFitness, evolParams, rng);
+    auto starting_chrom = math::XCoordinate{starting_value};
+    const auto winningXCoordinates = evol::partial::evolution(starting_chrom, math::MathFunctionPartial{}, winningFitness, evolParams, rng);
 
     std::cout << '\n';
     std::cout << "winning x: " << winningXCoordinates[0].x() <<"; winning f(x): " << winningFitness << '\n';

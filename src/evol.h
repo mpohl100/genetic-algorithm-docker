@@ -180,14 +180,15 @@ template<class Chrom, class Chall, class RNG>
 requires Chromosome<Chrom, RNG> && Challenge<Chall, Chrom, RNG>
 std::vector<Chrom>
 evolution(
-	Chall const& challenge, // the challenge 
+	const Chrom& starting_value, // the starting value
+	const Chall& challenge, // the challenge 
 	double& winningAccuracy, // the winning performance is an out parameter
-	EvolutionOptions const& options, // the evolution options
+	const EvolutionOptions& options, // the evolution options
 	RNG& rng // the random number generator
 )
 {
 	size_t num_children = 20;
-	auto candidates = challenge.grow_generation(Chrom{}, Chrom{}, rng, num_children);
+	auto candidates = challenge.grow_generation(starting_value, starting_value, rng, num_children);
 
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// let the chromosomes face the challenge
@@ -310,14 +311,15 @@ template<class Chrom, class Chall, class RNG>
 requires PartialChromosome<Chrom, RNG> && PartialChallenge<Chall, Chrom, RNG>
 std::vector<Chrom>
 evolution(
-	Chall const& challenge, // the challenge 
+	const Chrom& starting_value, // the starting value
+	const Chall& challenge, // the challenge 
 	double& winningAccuracy, // the winning performance is an out parameter
-	PartialEvolutionOptions const& options, // the evolution options
+	const PartialEvolutionOptions& options, // the evolution options
 	RNG& rng // the random number generator
 )
 {
 	size_t num_children = 20;
-	auto candidates = challenge.grow_generation(Chrom{}, Chrom{}, rng, num_children, options.min_magnitude, options.max_magnitude);
+	auto candidates = challenge.grow_generation(starting_value, starting_value, rng, num_children, options.min_magnitude, options.max_magnitude);
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// let the chromosomes face the challenge
 		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);

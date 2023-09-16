@@ -17,6 +17,7 @@ int main(int argc, char** argv)
     double max_magnitude = 1.0;
     unsigned int random_seed = 0;
     double starting_value = 0.0;
+    size_t num_parents = 2;
     bool help = false;
     auto cli = Opt(number_generations, "number_generations")["-n"]["--number-generations"]("The number of generations to calculate") 
     | Opt(min_magnitude, "min_magnitude")["-b"]["--min"]("The min magnitude of the x choordinates to examine")
@@ -24,6 +25,7 @@ int main(int argc, char** argv)
     | Opt(random_seed, "random_seed")["-r"]["--rand"]("The random seed of the evolution algorithm, a positive integer") 
     | Opt(log_level, "log_level")["-l"]["--log"]("The level of detail of the output. The higher the integer the more detailed the output.")
     | Opt(starting_value, "starting_value")["-s"]["--start"]("The starting value for the x coordinate.") 
+    | Opt(num_parents, "num_parents")["-p"]["--num-parents"]("The number of parents per generation.")
     | Help(help);
      
 
@@ -40,6 +42,7 @@ int main(int argc, char** argv)
     auto evolParams = evol::partial::PartialEvolutionOptions{};
     evolParams.num_generations = number_generations;
     evolParams.log_level = log_level;
+    evolParams.num_parents = num_parents;
     evolParams.out = &std::cout;
     evolParams.min_magnitude = min_magnitude;
     evolParams.max_magnitude = max_magnitude;

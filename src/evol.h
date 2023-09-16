@@ -74,7 +74,7 @@ template<class T, class C, class RNG>
 concept Challenge = std::semiregular<T> &&  Chromosome<C, RNG> && requires (T const t, C c, RNG& rng)
 {
     {t.score(c, rng)} -> std::same_as<double>;
-	{t.grow_generation(c, c, rng, 20)} ->std::same_as<std::vector<C>>;
+	{t.grow_generation(std::vector<C>{}, rng, 20)} ->std::same_as<std::vector<C>>;
 }; 
 
 // -----------------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ template<class T, class C, class RNG>
 concept PartialChallenge = std::semiregular<T> &&  PartialChromosome<C, RNG> && requires (T const t, C c, RNG& rng)
 {
     {t.score(c, rng)} -> std::same_as<double>;
-    {t.grow_generation(c,c, rng, 20 /*the number of partial chromosomes in the next generation*/, 0.0 /*the minimum magnitude of the partial chromosomes*/, 1.0 /*the maximum magnitude of the partial chromosomes*/ )} -> std::same_as<std::vector<C>>;
+    {t.grow_generation(std::vector<C>{}, rng, 20 /*the number of partial chromosomes in the next generation*/, 0.0 /*the minimum magnitude of the partial chromosomes*/, 1.0 /*the maximum magnitude of the partial chromosomes*/ )} -> std::same_as<std::vector<C>>;
 }; 
 
 }
@@ -133,14 +133,22 @@ selectMatingPool(std::multimap<double, const Chrom*> const& fitness, int sep = 2
 template<class Chrom, class RNG>
 requires Chromosome<Chrom, RNG>
 struct DefaultChallenge{
-	std::vector<Chrom> grow_generation(Chrom parent1, const Chrom& parent2, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/ ) const
+	std::vector<Chrom> grow_generation(std::vector<Chrom> parents, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/ ) const
 	{
+		if(parents.empty()){
+			throw std::runtime_error("no parents passed to grow_generation");
+			return {};
+		}
 		std::vector<Chrom> ret;
-        ret.push_back(parent1); // the winner parent should be part of the next gen to defend his title
-        auto crossed_over = parent1;
-		crossed_over.crossover(parent2);
-		for(size_t i = 0; i < num_children - 1; ++i){
-			auto chrom = crossed_over;
+        ret.push_back(parents[0]); // the winner parent should be part of the next gen to defend his title
+		for(size_t i = 1; i < parents.size(); ++i){
+			auto chrom = parents[0]; // the winner parent gets to spread their genes everywhere
+			chrom.crossover(parents[i]);  // the runner-ups are the cross over partners
+			chrom.mutate(rng);
+			ret.push_back(chrom);
+		}
+		for(size_t i = parents.size(); i < num_children; ++i){
+			auto chrom = parents[0]; // the rest of the generation are the winning parent with a random mutation
 			chrom.mutate(rng);
 			ret.push_back(chrom);
 		}
@@ -173,6 +181,7 @@ struct DefaultChallenge{
 struct EvolutionOptions{
 	size_t num_generations; // the number of generations to cross
 	size_t log_level = 1;  // logging level to see how far the algorithm progressed
+	size_t num_parents = 2; // the number of parents to grow a new generation
 	std::ostream* out; // the ostream to stream the logging to
 };
 
@@ -188,7 +197,7 @@ evolution(
 )
 {
 	size_t num_children = 20;
-	auto candidates = challenge.grow_generation(starting_value, starting_value, rng, num_children);
+	auto candidates = challenge.grow_generation({starting_value}, rng, num_children);
 
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// let the chromosomes face the challenge
@@ -215,7 +224,15 @@ evolution(
 			winningAccuracy = fitness.rbegin()->first;
 			return ret;
 		}
-		candidates = challenge.grow_generation(*winners[0], *winners[1], rng, num_children);
+		std::vector<Chrom> parents;
+		size_t j = 0;
+		for (auto* winner : winners){
+			parents.push_back(*winner);
+			if(++j >= options.num_parents){
+				break;
+			}
+		}
+		candidates = challenge.grow_generation(parents, rng, num_children);
 	}
 	return candidates;
 }
@@ -229,8 +246,12 @@ namespace partial {
 template<class Chrom, class RNG>
 requires PartialChromosome<Chrom, RNG>
 struct DefaultPartialChallenge{
-	std::vector<Chrom> grow_generation(Chrom parent1, const Chrom& parent2, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial chromosomes*/, double max_magnitude /*the maximum magnitude of the partial chromosomes*/ ) const
+	std::vector<Chrom> grow_generation(std::vector<Chrom> parents, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial chromosomes*/, double max_magnitude /*the maximum magnitude of the partial chromosomes*/ ) const
 	{
+		if(parents.empty()){
+			throw std::runtime_error("no parents passed to grow generation partial.");
+			return {};
+		}
 		std::vector<Chrom> ret;
 		const auto develop = [min_magnitude, max_magnitude, &rng](Chrom& chrom, bool initialMutate){
 			if(initialMutate){
@@ -264,13 +285,16 @@ struct DefaultPartialChallenge{
                 chrom = *opt_chrom;
             }
 		};
-        develop(parent1, false); // this will do nothing if the parent is part of the interesting magnitude range
-        ret.push_back(parent1); // the winner parent should be part of the next gen to defend his title
-        auto crossed_over = parent1;
-		crossed_over.crossover(parent2);
-		develop(crossed_over, false); 
-		for(size_t i = 0; i < num_children - 1; ++i){
-			auto chrom = crossed_over;
+        develop(parents[0], false); // this will do nothing if the parent is part of the interesting magnitude range
+        ret.push_back(parents[0]); // the winner parent should be part of the next gen to defend his title
+		for(size_t i = 1; i < parents.size(); ++i){
+			auto chrom = parents[0]; // the winning parent gets to spread his genes everywhere
+			chrom.crossover(parents[i]); // each of the runner-ups is a cross over partner
+			develop(chrom, true);
+			ret.push_back(chrom);
+		}
+		for(size_t i = parents.size(); i < num_children; ++i){
+			auto chrom = parents[0]; // the rest of the generation is the winning parent with a random mutation
 			develop(chrom, true);
 			ret.push_back(chrom);
 		}
@@ -319,7 +343,7 @@ evolution(
 )
 {
 	size_t num_children = 20;
-	auto candidates = challenge.grow_generation(starting_value, starting_value, rng, num_children, options.min_magnitude, options.max_magnitude);
+	auto candidates = challenge.grow_generation({starting_value}, rng, num_children, options.min_magnitude, options.max_magnitude);
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// let the chromosomes face the challenge
 		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);
@@ -345,7 +369,15 @@ evolution(
 			winningAccuracy = fitness.rbegin()->first;
 			return ret;
 		}
-		candidates = challenge.grow_generation(*winners[0], *winners[1], rng, num_children, options.min_magnitude, options.max_magnitude);
+		std::vector<Chrom> parents;
+		size_t j = 0;
+		for (auto* winner : winners){
+			parents.push_back(*winner);
+			if(++j >= options.num_parents){
+				break;
+			}
+		}
+		candidates = challenge.grow_generation(parents, rng, num_children, options.min_magnitude, options.max_magnitude);
 	}
 	return candidates;
 }

@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <limits>
 
 namespace path{
 
@@ -41,22 +42,97 @@ std::string Canvas2D::getPixels() const
     return ret;
 }
 
-void Canvas2D::draw_line(const Point& start, const Point& end)
+void Canvas2D::draw_line(Point start, Point end)
 {
+    if(end.x < start.x){
+        std::swap(start, end);
+    }
     int dX = end.x - start.x;
     int dY = end.y - start.y;
     Point current_point = start;
+    const auto draw_pixel = [this](int x, int y){
+        _pixels[x][y] = 1;
+    };
+    if(dX == 0){
+        if(dY >= 0){
+            for(size_t i = 0; i <= static_cast<size_t>(dY); ++i){
+                draw_pixel(current_point.x, current_point.y);
+                current_point.y++;
+            }
+        }
+        else{
+            for(size_t i = 0; i <= static_cast<size_t>(-dY); ++i){
+                draw_pixel(current_point.x, current_point.y);
+                current_point.y--;
+            }
+        }
+        return;
+    }
+
+    const auto gradient = double(dY) / double(dX);
     //std::cout << "dX=" << dX << "; dY=" << dY << '\n';  
-    const auto move_coord = [](int& d, int& point){
-        if(d <= 0) {
-            d++;
-            point--;
-        }   
-        else {
-            d--;
-            point++;
+    enum class Direction{
+        X,
+        YUp,
+        YDown,
+    };
+    const auto move_coord = [](int& d, Point& point, int& went, Direction direction){
+        switch(direction){
+            case Direction::X:{
+                d--;
+                point.x++;
+                went++;
+                break;
+            }
+            case Direction::YUp:{
+                d--;
+                point.y++;
+                went++;
+                break;
+            }
+            case Direction::YDown:{
+                d++;
+                point.y--;
+                went--;
+                break;
+            }
         }
     };
+    const auto go_x = [&](double went_x, double went_y){
+        const auto deduce_current_gradient = [=](){
+            if(went_x == 0){
+                if(went_y > 0){
+                    return std::numeric_limits<double>::max();
+                } 
+                else if(went_y == 0){
+                    return 0.0;
+                }
+                return std::numeric_limits<double>::min();
+            }
+            return went_y / went_x;
+        };
+        std::cout << "went_x = " << went_x << "; went_y = " << went_y << "\n";
+        const auto current_gradient = deduce_current_gradient();
+        std::cout << "current gradient = " << current_gradient << "; gradient = " << gradient << '\n';
+        if(gradient >= 0){
+            if(current_gradient > gradient){    
+                std::cout << "go x\n";
+                return Direction::X;
+            }
+            std::cout << "go y up\n";
+            return Direction::YUp;
+        }
+        else{
+            if(current_gradient < gradient){    
+                std::cout << "go x\n";
+                return Direction::X;
+            }
+            std::cout << "go y down\n";
+            return Direction::YDown;    
+        }
+    };
+    int went_x = 0;
+    int went_y = 0;
     while(true){
         if(dX == 0 && dY == 0){
             if(current_point != end){
@@ -64,13 +140,13 @@ void Canvas2D::draw_line(const Point& start, const Point& end)
             }
             break;
         }
-        //std::cout << "setting point to 1: x=" << current_point.x << "; y=" << current_point.y << "; dX=" << dX << "; dY=" << dY << '\n';  
-        _pixels[current_point.x][current_point.y] = 1;
-        if(std::abs(dX) >= std::abs(dY)){
-            move_coord(dX, current_point.x);
-        }
-        else{
-            move_coord(dY, current_point.y);
+        std::cout << "setting point to 1: x=" << current_point.x << "; y=" << current_point.y << "; dX=" << dX << "; dY=" << dY << '\n';  
+        draw_pixel(current_point.x, current_point.y);
+        const auto direction = go_x(went_x, went_y);
+        switch(direction){
+            case Direction::X: move_coord(dX, current_point, went_x, direction); break;
+            case Direction::YUp:
+            case Direction::YDown: move_coord(dY, current_point, went_y, direction); break;
         }
     }
 }

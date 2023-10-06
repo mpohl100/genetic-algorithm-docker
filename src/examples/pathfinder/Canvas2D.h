@@ -30,8 +30,8 @@ public:
 
     void draw_rectangle(const Point& tl, const Point& br);
     std::string getPixels() const; 
+    void draw_line(Point start, Point end);
 private:
-    void draw_line(const Point& start, const Point& end);
     [[maybe_unused]] int _x = 1;
     [[maybe_unused]] int _y = 1;
     std::vector<std::vector<int>> _pixels;

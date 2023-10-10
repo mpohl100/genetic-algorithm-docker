@@ -62,7 +62,7 @@ private:
 // Evolution concepts
 
 template<class T, class RNG>
-concept Chromosome = std::semiregular<T> && requires (T t, RNG& rng)
+concept Phenotype = std::semiregular<T> && requires (T t, RNG& rng)
 {
     t.crossover(t);
     t.mutate(rng);
@@ -71,7 +71,7 @@ concept Chromosome = std::semiregular<T> && requires (T t, RNG& rng)
 };
 
 template<class T, class C, class RNG>
-concept Challenge = std::semiregular<T> &&  Chromosome<C, RNG> && requires (T const t, C c, RNG& rng)
+concept Challenge = std::semiregular<T> &&  Phenotype<C, RNG> && requires (T const t, C c, RNG& rng)
 {
     {t.score(c, rng)} -> std::same_as<double>;
 	{t.breed(std::vector<C>{}, rng, 20)} ->std::same_as<std::vector<C>>;
@@ -82,16 +82,16 @@ concept Challenge = std::semiregular<T> &&  Chromosome<C, RNG> && requires (T co
 namespace partial{
 
 template<class T, class RNG>
-concept PartialChromosome = evol::Chromosome<T, RNG> && requires (const T t)
+concept PartialPhenotype = evol::Phenotype<T, RNG> && requires (const T t)
 {
     {t.magnitude()} -> std::same_as<double>; // the square root of the sum of the squares of all members 
 };
 
 template<class T, class C, class RNG>
-concept PartialChallenge = std::semiregular<T> &&  PartialChromosome<C, RNG> && requires (T const t, C c, RNG& rng)
+concept PartialChallenge = std::semiregular<T> &&  PartialPhenotype<C, RNG> && requires (T const t, C c, RNG& rng)
 {
     {t.score(c, rng)} -> std::same_as<double>;
-    {t.breed(std::vector<C>{}, rng, 20 /*the number of partial chromosomes in the next generation*/, 0.0 /*the minimum magnitude of the partial chromosomes*/, 1.0 /*the maximum magnitude of the partial chromosomes*/ )} -> std::same_as<std::vector<C>>;
+    {t.breed(std::vector<C>{}, rng, 20 /*the number of partial Phenotypes in the next generation*/, 0.0 /*the minimum magnitude of the partial Phenotypes*/, 1.0 /*the maximum magnitude of the partial Phenotypes*/ )} -> std::same_as<std::vector<C>>;
 }; 
 
 }
@@ -101,23 +101,23 @@ concept PartialChallenge = std::semiregular<T> &&  PartialChromosome<C, RNG> && 
 
 namespace detail{
 
-template<class Chrom, class Chall, class RNG>
-requires Chromosome<Chrom, RNG> && (Challenge<Chall, Chrom, RNG> || partial::PartialChallenge<Chall, Chrom, RNG>)
-std::multimap<double, const Chrom*>
-fitnessCalculation(std::vector<Chrom> const& candidates, Chall const& challenge, RNG& rng)
+template<class Pheno, class Chall, class RNG>
+requires Phenotype<Pheno, RNG> && (Challenge<Chall, Pheno, RNG> || partial::PartialChallenge<Chall, Pheno, RNG>)
+std::multimap<double, const Pheno*>
+fitnessCalculation(std::vector<Pheno> const& candidates, Chall const& challenge, RNG& rng)
 {
-	std::multimap<double, const Chrom*> ret;
+	std::multimap<double, const Pheno*> ret;
 	for (auto& cand : candidates)
 		ret.insert(std::make_pair(challenge.score(cand, rng), &cand));
 	return ret;
 }
 
-template<class Chrom, class RNG>
-requires Chromosome<Chrom, RNG>
-std::vector<const Chrom*>
-selectMatingPool(std::multimap<double, const Chrom*> const& fitness, int sep = 2)
+template<class Pheno, class RNG>
+requires Phenotype<Pheno, RNG>
+std::vector<const Pheno*>
+selectMatingPool(std::multimap<double, const Pheno*> const& fitness, int sep = 2)
 {
-	std::vector<const Chrom*> ret;
+	std::vector<const Pheno*> ret;
 	int i = 0;
 	for (auto it = fitness.rbegin(); it != fitness.rend(); ++it)
 	{
@@ -128,10 +128,10 @@ selectMatingPool(std::multimap<double, const Chrom*> const& fitness, int sep = 2
 	return ret;
 }
 
-template<class Chrom, class Chall, class RNG, class EvolutionOpts> 
-std::vector<Chrom>
+template<class Pheno, class Chall, class RNG, class EvolutionOpts> 
+std::vector<Pheno>
 evolution_impl(
-	const Chrom& starting_value, // the starting value
+	const Pheno& starting_value, // the starting value
 	const Chall& challenge, // the challenge 
 	double& winningAccuracy, // the winning performance is an out parameter
 	const EvolutionOpts& options, // the evolution options
@@ -139,17 +139,17 @@ evolution_impl(
 )
 {
 	size_t num_children = 20;
-	std::vector<Chrom> candidates;
-	if constexpr(evol::partial::PartialChallenge<Chall, Chrom, RNG>){
+	std::vector<Pheno> candidates;
+	if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
 		candidates = challenge.breed({starting_value}, rng, num_children, options.min_magnitude, options.max_magnitude);
 	}
-	else if constexpr(evol::Challenge<Chall, Chrom, RNG>){
+	else if constexpr(evol::Challenge<Chall, Pheno, RNG>){
 		candidates = challenge.breed({starting_value}, rng, num_children);
 	}
 
 	for (size_t i = 0; i < options.num_generations; ++i) {
-		// let the chromosomes face the challenge
-		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);
+		// let the Phenotypes face the challenge
+		std::multimap<double, const Pheno*> fitness = fitnessCalculation(candidates, challenge, rng);
 		// logging
 		if (options.log_level >= 1) {
 			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
@@ -161,18 +161,18 @@ evolution_impl(
 				if(options.out) *options.out << '\n';
 			}
 		}
-		// half of the chromosomes are winners
-		std::vector<const Chrom*> winners = selectMatingPool<Chrom, RNG>(fitness, 2);
+		// half of the Phenotypes are winners
+		std::vector<const Pheno*> winners = selectMatingPool<Pheno, RNG>(fitness, 2);
 		// return the winner of the last generation
 		if (i >= options.num_generations - 1)
 		{
-			std::vector<Chrom> ret;
+			std::vector<Pheno> ret;
 			for (auto w : winners)
 				ret.push_back(*w);
 			winningAccuracy = fitness.rbegin()->first;
 			return ret;
 		}
-		std::vector<Chrom> parents;
+		std::vector<Pheno> parents;
 		size_t j = 0;
 		for (auto* winner : winners){
 			parents.push_back(*winner);
@@ -181,10 +181,10 @@ evolution_impl(
 			}
 		}
 
-		if constexpr(evol::partial::PartialChallenge<Chall, Chrom, RNG>){
+		if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
 			candidates = challenge.breed(parents, rng, num_children, options.min_magnitude, options.max_magnitude);
 		}
-		else if constexpr(evol::Challenge<Chall, Chrom, RNG>){
+		else if constexpr(evol::Challenge<Chall, Pheno, RNG>){
 			candidates = challenge.breed(parents, rng, num_children);
 		}
 	}
@@ -196,27 +196,27 @@ evolution_impl(
 // Evolution challenge
 
 // inherit from this type in order to use the default implementation of grow generation
-template<class Chrom, class RNG>
-requires Chromosome<Chrom, RNG>
+template<class Pheno, class RNG>
+requires Phenotype<Pheno, RNG>
 struct DefaultChallenge{
-	std::vector<Chrom> breed(std::vector<Chrom> parents, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/ ) const
+	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, size_t num_children /*the number of partial Phenotypes in the next generation*/ ) const
 	{
 		if(parents.empty()){
 			throw std::runtime_error("no parents passed to breed");
 			return {};
 		}
-		std::vector<Chrom> ret;
+		std::vector<Pheno> ret;
         ret.push_back(parents[0]); // the winner parent should be part of the next gen to defend his title
 		for(size_t i = 1; i < parents.size(); ++i){
-			auto chrom = parents[0]; // the winner parent gets to spread their genes everywhere
-			chrom.crossover(parents[i]);  // the runner-ups are the cross over partners
-			chrom.mutate(rng);
-			ret.push_back(chrom);
+			auto pheno = parents[0]; // the winner parent gets to spread their genes everywhere
+			pheno.crossover(parents[i]);  // the runner-ups are the cross over partners
+			pheno.mutate(rng);
+			ret.push_back(pheno);
 		}
 		for(size_t i = parents.size(); i < num_children; ++i){
-			auto chrom = parents[0]; // the rest of the generation are the winning parent with a random mutation
-			chrom.mutate(rng);
-			ret.push_back(chrom);
+			auto pheno = parents[0]; // the rest of the generation are the winning parent with a random mutation
+			pheno.mutate(rng);
+			ret.push_back(pheno);
 		}
 		return ret;
 	}
@@ -228,20 +228,20 @@ struct DefaultChallenge{
 
 // This library encapsulates evolutional learning through genetic algorithms 
 // The library is header only and easy to use. 
-// You have a type (the chromosome) whose values you want to optimize through evolutional learning
+// You have a type (the Phenotype) whose values you want to optimize through evolutional learning
 // and you have a challenge your type needs to master
 // 
 
-// These functions must be added to your chromosome type (the one you want to optimize)
-//struct Chromosome {
-//	void crossover(Chromosome const& other); make sure to randomly choose what data members should be taken from this or other
-//	void mutate(); make sure to not randomly mutate too much of your chromosome type (only one data member at a time is recommended)
-// std::string toString() const; provide some output for the shape of the chromosome
+// These functions must be added to your Phenotype type (the one you want to optimize)
+//struct Phenotype {
+//	void crossover(Phenotype const& other); make sure to randomly choose what data members should be taken from this or other
+//	void mutate(); make sure to not randomly mutate too much of your Phenotype type (only one data member at a time is recommended)
+// std::string toString() const; provide some output for the shape of the Phenotype
 //};
 
 // These functions must be added to your challenge type
 //struct Challenge {
-//	double score(Chromosome const& chromosome); the chromosome faces the challenge and its performance needs to be evaluated with a double (0 means bad, the higher the better the performance)
+//	double score(Phenotype const& Phenotype); the Phenotype faces the challenge and its performance needs to be evaluated with a double (0 means bad, the higher the better the performance)
 //};
 
 struct EvolutionOptions{
@@ -251,11 +251,11 @@ struct EvolutionOptions{
 	std::ostream* out; // the ostream to stream the logging to
 };
 
-template<class Chrom, class Chall, class RNG> 
-requires Chromosome<Chrom, RNG> && Challenge<Chall, Chrom, RNG>
-std::vector<Chrom>
+template<class Pheno, class Chall, class RNG> 
+requires Phenotype<Pheno, RNG> && Challenge<Chall, Pheno, RNG>
+std::vector<Pheno>
 evolution(
-	const Chrom& starting_value, // the starting value
+	const Pheno& starting_value, // the starting value
 	const Chall& challenge, // the challenge 
 	double& winningAccuracy, // the winning performance is an out parameter
 	const EvolutionOptions& options, // the evolution options
@@ -271,60 +271,60 @@ namespace partial {
 // Partial Evolution challenge
 
 // inherit from this type in order to use the default implementation of grow generation
-template<class Chrom, class RNG>
-requires PartialChromosome<Chrom, RNG>
+template<class Pheno, class RNG>
+requires PartialPhenotype<Pheno, RNG>
 struct DefaultPartialChallenge{
-	std::vector<Chrom> breed(std::vector<Chrom> parents, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial chromosomes*/, double max_magnitude /*the maximum magnitude of the partial chromosomes*/ ) const
+	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, size_t num_children /*the number of partial Phenotypes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial Phenotypes*/, double max_magnitude /*the maximum magnitude of the partial Phenotypes*/ ) const
 	{
 		if(parents.empty()){
 			throw std::runtime_error("no parents passed to grow generation partial.");
 			return {};
 		}
-		std::vector<Chrom> ret;
-		const auto develop = [min_magnitude, max_magnitude, &rng](Chrom& chrom, bool initialMutate){
+		std::vector<Pheno> ret;
+		const auto develop = [min_magnitude, max_magnitude, &rng](Pheno& pheno, bool initialMutate){
 			if(initialMutate){
-				chrom.mutate(rng);
+				pheno.mutate(rng);
 			}
-            const auto try_n_times = [min_magnitude, max_magnitude, &rng](Chrom chrom, size_t num) -> std::optional<Chrom>
+            const auto try_n_times = [min_magnitude, max_magnitude, &rng](Pheno pheno, size_t num) -> std::optional<Pheno>
             {
                 size_t i = 0;
-			    while(min_magnitude > chrom.magnitude() || chrom.magnitude() > max_magnitude){
-				    chrom.mutate(rng);
+			    while(min_magnitude > pheno.magnitude() || pheno.magnitude() > max_magnitude){
+				    pheno.mutate(rng);
 				    i++;
                     if(i >= num){
                         break;
                     }
 			    }
-                if(min_magnitude <= chrom.magnitude() && chrom.magnitude() <= max_magnitude){
-                    return chrom;
+                if(min_magnitude <= pheno.magnitude() && pheno.magnitude() <= max_magnitude){
+                    return pheno;
                 }
                 else return std::nullopt;
             };
-            std::optional<Chrom> opt_chrom = std::nullopt;
+            std::optional<Pheno> opt_pheno = std::nullopt;
             size_t j = 0;
-            while(opt_chrom == std::nullopt && j <= 1000){
-                opt_chrom = try_n_times(chrom, 1000);
+            while(opt_pheno == std::nullopt && j <= 1000){
+                opt_pheno = try_n_times(pheno, 1000);
                 ++j;
             }
-            if(!opt_chrom){
-                throw std::runtime_error("could not create a chromosome in the magnitude range min: " + std::to_string(min_magnitude) + " and max: " + std::to_string(max_magnitude));
+            if(!opt_pheno){
+                throw std::runtime_error("could not create a Phenotype in the magnitude range min: " + std::to_string(min_magnitude) + " and max: " + std::to_string(max_magnitude));
             }
             else{
-                chrom = *opt_chrom;
+                pheno = *opt_pheno;
             }
 		};
         develop(parents[0], false); // this will do nothing if the parent is part of the interesting magnitude range
         ret.push_back(parents[0]); // the winner parent should be part of the next gen to defend his title
 		for(size_t i = 1; i < parents.size(); ++i){
-			auto chrom = parents[0]; // the winning parent gets to spread his genes everywhere
-			chrom.crossover(parents[i]); // each of the runner-ups is a cross over partner
-			develop(chrom, true);
-			ret.push_back(chrom);
+			auto pheno = parents[0]; // the winning parent gets to spread his genes everywhere
+			pheno.crossover(parents[i]); // each of the runner-ups is a cross over partner
+			develop(pheno, true);
+			ret.push_back(pheno);
 		}
 		for(size_t i = parents.size(); i < num_children; ++i){
-			auto chrom = parents[0]; // the rest of the generation is the winning parent with a random mutation
-			develop(chrom, true);
-			ret.push_back(chrom);
+			auto pheno = parents[0]; // the rest of the generation is the winning parent with a random mutation
+			develop(pheno, true);
+			ret.push_back(pheno);
 		}
 		return ret;
 	}
@@ -335,23 +335,23 @@ struct DefaultPartialChallenge{
 
 // This library encapsulates evolutional learning through genetic algorithms 
 // The library is header only and easy to use. 
-// You have a type (the partial chromosome) whose values you want to optimize through evolutional learning
+// You have a type (the partial Phenotype) whose values you want to optimize through evolutional learning
 // and you have a partial challenge your type needs to master
-// the difference from partial chromosomes to chromosomes is that only partial chromsomes that are in a defined magnitude range are considered
+// the difference from partial Phenotypes to Phenotypes is that only partial Phenosomes that are in a defined magnitude range are considered
 // this enables parallelization of the evolution on multiple threads or processes and ensuring that no redundant work is done
 // 
 
-// These functions must be added to your chromosome type (the one you want to optimize)
-//struct PartialChromosome {
-//	void crossover(Chromosome const& other); make sure to randomly choose what data members should be taken from this or other
-//	void mutate(); make sure to not randomly mutate too much of your chromosome type (only one data member at a time is recommended)
-//  std::string toString() const; provide some output for the shape of the chromosome
+// These functions must be added to your Phenotype type (the one you want to optimize)
+//struct PartialPhenotype {
+//	void crossover(Phenotype const& other); make sure to randomly choose what data members should be taken from this or other
+//	void mutate(); make sure to not randomly mutate too much of your Phenotype type (only one data member at a time is recommended)
+//  std::string toString() const; provide some output for the shape of the Phenotype
 //  double magnitude() const; the square root of the sum of the squares of all members
 //};
 
 // These functions must be added to your challenge type
 //struct PartialChallenge {
-//	double score(PatialChromosome const& chromosome); the chromosome faces the challenge and its performance needs to be evaluated with a double (0 means bad, the higher the better the performance)
+//	double score(PatialPhenotype const& Phenotype); the Phenotype faces the challenge and its performance needs to be evaluated with a double (0 means bad, the higher the better the performance)
 //};
 
 struct PartialEvolutionOptions : public EvolutionOptions{
@@ -359,11 +359,11 @@ struct PartialEvolutionOptions : public EvolutionOptions{
 	double max_magnitude = 1.0;
 };
 
-template<class Chrom, class Chall, class RNG>
-requires PartialChromosome<Chrom, RNG> && PartialChallenge<Chall, Chrom, RNG>
-std::vector<Chrom>
+template<class Pheno, class Chall, class RNG>
+requires PartialPhenotype<Pheno, RNG> && PartialChallenge<Chall, Pheno, RNG>
+std::vector<Pheno>
 evolution(
-	const Chrom& starting_value, // the starting value
+	const Pheno& starting_value, // the starting value
 	const Chall& challenge, // the challenge 
 	double& winningAccuracy, // the winning performance is an out parameter
 	const PartialEvolutionOptions& options, // the evolution options

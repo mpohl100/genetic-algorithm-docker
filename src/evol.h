@@ -191,6 +191,30 @@ evolution_impl(
 	return candidates;
 }
 
+template<class Pheno, class RNG>
+std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, size_t num_children /*the number of partial Phenotypes in the next generation*/, std::function<void(Pheno&, RNG&, bool)> develop)
+{
+	if(parents.empty()){
+		throw std::runtime_error("no parents passed to breed");
+		return {};
+	}
+	std::vector<Pheno> ret;
+	develop(parents[0], rng, false);
+	ret.push_back(parents[0]); // the winner parent should be part of the next gen to defend his title
+	for(size_t i = 1; i < parents.size(); ++i){
+		auto pheno = parents[0]; // the winner parent gets to spread their genes everywhere
+		pheno.crossover(parents[i]);  // the runner-ups are the cross over partners
+		develop(pheno, rng, true);
+		ret.push_back(pheno);
+	}
+	for(size_t i = parents.size(); i < num_children; ++i){
+		auto pheno = parents[0]; // the rest of the generation are the winning parent with a random mutation
+		develop(pheno, rng, true);
+		ret.push_back(pheno);
+	}
+	return ret;
+}
+
 }
 // -----------------------------------------------------------------------------------------------
 // Evolution challenge
@@ -201,24 +225,7 @@ requires Phenotype<Pheno, RNG>
 struct DefaultChallenge{
 	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, size_t num_children /*the number of partial Phenotypes in the next generation*/ ) const
 	{
-		if(parents.empty()){
-			throw std::runtime_error("no parents passed to breed");
-			return {};
-		}
-		std::vector<Pheno> ret;
-        ret.push_back(parents[0]); // the winner parent should be part of the next gen to defend his title
-		for(size_t i = 1; i < parents.size(); ++i){
-			auto pheno = parents[0]; // the winner parent gets to spread their genes everywhere
-			pheno.crossover(parents[i]);  // the runner-ups are the cross over partners
-			pheno.mutate(rng);
-			ret.push_back(pheno);
-		}
-		for(size_t i = parents.size(); i < num_children; ++i){
-			auto pheno = parents[0]; // the rest of the generation are the winning parent with a random mutation
-			pheno.mutate(rng);
-			ret.push_back(pheno);
-		}
-		return ret;
+		return detail::breed<Pheno, RNG>(parents, rng, num_children, [](Pheno& pheno, RNG& rng, bool doMutate){ if(doMutate) pheno.mutate(rng);});
 	}
 };
 
@@ -281,7 +288,7 @@ struct DefaultPartialChallenge{
 			return {};
 		}
 		std::vector<Pheno> ret;
-		const auto develop = [min_magnitude, max_magnitude, &rng](Pheno& pheno, bool initialMutate){
+		const auto develop = [min_magnitude, max_magnitude](Pheno& pheno, RNG& rng, bool initialMutate){
 			if(initialMutate){
 				pheno.mutate(rng);
 			}
@@ -313,20 +320,7 @@ struct DefaultPartialChallenge{
                 pheno = *opt_pheno;
             }
 		};
-        develop(parents[0], false); // this will do nothing if the parent is part of the interesting magnitude range
-        ret.push_back(parents[0]); // the winner parent should be part of the next gen to defend his title
-		for(size_t i = 1; i < parents.size(); ++i){
-			auto pheno = parents[0]; // the winning parent gets to spread his genes everywhere
-			pheno.crossover(parents[i]); // each of the runner-ups is a cross over partner
-			develop(pheno, true);
-			ret.push_back(pheno);
-		}
-		for(size_t i = parents.size(); i < num_children; ++i){
-			auto pheno = parents[0]; // the rest of the generation is the winning parent with a random mutation
-			develop(pheno, true);
-			ret.push_back(pheno);
-		}
-		return ret;
+		return detail::breed<Pheno, RNG>(parents, rng, num_children, develop);
 	}
 };
 

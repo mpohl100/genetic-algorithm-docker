@@ -20,7 +20,7 @@ public:
 private:
     double _x = 0.0;
 };
-static_assert(evol::partial::PartialChromosome<XCoordinate, evol::Rng>);
+static_assert(evol::partial::PartialPhenotype<XCoordinate, evol::Rng>);
 
 class MathFunctionPartial : public evol::partial::DefaultPartialChallenge<XCoordinate, evol::Rng>{
 public:

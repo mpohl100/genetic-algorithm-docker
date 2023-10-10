@@ -74,7 +74,7 @@ template<class T, class C, class RNG>
 concept Challenge = std::semiregular<T> &&  Chromosome<C, RNG> && requires (T const t, C c, RNG& rng)
 {
     {t.score(c, rng)} -> std::same_as<double>;
-	{t.grow_generation(std::vector<C>{}, rng, 20)} ->std::same_as<std::vector<C>>;
+	{t.breed(std::vector<C>{}, rng, 20)} ->std::same_as<std::vector<C>>;
 }; 
 
 // -----------------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ template<class T, class C, class RNG>
 concept PartialChallenge = std::semiregular<T> &&  PartialChromosome<C, RNG> && requires (T const t, C c, RNG& rng)
 {
     {t.score(c, rng)} -> std::same_as<double>;
-    {t.grow_generation(std::vector<C>{}, rng, 20 /*the number of partial chromosomes in the next generation*/, 0.0 /*the minimum magnitude of the partial chromosomes*/, 1.0 /*the maximum magnitude of the partial chromosomes*/ )} -> std::same_as<std::vector<C>>;
+    {t.breed(std::vector<C>{}, rng, 20 /*the number of partial chromosomes in the next generation*/, 0.0 /*the minimum magnitude of the partial chromosomes*/, 1.0 /*the maximum magnitude of the partial chromosomes*/ )} -> std::same_as<std::vector<C>>;
 }; 
 
 }
@@ -133,10 +133,10 @@ selectMatingPool(std::multimap<double, const Chrom*> const& fitness, int sep = 2
 template<class Chrom, class RNG>
 requires Chromosome<Chrom, RNG>
 struct DefaultChallenge{
-	std::vector<Chrom> grow_generation(std::vector<Chrom> parents, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/ ) const
+	std::vector<Chrom> breed(std::vector<Chrom> parents, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/ ) const
 	{
 		if(parents.empty()){
-			throw std::runtime_error("no parents passed to grow_generation");
+			throw std::runtime_error("no parents passed to breed");
 			return {};
 		}
 		std::vector<Chrom> ret;
@@ -197,7 +197,7 @@ evolution(
 )
 {
 	size_t num_children = 20;
-	auto candidates = challenge.grow_generation({starting_value}, rng, num_children);
+	auto candidates = challenge.breed({starting_value}, rng, num_children);
 
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// let the chromosomes face the challenge
@@ -232,7 +232,7 @@ evolution(
 				break;
 			}
 		}
-		candidates = challenge.grow_generation(parents, rng, num_children);
+		candidates = challenge.breed(parents, rng, num_children);
 	}
 	return candidates;
 }
@@ -246,7 +246,7 @@ namespace partial {
 template<class Chrom, class RNG>
 requires PartialChromosome<Chrom, RNG>
 struct DefaultPartialChallenge{
-	std::vector<Chrom> grow_generation(std::vector<Chrom> parents, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial chromosomes*/, double max_magnitude /*the maximum magnitude of the partial chromosomes*/ ) const
+	std::vector<Chrom> breed(std::vector<Chrom> parents, RNG& rng, size_t num_children /*the number of partial chromosomes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial chromosomes*/, double max_magnitude /*the maximum magnitude of the partial chromosomes*/ ) const
 	{
 		if(parents.empty()){
 			throw std::runtime_error("no parents passed to grow generation partial.");
@@ -343,7 +343,7 @@ evolution(
 )
 {
 	size_t num_children = 20;
-	auto candidates = challenge.grow_generation({starting_value}, rng, num_children, options.min_magnitude, options.max_magnitude);
+	auto candidates = challenge.breed({starting_value}, rng, num_children, options.min_magnitude, options.max_magnitude);
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// let the chromosomes face the challenge
 		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);
@@ -377,7 +377,7 @@ evolution(
 				break;
 			}
 		}
-		candidates = challenge.grow_generation(parents, rng, num_children, options.min_magnitude, options.max_magnitude);
+		candidates = challenge.breed(parents, rng, num_children, options.min_magnitude, options.max_magnitude);
 	}
 	return candidates;
 }

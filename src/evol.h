@@ -99,6 +99,8 @@ concept PartialChallenge = std::semiregular<T> &&  PartialChromosome<C, RNG> && 
 // -----------------------------------------------------------------------------------------------
 // Evolution Impl
 
+namespace detail{
+
 template<class Chrom, class Chall, class RNG>
 requires Chromosome<Chrom, RNG> && (Challenge<Chall, Chrom, RNG> || partial::PartialChallenge<Chall, Chrom, RNG>)
 std::multimap<double, const Chrom*>
@@ -126,6 +128,70 @@ selectMatingPool(std::multimap<double, const Chrom*> const& fitness, int sep = 2
 	return ret;
 }
 
+template<class Chrom, class Chall, class RNG, class EvolutionOpts> 
+std::vector<Chrom>
+evolution_impl(
+	const Chrom& starting_value, // the starting value
+	const Chall& challenge, // the challenge 
+	double& winningAccuracy, // the winning performance is an out parameter
+	const EvolutionOpts& options, // the evolution options
+	RNG& rng // the random number generator
+)
+{
+	size_t num_children = 20;
+	std::vector<Chrom> candidates;
+	if constexpr(evol::partial::PartialChallenge<Chall, Chrom, RNG>){
+		candidates = challenge.breed({starting_value}, rng, num_children, options.min_magnitude, options.max_magnitude);
+	}
+	else if constexpr(evol::Challenge<Chall, Chrom, RNG>){
+		candidates = challenge.breed({starting_value}, rng, num_children);
+	}
+
+	for (size_t i = 0; i < options.num_generations; ++i) {
+		// let the chromosomes face the challenge
+		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);
+		// logging
+		if (options.log_level >= 1) {
+			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
+			if (options.log_level >= 2) {
+				for (auto it = fitness.rbegin(); it != fitness.rend(); ++it){
+					const auto& f = *it;
+					if(options.out) *options.out << "  fitness: " << f.first << ": " << f.second->toString() << '\n';
+				}
+				if(options.out) *options.out << '\n';
+			}
+		}
+		// half of the chromosomes are winners
+		std::vector<const Chrom*> winners = selectMatingPool<Chrom, RNG>(fitness, 2);
+		// return the winner of the last generation
+		if (i >= options.num_generations - 1)
+		{
+			std::vector<Chrom> ret;
+			for (auto w : winners)
+				ret.push_back(*w);
+			winningAccuracy = fitness.rbegin()->first;
+			return ret;
+		}
+		std::vector<Chrom> parents;
+		size_t j = 0;
+		for (auto* winner : winners){
+			parents.push_back(*winner);
+			if(++j >= options.num_parents){
+				break;
+			}
+		}
+
+		if constexpr(evol::partial::PartialChallenge<Chall, Chrom, RNG>){
+			candidates = challenge.breed(parents, rng, num_children, options.min_magnitude, options.max_magnitude);
+		}
+		else if constexpr(evol::Challenge<Chall, Chrom, RNG>){
+			candidates = challenge.breed(parents, rng, num_children);
+		}
+	}
+	return candidates;
+}
+
+}
 // -----------------------------------------------------------------------------------------------
 // Evolution challenge
 
@@ -196,45 +262,7 @@ evolution(
 	RNG& rng // the random number generator
 )
 {
-	size_t num_children = 20;
-	auto candidates = challenge.breed({starting_value}, rng, num_children);
-
-	for (size_t i = 0; i < options.num_generations; ++i) {
-		// let the chromosomes face the challenge
-		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);
-		// logging
-		if (options.log_level >= 1) {
-			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
-			if (options.log_level >= 2) {
-				for (auto it = fitness.rbegin(); it != fitness.rend(); ++it){
-					const auto& f = *it;
-					if(options.out) *options.out << "  fitness: " << f.first << ": " << f.second->toString() << '\n';
-				}
-				if(options.out) *options.out << '\n';
-			}
-		}
-		// half of the chromosomes are winners
-		std::vector<const Chrom*> winners = selectMatingPool<Chrom, RNG>(fitness, 2);
-		// return the winner of the last generation
-		if (i >= options.num_generations - 1)
-		{
-			std::vector<Chrom> ret;
-			for (auto w : winners)
-				ret.push_back(*w);
-			winningAccuracy = fitness.rbegin()->first;
-			return ret;
-		}
-		std::vector<Chrom> parents;
-		size_t j = 0;
-		for (auto* winner : winners){
-			parents.push_back(*winner);
-			if(++j >= options.num_parents){
-				break;
-			}
-		}
-		candidates = challenge.breed(parents, rng, num_children);
-	}
-	return candidates;
+	return detail::evolution_impl(starting_value, challenge, winningAccuracy, options, rng);
 }
 
 namespace partial {
@@ -342,44 +370,7 @@ evolution(
 	RNG& rng // the random number generator
 )
 {
-	size_t num_children = 20;
-	auto candidates = challenge.breed({starting_value}, rng, num_children, options.min_magnitude, options.max_magnitude);
-	for (size_t i = 0; i < options.num_generations; ++i) {
-		// let the chromosomes face the challenge
-		std::multimap<double, const Chrom*> fitness = fitnessCalculation(candidates, challenge, rng);
-		// logging
-		if (options.log_level >= 1) {
-			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
-			if (options.log_level >= 2) {
-				for (auto it = fitness.rbegin(); it != fitness.rend(); ++it){
-					const auto& f = *it;
-					if(options.out) *options.out << "  fitness: " << f.first << ": " << f.second->toString() << '\n';
-				}
-				if(options.out) *options.out << '\n';
-			}
-		}
-		// half of the chromosomes are winners
-		std::vector<const Chrom*> winners = selectMatingPool<Chrom, RNG>(fitness, 2);
-		// return the winner of the last generation
-		if (i >= options.num_generations - 1)
-		{
-			std::vector<Chrom> ret;
-			for (auto w : winners)
-				ret.push_back(*w);
-			winningAccuracy = fitness.rbegin()->first;
-			return ret;
-		}
-		std::vector<Chrom> parents;
-		size_t j = 0;
-		for (auto* winner : winners){
-			parents.push_back(*winner);
-			if(++j >= options.num_parents){
-				break;
-			}
-		}
-		candidates = challenge.breed(parents, rng, num_children, options.min_magnitude, options.max_magnitude);
-	}
-	return candidates;
+	return detail::evolution_impl(starting_value, challenge, winningAccuracy, options, rng);
 }
 
 } // namespace partial

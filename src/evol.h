@@ -138,13 +138,12 @@ evolution_impl(
 	RNG& rng // the random number generator
 )
 {
-	size_t num_children = 20;
 	std::vector<Pheno> candidates;
 	if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
-		candidates = challenge.breed({starting_value}, rng, num_children, options.min_magnitude, options.max_magnitude);
+		candidates = challenge.breed({starting_value}, rng, options.num_children, options.min_magnitude, options.max_magnitude);
 	}
 	else if constexpr(evol::Challenge<Chall, Pheno, RNG>){
-		candidates = challenge.breed({starting_value}, rng, num_children);
+		candidates = challenge.breed({starting_value}, rng, options.num_children);
 	}
 
 	for (size_t i = 0; i < options.num_generations; ++i) {
@@ -182,10 +181,10 @@ evolution_impl(
 		}
 
 		if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
-			candidates = challenge.breed(parents, rng, num_children, options.min_magnitude, options.max_magnitude);
+			candidates = challenge.breed(parents, rng, options.num_children, options.min_magnitude, options.max_magnitude);
 		}
 		else if constexpr(evol::Challenge<Chall, Pheno, RNG>){
-			candidates = challenge.breed(parents, rng, num_children);
+			candidates = challenge.breed(parents, rng, options.num_children);
 		}
 	}
 	return candidates;
@@ -255,6 +254,7 @@ struct EvolutionOptions{
 	size_t num_generations; // the number of generations to cross
 	size_t log_level = 1;  // logging level to see how far the algorithm progressed
 	size_t num_parents = 2; // the number of parents to grow a new generation
+	size_t num_children = 20; // the number of phenotypes to breed per generation
 	std::ostream* out; // the ostream to stream the logging to
 };
 

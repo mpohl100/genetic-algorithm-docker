@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <concepts>
 #include <functional>
 #include <iostream>
@@ -26,9 +27,17 @@ namespace evol{
 // class Rng
 class Rng{
 public:
-    Rng(unsigned int random_seed)
-        : rd_("hw")
-        , gen_()
+	Rng()
+		: gen_()
+	{
+		auto currentTime = std::chrono::high_resolution_clock::now();
+        auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
+        size_t random_seed = static_cast<size_t>(timestamp);
+		gen_ = std::mt19937{random_seed};
+	}
+
+    Rng(size_t random_seed)
+        : gen_()
     {
 		gen_ = std::mt19937{random_seed};
 	} 
@@ -53,7 +62,6 @@ public:
         return ret;
     }
 private:
-    std::random_device rd_;
     mutable std::mt19937 gen_;
 };
 

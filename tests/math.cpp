@@ -12,7 +12,7 @@ struct EvolutionResult{
     double fitness = std::numeric_limits<double>::quiet_NaN();
 };
 
-EvolutionResult calculateEvolution(math::XCoordinate xCoordinate, unsigned int random_seed, int num_parents)
+EvolutionResult calculateEvolution(math::XCoordinate xCoordinate, size_t random_seed, int num_parents)
 {
     auto evolParams = evol::EvolutionOptions{};
     evolParams.num_generations = 100;
@@ -28,7 +28,7 @@ EvolutionResult calculateEvolution(math::XCoordinate xCoordinate, unsigned int r
     return EvolutionResult{winningXCoordinates[0].x(), winningFitness};
 }
 
-EvolutionResult calculatePartialEvolution(math::XCoordinate xCoordinate, unsigned int random_seed, int num_parents, std::pair<double, double> minMax)
+EvolutionResult calculatePartialEvolution(math::XCoordinate xCoordinate, size_t random_seed, int num_parents, std::pair<double, double> minMax)
 {
     auto evolParams = evol::partial::PartialEvolutionOptions{};
     evolParams.num_generations = 100;
@@ -50,7 +50,7 @@ TEST_CASE("Evol", "[evol]"){
     SECTION("Evolution"){
         const auto starting_values = std::vector<double>{0.0, 10.0, 20.0};
         const auto num_parents = std::vector<int>{1,2,3};
-        const auto random_seeds = std::vector<unsigned int>{0, 1, 2, 3, 4};
+        const auto random_seeds = std::vector<size_t>{0, 1, 2, 3, 4};
         for(const auto random_seed : random_seeds){
             for(const auto num_parent : num_parents){
                 for(const auto starting_value : starting_values){
@@ -63,7 +63,7 @@ TEST_CASE("Evol", "[evol]"){
     }
     SECTION("PartialEvolution"){
         const auto num_parents = std::vector<int>{1,2,3};
-        const auto random_seeds = std::vector<unsigned int>{0, 1, 2, 3, 4};
+        const auto random_seeds = std::vector<size_t>{0, 1, 2, 3, 4};
         const auto minMaxs = std::vector<std::pair<double, double>>{{2.0, 5.0}, {3.0, 6.0}, {4.0, 7.0}};
         for(const auto random_seed : random_seeds){
             for(const auto num_parent : num_parents){

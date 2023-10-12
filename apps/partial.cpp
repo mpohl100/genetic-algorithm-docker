@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     size_t log_level = 0;
     double min_magnitude = 0.0;
     double max_magnitude = 1.0;
-    unsigned int random_seed = 0;
+    size_t random_seed = 0;
     double starting_value = 0.0;
     size_t num_parents = 2;
     size_t num_children = 20;
@@ -49,12 +49,12 @@ int main(int argc, char** argv)
     evolParams.out = &std::cout;
     evolParams.min_magnitude = min_magnitude;
     evolParams.max_magnitude = max_magnitude;
-    
+
     double winningFitness = 0.0;
     if(random_seed == 0){
         auto currentTime = std::chrono::high_resolution_clock::now();
         auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
-        random_seed = static_cast<unsigned int>(timestamp);
+        random_seed = static_cast<size_t>(timestamp);
     }
     auto rng = evol::Rng{random_seed};
     auto starting_chrom = math::XCoordinate{starting_value};

@@ -1,0 +1,4 @@
+{
+    "name": "Ubuntu C/C++ Dev Container for genetic algorithm",
+    "dockerFile": "Dockerfile"
+}

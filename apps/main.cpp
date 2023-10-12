@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
 
     int number_generations = 100;
-    unsigned int random_seed = 0;
+    size_t random_seed = 0;
     size_t log_level = 0;
     double starting_value = 0.0;
     size_t num_parents = 2;
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     if(random_seed == 0){
         auto currentTime = std::chrono::high_resolution_clock::now();
         auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
-        random_seed = static_cast<unsigned int>(timestamp);
+        random_seed = static_cast<size_t>(timestamp);
     }
     auto rng = evol::Rng{random_seed};
 

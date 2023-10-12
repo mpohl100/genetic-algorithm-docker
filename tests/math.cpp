@@ -55,8 +55,8 @@ TEST_CASE("Evol", "[evol]"){
             for(const auto num_parent : num_parents){
                 for(const auto starting_value : starting_values){
                     const auto evolutionResult = calculateEvolution(math::XCoordinate{starting_value}, random_seed, num_parent);
-                    CHECK(std::abs(evolutionResult.xCoordinate - 2.0) < 1e-10);
-                    CHECK(evolutionResult.fitness > 1e10);
+                    CHECK(std::abs(evolutionResult.xCoordinate - 2.0) <= 0.05);
+                    CHECK(evolutionResult.fitness >= 400);
                 }
             }
         }

@@ -33,13 +33,13 @@ public:
 		auto currentTime = std::chrono::high_resolution_clock::now();
         auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
         size_t random_seed = static_cast<size_t>(timestamp);
-		gen_ = std::mt19937{random_seed};
+		gen_ = std::mt19937_64{random_seed};
 	}
 
     Rng(size_t random_seed)
         : gen_()
     {
-		gen_ = std::mt19937{random_seed};
+		gen_ = std::mt19937_64{random_seed};
 	} 
 
     std::stack<int> fetchUniform(int from, int to, size_t num)
@@ -62,7 +62,7 @@ public:
         return ret;
     }
 private:
-    mutable std::mt19937 gen_;
+    mutable std::mt19937_64 gen_;
 };
 
 

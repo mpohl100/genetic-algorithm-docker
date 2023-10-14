@@ -51,12 +51,11 @@ int main(int argc, char** argv)
     }
     auto rng = evol::Rng{random_seed};
 
-    double winningFitness = 0.0;
     auto starting_chrom = math::XCoordinate{starting_value};
-    const auto winningXCoordinates = evol::evolution(starting_chrom, math::MathFunction{}, winningFitness, evolParams, rng);
+    const auto evolResult = evol::evolution(starting_chrom, math::MathFunction{}, evolParams, rng);
 
     std::cout << '\n';
-    std::cout << "winning x: " << winningXCoordinates[0].x() <<"; winning f(x): " << winningFitness << '\n';
+    std::cout << "winning x: " << evolResult.winner.x() <<"; winning f(x): " << evolResult.fitness << '\n';
     std::cout << "random seed used: " << random_seed << ". Pass this seed with -r to get the same results with a rerun.\n";
     return 0;
 }

@@ -23,7 +23,7 @@ auto calculateEvolution(math::XCoordinate xCoordinate, size_t random_seed, int n
 auto calculatePartialEvolution(math::XCoordinate xCoordinate, size_t random_seed, int num_parents, std::pair<double, double> minMax)
 {
     auto evolParams = evol::partial::PartialEvolutionOptions{};
-    evolParams.num_generations = 100;
+    evolParams.num_generations = 1000;
     evolParams.log_level = 0;
     evolParams.num_parents = num_parents;
     evolParams.out = &std::cout;
@@ -54,7 +54,7 @@ TEST_CASE("Evol", "[evol]"){
     SECTION("PartialEvolution"){
         const auto num_parents = std::vector<int>{1,2,3};
         const auto random_seeds = std::vector<size_t>{0, 1, 2, 3, 4};
-        const auto minMaxs = std::vector<std::pair<double, double>>{{2.0, 5.0}, {3.0, 6.0}, {4.0, 7.0}};
+        const auto minMaxs = std::vector<std::pair<double, double>>{{2.0, 1000000}, {3.0, 1000000}, {4.0, 1000000}};
         for(const auto random_seed : random_seeds){
             for(const auto num_parent : num_parents){
                 std::vector<evol::EvolutionResult<math::XCoordinate>> results;

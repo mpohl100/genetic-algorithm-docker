@@ -50,7 +50,6 @@ int main(int argc, char** argv)
     evolParams.min_magnitude = min_magnitude;
     evolParams.max_magnitude = max_magnitude;
 
-    double winningFitness = 0.0;
     if(random_seed == 0){
         auto currentTime = std::chrono::high_resolution_clock::now();
         auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
@@ -58,10 +57,10 @@ int main(int argc, char** argv)
     }
     auto rng = evol::Rng{random_seed};
     auto starting_chrom = math::XCoordinate{starting_value};
-    const auto winningXCoordinates = evol::partial::evolution(starting_chrom, math::MathFunctionPartial{}, winningFitness, evolParams, rng);
+    const auto evolResult = evol::partial::evolution(starting_chrom, math::MathFunctionPartial{}, evolParams, rng);
 
     std::cout << '\n';
-    std::cout << "winning x: " << winningXCoordinates[0].x() <<"; winning f(x): " << winningFitness << '\n';
+    std::cout << "winning x: " << evolResult.winner.x() <<"; winning f(x): " << evolResult.fitness << '\n';
     std::cout << "random seed used: " << random_seed << ". Pass this seed with -r to get the same results with a rerun.\n";
     return 0;
 }

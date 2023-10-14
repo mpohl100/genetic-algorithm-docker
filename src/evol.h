@@ -11,6 +11,7 @@
 #include <concepts>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <optional>
 #include <random>
@@ -107,6 +108,12 @@ concept PartialChallenge = std::semiregular<T> &&  PartialPhenotype<C, RNG> && r
 // -----------------------------------------------------------------------------------------------
 // Evolution Impl
 
+template<class Pheno>
+struct EvolutionResult{
+	Pheno winner = {};
+	double fitness = std::numeric_limits<double>::quiet_NaN();
+};
+
 namespace detail{
 
 template<class Pheno, class Chall, class RNG>
@@ -123,40 +130,39 @@ fitnessCalculation(std::vector<Pheno> const& candidates, Chall const& challenge,
 template<class Pheno, class RNG>
 requires Phenotype<Pheno, RNG>
 std::vector<const Pheno*>
-selectMatingPool(std::multimap<double, const Pheno*> const& fitness, int sep = 2)
+selectMatingPool(std::multimap<double, const Pheno*> const& fitness)
 {
 	std::vector<const Pheno*> ret;
-	int i = 0;
 	for (auto it = fitness.rbegin(); it != fitness.rend(); ++it)
 	{
 		ret.push_back(it->second);
-		if (++i > int(fitness.size()) / sep - 1)
-			break;
 	}
 	return ret;
 }
 
 template<class Pheno, class Chall, class RNG, class EvolutionOpts> 
-std::vector<Pheno>
+EvolutionResult<Pheno>
 evolution_impl(
 	const Pheno& starting_value, // the starting value
 	const Chall& challenge, // the challenge 
-	double& winningAccuracy, // the winning performance is an out parameter
 	const EvolutionOpts& options, // the evolution options
 	RNG& rng // the random number generator
 )
 {
 	std::vector<Pheno> candidates;
-	if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
-		candidates = challenge.breed({starting_value}, rng, options.num_children, options.min_magnitude, options.max_magnitude);
-	}
-	else if constexpr(evol::Challenge<Chall, Pheno, RNG>){
-		candidates = challenge.breed({starting_value}, rng, options.num_children);
-	}
-
+	std::multimap<double, const Pheno*> fitness;
+	std::vector<Pheno> parents = {starting_value};
+	std::vector<const Pheno*> winners;
 	for (size_t i = 0; i < options.num_generations; ++i) {
+		// breed the new generation
+		if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
+			candidates = challenge.breed(parents, rng, options.num_children, options.min_magnitude, options.max_magnitude);
+		}
+		else if constexpr(evol::Challenge<Chall, Pheno, RNG>){
+			candidates = challenge.breed(parents, rng, options.num_children);
+		}
 		// let the Phenotypes face the challenge
-		std::multimap<double, const Pheno*> fitness = fitnessCalculation(candidates, challenge, rng);
+		fitness = fitnessCalculation(candidates, challenge, rng);
 		// logging
 		if (options.log_level >= 1) {
 			if(options.out) *options.out << "generation nr. " << i + 1 << " / " << options.num_generations << '\n';
@@ -169,17 +175,8 @@ evolution_impl(
 			}
 		}
 		// half of the Phenotypes are winners
-		std::vector<const Pheno*> winners = selectMatingPool<Pheno, RNG>(fitness, 2);
-		// return the winner of the last generation
-		if (i >= options.num_generations - 1)
-		{
-			std::vector<Pheno> ret;
-			for (auto w : winners)
-				ret.push_back(*w);
-			winningAccuracy = fitness.rbegin()->first;
-			return ret;
-		}
-		std::vector<Pheno> parents;
+		winners = selectMatingPool<Pheno, RNG>(fitness);
+		parents.clear();
 		size_t j = 0;
 		for (auto* winner : winners){
 			parents.push_back(*winner);
@@ -187,15 +184,11 @@ evolution_impl(
 				break;
 			}
 		}
-
-		if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
-			candidates = challenge.breed(parents, rng, options.num_children, options.min_magnitude, options.max_magnitude);
-		}
-		else if constexpr(evol::Challenge<Chall, Pheno, RNG>){
-			candidates = challenge.breed(parents, rng, options.num_children);
-		}
 	}
-	return candidates;
+	EvolutionResult<Pheno> ret;
+	ret.winner = *winners[0];
+	ret.fitness = fitness.rbegin()->first;
+	return ret;
 }
 
 template<class Pheno, class RNG>
@@ -268,16 +261,15 @@ struct EvolutionOptions{
 
 template<class Pheno, class Chall, class RNG> 
 requires Phenotype<Pheno, RNG> && Challenge<Chall, Pheno, RNG>
-std::vector<Pheno>
+EvolutionResult<Pheno>
 evolution(
 	const Pheno& starting_value, // the starting value
 	const Chall& challenge, // the challenge 
-	double& winningAccuracy, // the winning performance is an out parameter
 	const EvolutionOptions& options, // the evolution options
 	RNG& rng // the random number generator
 )
 {
-	return detail::evolution_impl(starting_value, challenge, winningAccuracy, options, rng);
+	return detail::evolution_impl(starting_value, challenge, options, rng);
 }
 
 namespace partial {
@@ -363,16 +355,15 @@ struct PartialEvolutionOptions : public EvolutionOptions{
 
 template<class Pheno, class Chall, class RNG>
 requires PartialPhenotype<Pheno, RNG> && PartialChallenge<Chall, Pheno, RNG>
-std::vector<Pheno>
+EvolutionResult<Pheno>
 evolution(
 	const Pheno& starting_value, // the starting value
 	const Chall& challenge, // the challenge 
-	double& winningAccuracy, // the winning performance is an out parameter
 	const PartialEvolutionOptions& options, // the evolution options
 	RNG& rng // the random number generator
 )
 {
-	return detail::evolution_impl(starting_value, challenge, winningAccuracy, options, rng);
+	return detail::evolution_impl(starting_value, challenge, options, rng);
 }
 
 } // namespace partial

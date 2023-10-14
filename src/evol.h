@@ -127,19 +127,6 @@ fitnessCalculation(std::vector<Pheno> const& candidates, Chall const& challenge,
 	return ret;
 }
 
-template<class Pheno, class RNG>
-requires Phenotype<Pheno, RNG>
-std::vector<const Pheno*>
-selectMatingPool(std::multimap<double, const Pheno*> const& fitness)
-{
-	std::vector<const Pheno*> ret;
-	for (auto it = fitness.rbegin(); it != fitness.rend(); ++it)
-	{
-		ret.push_back(it->second);
-	}
-	return ret;
-}
-
 template<class Pheno, class Chall, class RNG, class EvolutionOpts> 
 EvolutionResult<Pheno>
 evolution_impl(
@@ -152,7 +139,6 @@ evolution_impl(
 	std::vector<Pheno> candidates;
 	std::multimap<double, const Pheno*> fitness;
 	std::vector<Pheno> parents = {starting_value};
-	std::vector<const Pheno*> winners;
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		// breed the new generation
 		if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
@@ -174,19 +160,17 @@ evolution_impl(
 				if(options.out) *options.out << '\n';
 			}
 		}
-		// half of the Phenotypes are winners
-		winners = selectMatingPool<Pheno, RNG>(fitness);
 		parents.clear();
 		size_t j = 0;
-		for (auto* winner : winners){
-			parents.push_back(*winner);
+		for (auto fitnessPhenoIt = fitness.rbegin(); fitnessPhenoIt != fitness.rend(); ++fitnessPhenoIt){
+			parents.push_back(*fitnessPhenoIt->second);
 			if(++j >= options.num_parents){
 				break;
 			}
 		}
 	}
 	EvolutionResult<Pheno> ret;
-	ret.winner = *winners[0];
+	ret.winner = *fitness.rbegin()->second;
 	ret.fitness = fitness.rbegin()->first;
 	return ret;
 }

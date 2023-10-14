@@ -13,10 +13,13 @@ void XCoordinate::crossover(const XCoordinate& other)
     _x = (_x + other.x()) / 2.0;
 }
 
-void XCoordinate::mutate(evol::Rng& rng)
+void XCoordinate::mutate(evol::Rng& rng, const evol::EvolutionCoordinator& evolCoordinator)
 {
-    const auto randomNumber = rng.fetchUniform(-10, 10, 1).top();
-    _x += randomNumber / 10.0;
+    const auto progress = evolCoordinator.progress();
+    const int exponent = int(100*(1 - progress)) / 10;
+    const int baseNumber = std::pow(10, exponent);
+    const auto randomNumber = rng.fetchUniform(-baseNumber, baseNumber, 1).top();
+    _x += randomNumber / 10000.0;
 }
 
 std::string XCoordinate::toString() const

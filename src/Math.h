@@ -13,7 +13,7 @@ public:
     XCoordinate(XCoordinate&&) = default;
     XCoordinate& operator=(XCoordinate&&) = default;
     void crossover(const XCoordinate& other);
-    void mutate(evol::Rng& rng);
+    void mutate(evol::Rng& rng, const evol::EvolutionCoordinator& evolCoordinator);
     std::string toString() const;
     double magnitude() const;
     double x() const;

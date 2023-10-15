@@ -20,19 +20,25 @@ public:
 private:
     double _x = 0.0;
 };
+#if EVOL_USE_CONCEPTS == 1
 static_assert(evol::partial::PartialPhenotype<XCoordinate, evol::Rng>);
+#endif
 
 class MathFunctionPartial : public evol::partial::DefaultPartialChallenge<XCoordinate, evol::Rng>{
 public:
     double score(XCoordinate xCoordinate, evol::Rng& rng) const;
 };
+#if EVOL_USE_CONCEPTS == 1
 static_assert(evol::partial::PartialChallenge<MathFunctionPartial, XCoordinate, evol::Rng>);
+#endif
 
 class MathFunction : public evol::DefaultChallenge<XCoordinate, evol::Rng>{
 public:
     double score(XCoordinate xCoordinate, evol::Rng& rng) const;
 };
+#if EVOL_USE_CONCEPTS == 1
 static_assert(evol::Challenge<MathFunction, XCoordinate, evol::Rng>);
+#endif
 
 
 

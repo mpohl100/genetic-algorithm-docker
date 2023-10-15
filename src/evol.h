@@ -6,6 +6,10 @@
 
 #pragma once
 
+#ifndef EVOL_USE_CONCEPTS
+#define EVOL_USE_CONCEPTS 1
+#endif
+
 #include <algorithm>
 #include <chrono>
 #include <concepts>
@@ -109,6 +113,8 @@ struct PartialEvolutionOptions : public EvolutionOptions{
 
 }
 
+
+#if EVOL_USE_CONCEPTS == 1
 // -----------------------------------------------------------------------------------------------
 // Evolution concepts
 
@@ -147,6 +153,8 @@ concept PartialChallenge = std::semiregular<T> &&  PartialPhenotype<C, RNG> && r
 
 }
 
+#endif
+
 // -----------------------------------------------------------------------------------------------
 // Evolution Impl
 
@@ -159,7 +167,9 @@ struct EvolutionResult{
 namespace detail{
 
 template<class Pheno, class Chall, class RNG>
+#if EVOL_USE_CONCEPTS == 1
 requires Phenotype<Pheno, RNG> && (Challenge<Chall, Pheno, RNG> || partial::PartialChallenge<Chall, Pheno, RNG>)
+#endif
 std::multimap<double, const Pheno*>
 fitnessCalculation(std::vector<Pheno> const& candidates, Chall const& challenge, RNG& rng)
 {
@@ -244,7 +254,9 @@ std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, const EvolutionCo
 
 // inherit from this type in order to use the default implementation of grow generation
 template<class Pheno, class RNG>
+#if EVOL_USE_CONCEPTS == 1
 requires Phenotype<Pheno, RNG>
+#endif
 struct DefaultChallenge{
 	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, const EvolutionCoordinator& evolCoordinator, const EvolutionOptions& options ) const
 	{
@@ -275,7 +287,9 @@ struct DefaultChallenge{
 //};
 
 template<class Pheno, class Chall, class RNG> 
+#if EVOL_USE_CONCEPTS == 1
 requires Phenotype<Pheno, RNG> && Challenge<Chall, Pheno, RNG>
+#endif
 EvolutionResult<Pheno>
 evolution(
 	const Pheno& starting_value, // the starting value
@@ -294,7 +308,9 @@ namespace partial {
 
 // inherit from this type in order to use the default implementation of grow generation
 template<class Pheno, class RNG>
+#if EVOL_USE_CONCEPTS == 1
 requires PartialPhenotype<Pheno, RNG>
+#endif
 struct DefaultPartialChallenge{
 	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, const EvolutionCoordinator& evolCoordinator, const PartialEvolutionOptions& options) const
 	{
@@ -364,7 +380,9 @@ struct DefaultPartialChallenge{
 //};
 
 template<class Pheno, class Chall, class RNG>
+#if EVOL_USE_CONCEPTS == 1
 requires PartialPhenotype<Pheno, RNG> && PartialChallenge<Chall, Pheno, RNG>
+#endif
 EvolutionResult<Pheno>
 evolution(
 	const Pheno& starting_value, // the starting value

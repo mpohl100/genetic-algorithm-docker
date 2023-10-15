@@ -92,6 +92,22 @@ private:
 	size_t nb_generations_;
 };
 
+struct EvolutionOptions{
+	size_t num_generations; // the number of generations to cross
+	size_t log_level = 1;  // logging level to see how far the algorithm progressed
+	size_t num_parents = 2; // the number of parents to grow a new generation
+	size_t num_children = 20; // the number of phenotypes to breed per generation
+	std::ostream* out; // the ostream to stream the logging to
+};
+
+namespace partial{
+
+struct PartialEvolutionOptions : public EvolutionOptions{
+	double min_magnitude = 0.0;
+	double max_magnitude = 1.0;
+};
+
+}
 
 // -----------------------------------------------------------------------------------------------
 // Evolution concepts
@@ -106,10 +122,10 @@ concept Phenotype = std::semiregular<T> && requires (T t, RNG& rng, const Evolut
 };
 
 template<class T, class C, class RNG>
-concept Challenge = std::semiregular<T> &&  Phenotype<C, RNG> && requires (T const t, C c, RNG& rng, const EvolutionCoordinator& evolCoordinator)
+concept Challenge = std::semiregular<T> &&  Phenotype<C, RNG> && requires (T const t, C c, RNG& rng, const EvolutionCoordinator& evolCoordinator, const EvolutionOptions& evolOpts)
 {
     {t.score(c, rng)} -> std::same_as<double>;
-	{t.breed(std::vector<C>{}, rng, evolCoordinator, 20)} ->std::same_as<std::vector<C>>;
+	{t.breed(std::vector<C>{}, rng, evolCoordinator, evolOpts)} ->std::same_as<std::vector<C>>;
 }; 
 
 // -----------------------------------------------------------------------------------------------
@@ -123,10 +139,10 @@ concept PartialPhenotype = evol::Phenotype<T, RNG> && requires (const T t)
 };
 
 template<class T, class C, class RNG>
-concept PartialChallenge = std::semiregular<T> &&  PartialPhenotype<C, RNG> && requires (T const t, C c, RNG& rng, const EvolutionCoordinator& evolCoordinator)
+concept PartialChallenge = std::semiregular<T> &&  PartialPhenotype<C, RNG> && requires (T const t, C c, RNG& rng, const EvolutionCoordinator& evolCoordinator, const PartialEvolutionOptions& partialEvolOpts)
 {
     {t.score(c, rng)} -> std::same_as<double>;
-    {t.breed(std::vector<C>{}, rng, evolCoordinator,20 /*the number of partial Phenotypes in the next generation*/, 0.0 /*the minimum magnitude of the partial Phenotypes*/, 1.0 /*the maximum magnitude of the partial Phenotypes*/ )} -> std::same_as<std::vector<C>>;
+    {t.breed(std::vector<C>{}, rng, evolCoordinator, partialEvolOpts)} -> std::same_as<std::vector<C>>;
 }; 
 
 }
@@ -169,12 +185,7 @@ evolution_impl(
 	for (size_t i = 0; i < options.num_generations; ++i) {
 		evolCoordinator.set_generation_nr(i+1);
 		// breed the new generation
-		if constexpr(evol::partial::PartialChallenge<Chall, Pheno, RNG>){
-			candidates = challenge.breed(parents, rng, evolCoordinator, options.num_children, options.min_magnitude, options.max_magnitude);
-		}
-		else if constexpr(evol::Challenge<Chall, Pheno, RNG>){
-			candidates = challenge.breed(parents, rng, evolCoordinator, options.num_children);
-		}
+		candidates = challenge.breed(parents, rng, evolCoordinator, options);
 		// let the Phenotypes face the challenge
 		fitness = fitnessCalculation(candidates, challenge, rng);
 		// logging
@@ -235,9 +246,9 @@ std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, const EvolutionCo
 template<class Pheno, class RNG>
 requires Phenotype<Pheno, RNG>
 struct DefaultChallenge{
-	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, const EvolutionCoordinator& evolCoordinator, size_t num_children /*the number of partial Phenotypes in the next generation*/ ) const
+	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, const EvolutionCoordinator& evolCoordinator, const EvolutionOptions& options ) const
 	{
-		return detail::breed<Pheno, RNG>(parents, rng, evolCoordinator, num_children, [](Pheno& pheno, RNG& rng, const EvolutionCoordinator& evolCoordinator, bool doMutate){ if(doMutate) pheno.mutate(rng, evolCoordinator);});
+		return detail::breed<Pheno, RNG>(parents, rng, evolCoordinator, options.num_children, [](Pheno& pheno, RNG& rng, const EvolutionCoordinator& evolCoordinator, bool doMutate){ if(doMutate) pheno.mutate(rng, evolCoordinator);});
 	}
 };
 
@@ -263,14 +274,6 @@ struct DefaultChallenge{
 //	double score(Phenotype const& Phenotype); the Phenotype faces the challenge and its performance needs to be evaluated with a double (0 means bad, the higher the better the performance)
 //};
 
-struct EvolutionOptions{
-	size_t num_generations; // the number of generations to cross
-	size_t log_level = 1;  // logging level to see how far the algorithm progressed
-	size_t num_parents = 2; // the number of parents to grow a new generation
-	size_t num_children = 20; // the number of phenotypes to breed per generation
-	std::ostream* out; // the ostream to stream the logging to
-};
-
 template<class Pheno, class Chall, class RNG> 
 requires Phenotype<Pheno, RNG> && Challenge<Chall, Pheno, RNG>
 EvolutionResult<Pheno>
@@ -293,28 +296,28 @@ namespace partial {
 template<class Pheno, class RNG>
 requires PartialPhenotype<Pheno, RNG>
 struct DefaultPartialChallenge{
-	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, const EvolutionCoordinator& evolCoordinator, size_t num_children /*the number of partial Phenotypes in the next generation*/, double min_magnitude /*the minimum magnitude of the partial Phenotypes*/, double max_magnitude /*the maximum magnitude of the partial Phenotypes*/ ) const
+	std::vector<Pheno> breed(std::vector<Pheno> parents, RNG& rng, const EvolutionCoordinator& evolCoordinator, const PartialEvolutionOptions& options) const
 	{
 		if(parents.empty()){
 			throw std::runtime_error("no parents passed to grow generation partial.");
 			return {};
 		}
 		std::vector<Pheno> ret;
-		const auto develop = [min_magnitude, max_magnitude](Pheno& pheno, RNG& rng, const EvolutionCoordinator& evolCoordinator, bool initialMutate){
+		const auto develop = [&options](Pheno& pheno, RNG& rng, const EvolutionCoordinator& evolCoordinator, bool initialMutate){
 			if(initialMutate){
 				pheno.mutate(rng, evolCoordinator);
 			}
-            const auto try_n_times = [min_magnitude, max_magnitude, &rng, &evolCoordinator](Pheno pheno, size_t num) -> std::optional<Pheno>
+            const auto try_n_times = [&options, &rng, &evolCoordinator](Pheno pheno, size_t num) -> std::optional<Pheno>
             {
                 size_t i = 0;
-			    while(min_magnitude > pheno.magnitude() || pheno.magnitude() > max_magnitude){
+			    while(options.min_magnitude > pheno.magnitude() || pheno.magnitude() > options.max_magnitude){
 				    pheno.mutate(rng, evolCoordinator);
 				    i++;
                     if(i >= num){
                         break;
                     }
 			    }
-                if(min_magnitude <= pheno.magnitude() && pheno.magnitude() <= max_magnitude){
+                if(options.min_magnitude <= pheno.magnitude() && pheno.magnitude() <= options.max_magnitude){
                     return pheno;
                 }
                 else return std::nullopt;
@@ -326,13 +329,13 @@ struct DefaultPartialChallenge{
                 ++j;
             }
             if(!opt_pheno){
-                throw std::runtime_error("could not create a Phenotype in the magnitude range min: " + std::to_string(min_magnitude) + " and max: " + std::to_string(max_magnitude));
+                throw std::runtime_error("could not create a Phenotype in the magnitude range min: " + std::to_string(options.min_magnitude) + " and max: " + std::to_string(options.max_magnitude));
             }
             else{
                 pheno = *opt_pheno;
             }
 		};
-		return detail::breed<Pheno, RNG>(parents, rng, evolCoordinator, num_children, develop);
+		return detail::breed<Pheno, RNG>(parents, rng, evolCoordinator, options.num_children, develop);
 	}
 };
 
@@ -359,11 +362,6 @@ struct DefaultPartialChallenge{
 //struct PartialChallenge {
 //	double score(PatialPhenotype const& Phenotype); the Phenotype faces the challenge and its performance needs to be evaluated with a double (0 means bad, the higher the better the performance)
 //};
-
-struct PartialEvolutionOptions : public EvolutionOptions{
-	double min_magnitude = 0.0;
-	double max_magnitude = 1.0;
-};
 
 template<class Pheno, class Chall, class RNG>
 requires PartialPhenotype<Pheno, RNG> && PartialChallenge<Chall, Pheno, RNG>

@@ -7,7 +7,10 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "ms-vscode.git"  // Include Git extension
+                "ms-vscode.git",  // Include Git extension
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools", 
+                "webfreak.debug"
               ],
               "settings": {
                 "terminal.integrated.shell.linux": "/bin/bash",

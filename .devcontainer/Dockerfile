@@ -20,6 +20,7 @@ RUN pip3 install conan==1.*
 # Install additional GCC versions (change as needed)
 RUN apt-get update && apt-get install -y \
     g++-11 \
+    gdb \
  && rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100

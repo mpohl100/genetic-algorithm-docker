@@ -4,10 +4,8 @@
 
 namespace {
 
-TEST_CASE("Math", "[math]"){
-    SECTION("Example"){
-        CHECK(true);
-    }
+TEST_CASE("Math", "[math]") {
+  SECTION("Example") { CHECK(true); }
 }
 
-}
+} // namespace

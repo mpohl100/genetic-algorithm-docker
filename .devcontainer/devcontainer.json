@@ -9,8 +9,10 @@
             "extensions": [
                 "ms-vscode.git",  // Include Git extension
                 "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack",
                 "ms-vscode.cmake-tools", 
-                "webfreak.debug"
+                "webfreak.debug",
+                "xaver.clang-format",
               ],
               "settings": {
                 "terminal.integrated.shell.linux": "/bin/bash",

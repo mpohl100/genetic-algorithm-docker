@@ -21,6 +21,7 @@ RUN pip3 install conan==1.*
 RUN apt-get update && apt-get install -y \
     g++-11 \
     gdb \
+    clang-format \
  && rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100

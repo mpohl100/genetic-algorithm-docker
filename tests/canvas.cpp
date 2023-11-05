@@ -9,7 +9,17 @@ TEST_CASE("Canvas", "[canvas]"){
         auto canvas = path::Canvas2D(10,10);
         canvas.draw_line(path::Point(1,1), path::Point(7,3));
         const auto canvas_pixels = canvas.getPixels();
-        CHECK(canvas_pixels == std::string());
+        std::string result = "..........\n"
+                             ".XX.......\n"
+                             "..X.......\n"
+                             "..X.......\n"
+                             "..XX......\n"
+                             "...X......\n"
+                             "...X......\n"
+                             "..........\n"
+                             "..........\n"
+                             "..........\n";
+        CHECK(canvas_pixels == result);
     }
     SECTION("Canvas_Rectangle"){
         auto canvas = path::Canvas2D(5,5);

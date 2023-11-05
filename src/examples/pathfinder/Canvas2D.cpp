@@ -47,6 +47,7 @@ void Canvas2D::draw_line(Point start, Point end)
     if(end.x < start.x){
         std::swap(start, end);
     }
+    constexpr bool dolog = false;
     int dX = end.x - start.x;
     int dY = end.y - start.y;
     Point current_point = start;
@@ -68,9 +69,27 @@ void Canvas2D::draw_line(Point start, Point end)
         }
         return;
     }
+    if(dY == 0){
+        if(dX >= 0){
+            for(size_t i = 0; i <= static_cast<size_t>(dX); ++i){
+                draw_pixel(current_point.x, current_point.y);
+                current_point.x++;
+            }
+        }
+        else{
+            for(size_t i = 0; i <= static_cast<size_t>(-dX); ++i){
+                draw_pixel(current_point.x, current_point.y);
+                current_point.x--;
+            }
+        }
+        return;
+    }
 
     const auto gradient = double(dY) / double(dX);
-    //std::cout << "dX=" << dX << "; dY=" << dY << '\n';  
+    if constexpr(dolog){
+        std::cout << "gradient = " << gradient << '\n';
+        std::cout << "dX=" << dX << "; dY=" << dY << '\n';  
+    }
     enum class Direction{
         X,
         YUp,
@@ -111,23 +130,35 @@ void Canvas2D::draw_line(Point start, Point end)
             }
             return went_y / went_x;
         };
-        std::cout << "went_x = " << went_x << "; went_y = " << went_y << "\n";
+        if constexpr(dolog){
+            std::cout << "went_x = " << went_x << "; went_y = " << went_y << "\n";
+        }
         const auto current_gradient = deduce_current_gradient();
-        std::cout << "current gradient = " << current_gradient << "; gradient = " << gradient << '\n';
+        if constexpr(dolog){
+            std::cout << "current gradient = " << current_gradient << "; gradient = " << gradient << '\n';
+        }
         if(gradient >= 0){
             if(current_gradient > gradient){    
-                std::cout << "go x\n";
+                if constexpr(dolog){
+                    std::cout << "go x\n";
+                }
                 return Direction::X;
             }
-            std::cout << "go y up\n";
+            if constexpr(dolog){
+                std::cout << "go y up\n";
+            }
             return Direction::YUp;
         }
         else{
             if(current_gradient < gradient){    
-                std::cout << "go x\n";
+                if constexpr(dolog){
+                    std::cout << "go x\n";
+                }
                 return Direction::X;
             }
-            std::cout << "go y down\n";
+            if constexpr(dolog){
+                std::cout << "go y down\n";
+            }
             return Direction::YDown;    
         }
     };
@@ -140,7 +171,9 @@ void Canvas2D::draw_line(Point start, Point end)
             }
             break;
         }
-        std::cout << "setting point to 1: x=" << current_point.x << "; y=" << current_point.y << "; dX=" << dX << "; dY=" << dY << '\n';  
+        if constexpr(dolog){
+            std::cout << "setting point to 1: x=" << current_point.x << "; y=" << current_point.y << "; dX=" << dX << "; dY=" << dY << '\n';  
+        }
         draw_pixel(current_point.x, current_point.y);
         const auto direction = go_x(went_x, went_y);
         switch(direction){

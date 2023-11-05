@@ -15,6 +15,7 @@
         "ms-vscode.cmake-tools",
         "webfreak.debug",
         "xaver.clang-format",
+        "GitHub.copilot" 
       ],
       "settings": {
         "terminal.integrated.shell.linux": "/bin/bash",

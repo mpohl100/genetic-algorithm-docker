@@ -19,6 +19,55 @@ struct Point {
   int y = 0;
 };
 
+class Line {
+public:
+  Line() = default;
+  Line(const Line &) = default;
+  Line &operator=(const Line &) = default;
+  Line(Line &&) = default;
+  Line &operator=(Line &&) = default;
+  Line(Point start, Point end);
+
+  friend constexpr auto operator<=>(const Line &, const Line &) = default;
+private:
+  Point _start;
+  Point _end;
+};
+
+class Rectangle {
+public:
+  Rectangle() = default;
+  Rectangle(const Rectangle &) = default;
+  Rectangle &operator=(const Rectangle &) = default;
+  Rectangle(Rectangle &&) = default;
+  Rectangle &operator=(Rectangle &&) = default;
+  Rectangle(Point tl, Point br);
+
+  friend auto operator<=>(const Rectangle &, const Rectangle &) = default;
+
+  std::vector<Line> lines() const;
+
+  std::vector<Line> _lines;
+};
+
+class Circle {
+public:
+  Circle() = default;
+  Circle(const Circle &) = default;
+  Circle &operator=(const Circle &) = default;
+  Circle(Circle &&) = default;
+  Circle &operator=(Circle &&) = default;
+  Circle(Point center, int radius);
+
+  friend auto operator<=>(const Circle &, const Circle &) = default;
+
+  std::vector<Point> points() const;
+private:
+  Point _center;
+  int _radius;
+
+};
+
 class Canvas2D {
 public:
   Canvas2D() = default;

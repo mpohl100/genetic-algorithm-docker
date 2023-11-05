@@ -35,7 +35,7 @@ TEST_CASE("Canvas", "[canvas]") {
         auto canvas = bubbles::Canvas2D(10, 10);
         canvas.draw_line(bubbles::Point(5, 5), bubbles::Point(i, j));
         const auto canvas_pixels = canvas.getPixels();
-        std::cout << "i: " << i << " j: " << j << std::endl;
+        // std::cout << "i: " << i << " j: " << j << std::endl;
         // std::cout << "fixed x:" << 5 << " fixed y:" << 5 << std::endl;
         CHECK(canvas_pixels[5 * 11 + 5] == 'X');
         if (canvas_pixels[5 * 11 + 5] != 'X') {

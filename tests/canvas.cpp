@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "examples/pathfinder/Canvas2D.h"
+#include "examples/bubbles/Canvas2D.h"
 
 #include <iostream>
 

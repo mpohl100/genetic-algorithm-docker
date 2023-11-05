@@ -1,1 +1,1 @@
-add_subdirectory(pathfinder)
+add_subdirectory(bubbles)

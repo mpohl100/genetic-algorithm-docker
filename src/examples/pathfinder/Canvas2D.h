@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace path{
+namespace bubbles{
 
 struct Point{
     Point() = default;

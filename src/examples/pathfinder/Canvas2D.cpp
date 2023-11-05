@@ -4,7 +4,7 @@
 #include <iostream>
 #include <limits>
 
-namespace path{
+namespace bubbles{
 
 Point::Point(int xx, int yy)
 : x(xx)

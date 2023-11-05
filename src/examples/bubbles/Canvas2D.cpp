@@ -1,5 +1,6 @@
 #include "Canvas2D.h"
 
+#include <cmath>
 #include <stdexcept>
 #include <iostream>
 #include <limits>
@@ -23,6 +24,23 @@ void Canvas2D::draw_rectangle([[maybe_unused]] const Point& tl, [[maybe_unused]]
     draw_line(Point(br.x, tl.y), br);
     draw_line(br, Point(tl.x, br.y));
     draw_line(Point(tl.x, br.y), tl);
+}
+
+void Canvas2D::draw_circle(const Point& center, int radius)
+{
+    int centerX = center.x;
+    int centerY = center.y;
+
+    for (size_t y = 0; y < _pixels[0].size(); y++) {
+        for (size_t x = 0; x < _pixels.size(); x++) {
+            // Use the circle equation to determine if a point is on the circle's outline
+            if (std::abs(std::pow(static_cast<int>(x) - centerX, 2) + std::pow(static_cast<int>(y) - centerY, 2) - std::pow(radius, 2)) < 1.5) {
+                draw_pixel(x, y);
+            }
+        }
+    }
+
+    
 }
 
 std::string Canvas2D::getPixels() const
@@ -51,9 +69,6 @@ void Canvas2D::draw_line(Point start, Point end)
     int dX = end.x - start.x;
     int dY = end.y - start.y;
     Point current_point = start;
-    const auto draw_pixel = [this](int x, int y){
-        _pixels[x][y] = 1;
-    };
     // draw start and end point
     draw_pixel(start.x, start.y);
     draw_pixel(end.x, end.y);
@@ -191,5 +206,9 @@ void Canvas2D::draw_line(Point start, Point end)
         }
     }
 }
+
+void Canvas2D::draw_pixel(int x, int y){
+    _pixels[x][y] = 1;
+};
 
 }

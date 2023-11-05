@@ -48,6 +48,21 @@ TEST_CASE("Canvas", "[canvas]"){
             }
         }
     }
+    SECTION("Canvas_Circle"){
+        auto canvas = bubbles::Canvas2D(10,10);
+        canvas.draw_circle(bubbles::Point(5,5), 3);
+        const auto canvas_pixels = canvas.getPixels();
+        CHECK(canvas_pixels == std::string("..........\n"
+                                           "..........\n"
+                                           "....XXX...\n"
+                                           "...X...X..\n"
+                                           "..X.....X.\n"
+                                           "..X.....X.\n"
+                                           "..X.....X.\n"
+                                           "...X...X..\n"
+                                           "....XXX...\n"
+                                           "..........\n"));
+    }
 }
 
 }

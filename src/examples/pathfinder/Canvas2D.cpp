@@ -54,6 +54,9 @@ void Canvas2D::draw_line(Point start, Point end)
     const auto draw_pixel = [this](int x, int y){
         _pixels[x][y] = 1;
     };
+    // draw start and end point
+    draw_pixel(start.x, start.y);
+    draw_pixel(end.x, end.y);
     if(dX == 0){
         if(dY >= 0){
             for(size_t i = 0; i <= static_cast<size_t>(dY); ++i){
@@ -71,6 +74,8 @@ void Canvas2D::draw_line(Point start, Point end)
     }
     if(dY == 0){
         if(dX >= 0){
+            if constexpr(dolog)
+                std::cout << "x positive\n";
             for(size_t i = 0; i <= static_cast<size_t>(dX); ++i){
                 draw_pixel(current_point.x, current_point.y);
                 current_point.x++;
@@ -122,11 +127,13 @@ void Canvas2D::draw_line(Point start, Point end)
             if(went_x == 0){
                 if(went_y > 0){
                     return std::numeric_limits<double>::max();
-                } 
+                }
                 else if(went_y == 0){
                     return 0.0;
                 }
-                return std::numeric_limits<double>::min();
+                else{
+                    return -std::numeric_limits<double>::max();
+                }
             }
             return went_y / went_x;
         };
@@ -169,6 +176,7 @@ void Canvas2D::draw_line(Point start, Point end)
             if(current_point != end){
                 throw std::runtime_error("end point not hit in draw_line.");
             }
+            draw_pixel(current_point.x, current_point.y);
             break;
         }
         if constexpr(dolog){

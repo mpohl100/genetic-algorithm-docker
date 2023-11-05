@@ -2,6 +2,8 @@
 
 #include "examples/pathfinder/Canvas2D.h"
 
+#include <iostream>
+
 namespace {
 
 TEST_CASE("Canvas", "[canvas]"){
@@ -16,7 +18,7 @@ TEST_CASE("Canvas", "[canvas]"){
                              "..XX......\n"
                              "...X......\n"
                              "...X......\n"
-                             "..........\n"
+                             "...X......\n"
                              "..........\n"
                              "..........\n";
         CHECK(canvas_pixels == result);
@@ -26,6 +28,25 @@ TEST_CASE("Canvas", "[canvas]"){
         canvas.draw_rectangle(path::Point(1,1), path::Point(3,3));
         const auto canvas_pixels = canvas.getPixels();
         CHECK(canvas_pixels == std::string(".....\n.XXX.\n.X.X.\n.XXX.\n.....\n"));
+    }
+    SECTION("Canvas_Line_Fuzztest"){
+        for(size_t i = 1; i < 9; ++i){
+            for(size_t j = 1; j < 9; ++j){
+                auto canvas = path::Canvas2D(10,10);
+                canvas.draw_line(path::Point(5,5), path::Point(i,j));
+                const auto canvas_pixels = canvas.getPixels();
+                std::cout << "i: " << i << " j: " << j << std::endl;
+                //std::cout << "fixed x:" << 5 << " fixed y:" << 5 << std::endl;
+                CHECK(canvas_pixels[5*11+5] == 'X');
+                if(canvas_pixels[5*11+5] != 'X'){
+                    //std::cout << canvas_pixels << std::endl;
+                }
+                CHECK(canvas_pixels[i*11+j] == 'X');
+                if(canvas_pixels[i*11+j] != 'X'){
+                    //std::cout << canvas_pixels << std::endl;
+                }
+            }
+        }
     }
 }
 

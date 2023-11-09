@@ -1,4 +1,4 @@
-set( PATH_SOURCES Canvas2D.cpp)
+set( BUBBLES_SOURCES Canvas2D.cpp)
 
-add_library( path SHARED ${PATH_SOURCES} )
-target_include_directories(path PUBLIC {CMAKE_SOURCE_DIR}/src)
+add_library( bubbles SHARED ${BUBBLES_SOURCES} )
+target_include_directories(bubbles PUBLIC {CMAKE_SOURCE_DIR}/src)

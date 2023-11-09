@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "Math.h"
+#include "examples/math/Math.h"
 
 namespace {
 

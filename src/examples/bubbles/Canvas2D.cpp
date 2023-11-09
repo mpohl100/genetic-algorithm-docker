@@ -26,17 +26,6 @@ std::vector<Line> Rectangle::lines() const {
 
 Circle::Circle(Point center, int radius) : _center(center), _radius(radius) {}
 
-Point rotate_around(Point target, Point center, int angle) {
-  // implement a method that rotates the point target around the point center
-  // by the given angle
-  int radius = std::sqrt(std::pow(target.x - center.x, 2) +
-                         std::pow(target.y - center.y, 2));
-  int angle_rad = angle * M_PI / 180;
-  target.x = center.x + radius * std::cos(angle_rad);
-  target.y = center.y + radius * std::sin(angle_rad);
-  return target;
-}
-
 Canvas2D::Canvas2D(int xx, int yy)
     : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)) {}
 

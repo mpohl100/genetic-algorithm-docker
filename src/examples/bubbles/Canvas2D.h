@@ -30,6 +30,7 @@ public:
 
   const Point &start() const;
   const Point &end() const;
+  double magnitude() const;
 
   friend constexpr auto operator<=>(const Line &, const Line &) = default;
 private:
@@ -49,6 +50,7 @@ public:
   friend auto operator<=>(const Rectangle &, const Rectangle &) = default;
 
   std::vector<Line> lines() const;
+  double area() const;
 
   std::vector<Line> _lines;
 };

@@ -21,6 +21,12 @@ const Point &Line::end() const
   return _end;
 }
 
+double Line::magnitude() const
+{
+  return std::sqrt(std::pow(_end.x - _start.x, 2) +
+                   std::pow(_end.y - _start.y, 2));
+}
+
 Rectangle::Rectangle(Point tl, Point br) 
 : _lines()
 {
@@ -32,6 +38,11 @@ Rectangle::Rectangle(Point tl, Point br)
 
 std::vector<Line> Rectangle::lines() const {
   return _lines;
+}
+
+double Rectangle::area() const
+{
+  return _lines[0].magnitude() * _lines[1].magnitude();
 }
 
 Circle::Circle(Point center, int radius) : _center(center), _radius(radius) {}

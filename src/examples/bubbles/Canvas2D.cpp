@@ -11,6 +11,16 @@ Point::Point(int xx, int yy) : x(xx), y(yy) {}
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
 
+const Point &Line::start() const
+{
+  return _start;
+}
+
+const Point &Line::end() const
+{
+  return _end;
+}
+
 Rectangle::Rectangle(Point tl, Point br) 
 : _lines()
 {
@@ -26,21 +36,30 @@ std::vector<Line> Rectangle::lines() const {
 
 Circle::Circle(Point center, int radius) : _center(center), _radius(radius) {}
 
+const Point &Circle::center() const
+{
+  return _center;
+}
+
+int Circle::radius() const
+{
+  return _radius;
+}
+
 Canvas2D::Canvas2D(int xx, int yy)
     : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)) {}
 
-void Canvas2D::draw_rectangle([[maybe_unused]] const Point &tl,
-                              [[maybe_unused]] const Point &br) {
-  draw_line(tl, Point(br.x, tl.y));
-  draw_line(Point(br.x, tl.y), br);
-  draw_line(br, Point(tl.x, br.y));
-  draw_line(Point(tl.x, br.y), tl);
+void Canvas2D::draw_rectangle(const Rectangle &rectangle) {
+  draw_line(rectangle.lines()[0]);
+  draw_line(rectangle.lines()[1]);
+  draw_line(rectangle.lines()[2]);
+  draw_line(rectangle.lines()[3]);
 }
 
-void Canvas2D::draw_circle(const Point &center, int radius) {
-  int centerX = center.x;
-  int centerY = center.y;
-
+void Canvas2D::draw_circle(const Circle& circle) {
+  int centerX = circle.center().x;
+  int centerY = circle.center().y;
+  int radius = circle.radius();
   for (int x = centerX - radius; x <= centerX + radius; x++) {
     for (int y = centerY - radius; y <= centerY + radius; y++) {
       // Use the circle equation to determine if a point is on the circle's
@@ -69,7 +88,9 @@ std::string Canvas2D::getPixels() const {
   return ret;
 }
 
-void Canvas2D::draw_line(Point start, Point end) {
+void Canvas2D::draw_line(const Line& line) {
+  auto start = line.start();
+  auto end = line.end();
   if (end.x < start.x) {
     std::swap(start, end);
   }

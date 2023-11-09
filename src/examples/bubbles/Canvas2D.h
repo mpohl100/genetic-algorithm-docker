@@ -28,6 +28,9 @@ public:
   Line &operator=(Line &&) = default;
   Line(Point start, Point end);
 
+  const Point &start() const;
+  const Point &end() const;
+
   friend constexpr auto operator<=>(const Line &, const Line &) = default;
 private:
   Point _start;
@@ -59,13 +62,15 @@ public:
   Circle &operator=(Circle &&) = default;
   Circle(Point center, int radius);
 
+  const Point &center() const;
+  int radius() const;
+
   friend auto operator<=>(const Circle &, const Circle &) = default;
 
   std::vector<Point> points() const;
 private:
   Point _center;
   int _radius;
-
 };
 
 class Canvas2D {
@@ -77,10 +82,10 @@ public:
   Canvas2D &operator=(Canvas2D &&) = default;
   Canvas2D(int xx, int yy);
 
-  void draw_rectangle(const Point &tl, const Point &br);
-  void draw_circle(const Point &m, int radius);
+  void draw_rectangle(const Rectangle& rectangle);
+  void draw_circle(const Circle& circle);
   std::string getPixels() const;
-  void draw_line(Point start, Point end);
+  void draw_line(const Line& line);
 
 private:
   void draw_pixel(int x, int y);

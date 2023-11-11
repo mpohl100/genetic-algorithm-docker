@@ -1,9 +1,16 @@
 #include "bubbles_swarm.h"
 
+#include <queue>
+#include <set>
+
 namespace bubbles {
 
 AngleArea::AngleArea(int area, int number_angles)
     : area{area}, nb_angles{number_angles} {}
+
+void AlreadyOptimized::add_circle(const Circle &circle) {
+  _circles.push_back(circle);
+}
 
 BubbleCircle::BubbleCircle(const Circle &circle,
                            const SourceCircle &source_circle)
@@ -18,9 +25,45 @@ std::string BubbleCircle::toString() const { return ""; }
 
 double BubbleCircle::magnitude() const { return 0.0; }
 
+Circle calculate_next_circle(
+    [[maybe_unused]] const SourceCircle &source_circle,
+    [[maybe_unused]] const AlreadyOptimized &already_optimized) {
+  return Circle{};
+}
+
+std::vector<SourceCircle> deduce_next_sourve_circles(const Circle &circle) {
+  std::vector<SourceCircle> source_circles;
+  int nb_angles = 6;
+  for (int i = 0; i < nb_angles; ++i) {
+    source_circles.emplace_back(SourceCircle{circle, AngleArea{i, nb_angles}});
+  }
+  return source_circles;
+}
+
 BubblesSwarm bubbles_algorithm([[maybe_unused]] const Canvas2D &canvas,
-                               [[maybe_unused]] const Point &point) {
-  return BubblesSwarm{};
+                               const Point &point) {
+  auto bubble_swarm = BubblesSwarm{};
+  auto already_optimized = AlreadyOptimized{};
+  auto queue = std::queue<SourceCircle>{};
+  queue.emplace(SourceCircle{Circle{point, 1}, AngleArea{0, 6}});
+  auto already_calculated = std::set<SourceCircle>{};
+  while (!queue.empty()) {
+    const auto next_circle =
+        calculate_next_circle(queue.front(), already_optimized);
+    already_optimized.add_circle(next_circle);
+
+    const auto next_source_circles = deduce_next_sourve_circles(next_circle);
+    for (const auto &next_source_circle : next_source_circles) {
+      if (already_calculated.find(next_source_circle) ==
+          already_calculated.end()) {
+        queue.emplace(next_source_circle);
+      }
+    }
+    
+    already_calculated.insert(queue.front());
+    queue.pop();
+  }
+  return bubble_swarm;
 }
 
 BubblesSwarm::BubblesSwarm(const AlreadyOptimized &already_optimized,

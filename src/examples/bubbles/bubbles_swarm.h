@@ -28,8 +28,11 @@ struct SourceCircle {
 };
 
 struct AlreadyOptimized {
-  std::vector<Circle> circles;
-  std::optional<SourceCircle> source_circle = std::nullopt;
+public:
+  void add_circle(const Circle &circle);
+
+private:
+  std::vector<Circle> _circles;
 };
 
 struct BubbleCircle {

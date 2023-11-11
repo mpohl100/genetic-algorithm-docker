@@ -71,13 +71,55 @@ Point get_mid_point(const Point &from, const Point &to) {
   return from.plus(Vector{from, to}.scale(0.5));
 }
 
+std::vector<Point> calculate_circle_intersection(const Circle &first,
+                                                 const Circle &second) {
+  std::vector<Point> intersectionPoints;
+
+  // Calculate the distance between the centers of the circles
+  double dist = Vector{first.center(), second.center()}.magnitude();
+
+  // Check if the circles are completely separate
+  if (dist > first.radius() + second.radius()) {
+    // No intersection, return empty vector
+    return intersectionPoints;
+  }
+
+  // Check if one circle is entirely inside the other
+  if (dist < std::abs(first.radius() - second.radius())) {
+    // No intersection, return empty vector
+    return intersectionPoints;
+  }
+
+  // Calculate the intersection points using trigonometry
+  double a = (std::pow(first.radius(), 2) - std::pow(second.radius(), 2) +
+              std::pow(dist, 2)) /
+             (2 * dist);
+  double h = std::sqrt(std::pow(first.radius(), 2) - std::pow(a, 2));
+
+  // Calculate the coordinates of the intersection points
+  double x2 = first.center().x + a * (second.center().x - first.center().x) / dist;
+  double y2 = first.center().y + a * (second.center().y - first.center().y) / dist;
+
+  double intersectionX1 = x2 + h * (second.center().y - first.center().y) / dist;
+  double intersectionY1 = y2 - h * (second.center().x - first.center().x) / dist;
+  double intersectionX2 = x2 - h * (second.center().y - first.center().y) / dist;
+  double intersectionY2 = y2 + h * (second.center().x - first.center().x) / dist;
+
+  // Add the intersection points to the vector
+  intersectionPoints.emplace_back(intersectionX1, intersectionY1);
+  intersectionPoints.emplace_back(intersectionX2, intersectionY2);
+
+  return intersectionPoints;
+}
+
 bool BubbleCircle::is_within_angle_of_source_circle() const {
-  [[maybe_unused]] const auto thales_circle = Circle{
+  const auto thales_circle = Circle{
       get_mid_point(_circle.center(), _source_circle.circle.center()),
       static_cast<int>(Vector{_circle.center(), _source_circle.circle.center()}
                            .scale(0.5)
                            .magnitude())};
-  const auto intersection_points = std::vector<Point>{};
+  [[maybe_unused]] const auto intersection_points =
+      calculate_circle_intersection(_circle, thales_circle);
   return false;
 }
 

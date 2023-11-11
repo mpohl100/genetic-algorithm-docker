@@ -11,51 +11,35 @@ Point::Point(int xx, int yy) : x(xx), y(yy) {}
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
 
-const Point &Line::start() const
-{
-  return _start;
-}
+const Point &Line::start() const { return _start; }
 
-const Point &Line::end() const
-{
-  return _end;
-}
+const Point &Line::end() const { return _end; }
 
-double Line::magnitude() const
-{
+double Line::magnitude() const {
   return std::sqrt(std::pow(_end.x - _start.x, 2) +
                    std::pow(_end.y - _start.y, 2));
 }
 
-Rectangle::Rectangle(Point tl, Point br) 
-: _lines()
-{
+Rectangle::Rectangle(Point tl, Point br) : _lines() {
   _lines.emplace_back(tl, Point(br.x, tl.y));
   _lines.emplace_back(Point(br.x, tl.y), br);
   _lines.emplace_back(br, Point(tl.x, br.y));
   _lines.emplace_back(Point(tl.x, br.y), tl);
 }
 
-std::vector<Line> Rectangle::lines() const {
-  return _lines;
-}
+std::vector<Line> Rectangle::lines() const { return _lines; }
 
-double Rectangle::area() const
-{
+double Rectangle::area() const {
   return _lines[0].magnitude() * _lines[1].magnitude();
 }
 
 Circle::Circle(Point center, int radius) : _center(center), _radius(radius) {}
 
-const Point &Circle::center() const
-{
-  return _center;
-}
+const Point &Circle::center() const { return _center; }
 
-int Circle::radius() const
-{
-  return _radius;
-}
+int Circle::radius() const { return _radius; }
+
+double Circle::area() const { return M_PI * std::pow(_radius, 2); }
 
 Canvas2D::Canvas2D(int xx, int yy)
     : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)) {}
@@ -67,7 +51,7 @@ void Canvas2D::draw_rectangle(const Rectangle &rectangle) {
   draw_line(rectangle.lines()[3]);
 }
 
-void Canvas2D::draw_circle(const Circle& circle) {
+void Canvas2D::draw_circle(const Circle &circle) {
   int centerX = circle.center().x;
   int centerY = circle.center().y;
   int radius = circle.radius();
@@ -99,7 +83,7 @@ std::string Canvas2D::getPixels() const {
   return ret;
 }
 
-void Canvas2D::draw_line(const Line& line) {
+void Canvas2D::draw_line(const Line &line) {
   auto start = line.start();
   auto end = line.end();
   if (end.x < start.x) {

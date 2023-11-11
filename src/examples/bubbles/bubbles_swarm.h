@@ -51,6 +51,8 @@ struct BubbleCircle {
   std::string toString() const;
   double magnitude() const;
 
+  const Circle &circle() const;
+
 private:
   Circle _circle;
   SourceCircle _source_circle;

@@ -12,6 +12,14 @@ void AlreadyOptimized::add_circle(const Circle &circle) {
   _circles.push_back(circle);
 }
 
+double AlreadyOptimized::area() const {
+  auto area = 0.0;
+  for (const auto &circle : _circles) {
+    area += circle.area();
+  }
+  return area;
+}
+
 BubbleCircle::BubbleCircle(const Circle &circle,
                            const SourceCircle &source_circle)
     : _circle{circle}, _source_circle{source_circle} {}
@@ -56,8 +64,7 @@ std::vector<SourceCircle> deduce_next_sourve_circles(const Circle &circle) {
   return source_circles;
 }
 
-BubblesSwarm bubbles_algorithm(const Canvas2D &canvas, const Point &point) {
-  auto bubble_swarm = BubblesSwarm{};
+AlreadyOptimized bubbles_algorithm(const Canvas2D &canvas, const Point &point) {
   auto already_optimized = AlreadyOptimized{};
   auto queue = std::queue<SourceCircle>{};
   queue.emplace(SourceCircle{Circle{point, 1}, AngleArea{0, 6}});
@@ -78,14 +85,12 @@ BubblesSwarm bubbles_algorithm(const Canvas2D &canvas, const Point &point) {
     already_calculated.insert(queue.front());
     queue.pop();
   }
-  return bubble_swarm;
+  return already_optimized;
 }
 
 BubblesSwarm::BubblesSwarm(const AlreadyOptimized &already_optimized,
                            const Canvas2D &canvas)
     : _already_optimized{already_optimized}, _canvas{canvas} {}
-
-double BubblesSwarm::area() const { return 0.0; }
 
 double BubblesSwarm::score([[maybe_unused]] const BubbleCircle &bubble_circle,
                            [[maybe_unused]] const evol::Rng &rng) const {

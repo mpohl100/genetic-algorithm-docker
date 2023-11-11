@@ -67,7 +67,7 @@ public:
 
   const Point &center() const;
   int radius() const;
-
+  double area() const;
   friend constexpr auto operator<=>(const Circle &, const Circle &) = default;
 
   std::vector<Point> points() const;

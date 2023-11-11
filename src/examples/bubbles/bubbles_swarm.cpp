@@ -25,10 +25,26 @@ std::string BubbleCircle::toString() const { return ""; }
 
 double BubbleCircle::magnitude() const { return 0.0; }
 
-Circle calculate_next_circle(
-    [[maybe_unused]] const SourceCircle &source_circle,
-    [[maybe_unused]] const AlreadyOptimized &already_optimized) {
-  return Circle{};
+const Circle &BubbleCircle::circle() const { return _circle; }
+
+Circle calculate_next_circle(const SourceCircle &source_circle,
+                             const AlreadyOptimized &already_optimized,
+                             const Canvas2D &canvas) {
+  const auto bubble_swarm = BubblesSwarm{already_optimized, canvas};
+  auto evolParam = evol::partial::PartialEvolutionOptions{};
+  evolParam.num_generations = 100;
+  evolParam.log_level = 0;
+  evolParam.num_parents = 2;
+  evolParam.num_children = 20;
+  evolParam.min_magnitude = 0.9;
+  evolParam.max_magnitude = 1.1;
+  evolParam.out = &std::cout;
+  auto rng = evol::Rng{};
+
+  const auto result = evol::partial::evolution(
+      BubbleCircle{source_circle.circle, source_circle}, bubble_swarm,
+      evolParam, rng);
+  return result.winner.circle();
 }
 
 std::vector<SourceCircle> deduce_next_sourve_circles(const Circle &circle) {
@@ -40,8 +56,7 @@ std::vector<SourceCircle> deduce_next_sourve_circles(const Circle &circle) {
   return source_circles;
 }
 
-BubblesSwarm bubbles_algorithm([[maybe_unused]] const Canvas2D &canvas,
-                               const Point &point) {
+BubblesSwarm bubbles_algorithm(const Canvas2D &canvas, const Point &point) {
   auto bubble_swarm = BubblesSwarm{};
   auto already_optimized = AlreadyOptimized{};
   auto queue = std::queue<SourceCircle>{};
@@ -49,7 +64,7 @@ BubblesSwarm bubbles_algorithm([[maybe_unused]] const Canvas2D &canvas,
   auto already_calculated = std::set<SourceCircle>{};
   while (!queue.empty()) {
     const auto next_circle =
-        calculate_next_circle(queue.front(), already_optimized);
+        calculate_next_circle(queue.front(), already_optimized, canvas);
     already_optimized.add_circle(next_circle);
 
     const auto next_source_circles = deduce_next_sourve_circles(next_circle);
@@ -59,7 +74,7 @@ BubblesSwarm bubbles_algorithm([[maybe_unused]] const Canvas2D &canvas,
         queue.emplace(next_source_circle);
       }
     }
-    
+
     already_calculated.insert(queue.front());
     queue.pop();
   }

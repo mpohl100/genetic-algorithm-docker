@@ -7,7 +7,24 @@
 
 namespace bubbles {
 
+Vector::Vector(double xx, double yy) : x(xx), y(yy) {}
+
+Vector::Vector(const Point &start, const Point &end)
+    : x(end.x - start.x), y(end.y - start.y) {}
+
+Vector Vector::scale(double factor) const {
+  return Vector{x * factor, y * factor};
+}
+
+double Vector::magnitude() const {
+  return std::sqrt(std::pow(x, 2) + std::pow(y, 2));
+}
+
 Point::Point(int xx, int yy) : x(xx), y(yy) {}
+
+Point Point::plus(const Vector &vec) const {
+  return Point{x + static_cast<int>(vec.x), y + static_cast<int>(vec.y)};
+}
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
 

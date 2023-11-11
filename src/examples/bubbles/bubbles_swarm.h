@@ -55,6 +55,8 @@ struct BubbleCircle {
   const Circle &circle() const;
 
 private:
+  bool is_within_angle_of_source_circle() const;
+
   Circle _circle;
   SourceCircle _source_circle;
 };

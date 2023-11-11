@@ -61,9 +61,25 @@ std::string BubbleCircle::toString() const {
          "}, radius: " + std::to_string(_circle.radius());
 }
 
-double BubbleCircle::magnitude() const { return 0.0; }
+double BubbleCircle::magnitude() const {
+  return is_within_angle_of_source_circle() ? 1.0 : 0.0;
+}
 
 const Circle &BubbleCircle::circle() const { return _circle; }
+
+Point get_mid_point(const Point &from, const Point &to) {
+  return from.plus(Vector{from, to}.scale(0.5));
+}
+
+bool BubbleCircle::is_within_angle_of_source_circle() const {
+  [[maybe_unused]] const auto thales_circle = Circle{
+      get_mid_point(_circle.center(), _source_circle.circle.center()),
+      static_cast<int>(Vector{_circle.center(), _source_circle.circle.center()}
+                           .scale(0.5)
+                           .magnitude())};
+  const auto intersection_points = std::vector<Point>{};
+  return false;
+}
 
 Circle calculate_next_circle(const SourceCircle &source_circle,
                              const AlreadyOptimized &already_optimized,

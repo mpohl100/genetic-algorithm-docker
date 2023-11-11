@@ -24,12 +24,42 @@ BubbleCircle::BubbleCircle(const Circle &circle,
                            const SourceCircle &source_circle)
     : _circle{circle}, _source_circle{source_circle} {}
 
-void BubbleCircle::crossover([[maybe_unused]] const BubbleCircle &other) {}
-void BubbleCircle::mutate(
-    [[maybe_unused]] evol::Rng &rng,
-    [[maybe_unused]] const evol::EvolutionCoordinator &evolCoordinator) {}
+void BubbleCircle::crossover(const BubbleCircle &other) {
+  _circle = Circle{Point{(_circle.center().x + other.circle().center().x) / 2,
+                         (_circle.center().y + other.circle().center().y) / 2},
+                   (_circle.radius() + other.circle().radius()) / 2};
+}
 
-std::string BubbleCircle::toString() const { return ""; }
+void BubbleCircle::mutate(
+    evol::Rng &rng,
+    [[maybe_unused]] const evol::EvolutionCoordinator &evolCoordinator) {
+  const auto random_number = rng.fetchUniform(0, 2, 1).top();
+  // try out different valus here
+  const auto random_mutation_value =
+      static_cast<int>(rng.fetchNormal(0, 2, 1).top());
+  switch (random_number) {
+  case 0:
+    _circle = Circle{
+        Point{_circle.center().x + random_mutation_value, _circle.center().y},
+        _circle.radius()};
+    break;
+  case 1:
+    _circle = Circle{
+        Point{_circle.center().x, _circle.center().y + random_mutation_value},
+        _circle.radius()};
+    break;
+  case 2:
+    _circle =
+        Circle{_circle.center(), _circle.radius() + random_mutation_value};
+    break;
+  }
+}
+
+std::string BubbleCircle::toString() const {
+  return "center {x: " + std::to_string(_circle.center().x) +
+         " y: " + std::to_string(_circle.center().y) +
+         "}, radius: " + std::to_string(_circle.radius());
+}
 
 double BubbleCircle::magnitude() const { return 0.0; }
 

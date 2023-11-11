@@ -33,6 +33,7 @@ public:
   double magnitude() const;
 
   friend constexpr auto operator<=>(const Line &, const Line &) = default;
+
 private:
   Point _start;
   Point _end;
@@ -67,9 +68,10 @@ public:
   const Point &center() const;
   int radius() const;
 
-  friend auto operator<=>(const Circle &, const Circle &) = default;
+  friend constexpr auto operator<=>(const Circle &, const Circle &) = default;
 
   std::vector<Point> points() const;
+
 private:
   Point _center;
   int _radius;
@@ -84,10 +86,10 @@ public:
   Canvas2D &operator=(Canvas2D &&) = default;
   Canvas2D(int xx, int yy);
 
-  void draw_rectangle(const Rectangle& rectangle);
-  void draw_circle(const Circle& circle);
+  void draw_rectangle(const Rectangle &rectangle);
+  void draw_circle(const Circle &circle);
   std::string getPixels() const;
-  void draw_line(const Line& line);
+  void draw_line(const Line &line);
 
 private:
   void draw_pixel(int x, int y);

@@ -97,13 +97,19 @@ std::vector<Point> calculate_circle_intersection(const Circle &first,
   double h = std::sqrt(std::pow(first.radius(), 2) - std::pow(a, 2));
 
   // Calculate the coordinates of the intersection points
-  double x2 = first.center().x + a * (second.center().x - first.center().x) / dist;
-  double y2 = first.center().y + a * (second.center().y - first.center().y) / dist;
+  double x2 =
+      first.center().x + a * (second.center().x - first.center().x) / dist;
+  double y2 =
+      first.center().y + a * (second.center().y - first.center().y) / dist;
 
-  double intersectionX1 = x2 + h * (second.center().y - first.center().y) / dist;
-  double intersectionY1 = y2 - h * (second.center().x - first.center().x) / dist;
-  double intersectionX2 = x2 - h * (second.center().y - first.center().y) / dist;
-  double intersectionY2 = y2 + h * (second.center().x - first.center().x) / dist;
+  double intersectionX1 =
+      x2 + h * (second.center().y - first.center().y) / dist;
+  double intersectionY1 =
+      y2 - h * (second.center().x - first.center().x) / dist;
+  double intersectionX2 =
+      x2 - h * (second.center().y - first.center().y) / dist;
+  double intersectionY2 =
+      y2 + h * (second.center().x - first.center().x) / dist;
 
   // Add the intersection points to the vector
   intersectionPoints.emplace_back(intersectionX1, intersectionY1);
@@ -118,8 +124,17 @@ bool BubbleCircle::is_within_angle_of_source_circle() const {
       static_cast<int>(Vector{_circle.center(), _source_circle.circle.center()}
                            .scale(0.5)
                            .magnitude())};
-  [[maybe_unused]] const auto intersection_points =
+  const auto intersection_points =
       calculate_circle_intersection(_circle, thales_circle);
+  if (intersection_points.size() < 2) {
+    throw std::runtime_error("Not enough intersection points");
+  }
+  [[maybe_unused]] const auto angle_0 = Angle{
+      _circle.center().plus(Vector{static_cast<double>(_circle.radius()), 0.0}),
+      _circle.center(), intersection_points[0]};
+  [[maybe_unused]] const auto angle_1 = Angle{
+      _circle.center().plus(Vector{static_cast<double>(_circle.radius()), 0.0}),
+      _circle.center(), intersection_points[1]};
   return false;
 }
 

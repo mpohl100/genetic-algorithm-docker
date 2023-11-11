@@ -26,6 +26,17 @@ Point Point::plus(const Vector &vec) const {
   return Point{x + static_cast<int>(vec.x), y + static_cast<int>(vec.y)};
 }
 
+Angle::Angle(double degrees) : _degrees(degrees) {}
+
+Angle::Angle(const Point &p1, const Point &center, const Point &p2) {
+  const auto v1 = Vector{center, p1};
+  const auto v2 = Vector{center, p2};
+  const auto dot_product = v1.x * v2.x + v1.y * v2.y;
+  const auto magnitude_product = v1.magnitude() * v2.magnitude();
+  const auto cos_angle = dot_product / magnitude_product;
+  _degrees = std::acos(cos_angle) * 180.0 / M_PI;
+}
+
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
 
 const Point &Line::start() const { return _start; }

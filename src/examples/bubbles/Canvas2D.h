@@ -23,6 +23,21 @@ struct Point {
   int y = 0;
 };
 
+struct Angle {
+  Angle() = default;
+  Angle(const Angle &) = default;
+  Angle &operator=(const Angle &) = default;
+  Angle(Angle &&) = default;
+  Angle &operator=(Angle &&) = default;
+  Angle(double degrees);
+  Angle(const Point &p1, const Point &center, const Point &p2);
+
+  double degrees() const;
+
+private:
+  double _degrees = 0;
+};
+
 struct Vector {
   Vector() = default;
   Vector(const Vector &) = default;

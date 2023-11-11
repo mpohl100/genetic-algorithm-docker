@@ -5,6 +5,8 @@
 
 namespace bubbles {
 
+struct Vector;
+
 struct Point {
   Point() = default;
   Point(const Point &) = default;
@@ -13,10 +15,30 @@ struct Point {
   Point &operator=(Point &&) = default;
   Point(int xx, int yy);
 
+  Point plus(const Vector &vec) const;
+
   friend constexpr auto operator<=>(const Point &, const Point &) = default;
 
   int x = 0;
   int y = 0;
+};
+
+struct Vector {
+  Vector() = default;
+  Vector(const Vector &) = default;
+  Vector &operator=(const Vector &) = default;
+  Vector(Vector &&) = default;
+  Vector &operator=(Vector &&) = default;
+  Vector(double xx, double yy);
+  Vector(const Point &start, const Point &end);
+
+  friend constexpr auto operator<=>(const Vector &, const Vector &) = default;
+
+  Vector scale(double factor) const;
+  double magnitude() const;
+
+  double x = 0;
+  double y = 0;
 };
 
 class Line {

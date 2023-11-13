@@ -6,7 +6,13 @@
 namespace bubbles {
 
 AngleArea::AngleArea(int area, int number_angles)
-    : area{area}, nb_angles{number_angles} {}
+    : _area{area}, _nb_angles{number_angles} {}
+
+bool AngleArea::is_within(const Angle &angle) const {
+  const auto angle_1 = 360.0 / _nb_angles * _area;
+  const auto angle_2 = 360.0 / _nb_angles * (_area + 1);
+  return angle.degrees() >= angle_1 && angle.degrees() < angle_2;
+}
 
 void AlreadyOptimized::add_circle(const Circle &circle) {
   _circles.push_back(circle);
@@ -127,15 +133,21 @@ bool BubbleCircle::is_within_angle_of_source_circle() const {
   const auto intersection_points =
       calculate_circle_intersection(_circle, thales_circle);
   if (intersection_points.size() < 2) {
-    throw std::runtime_error("Not enough intersection points");
+    const auto angle = Angle{_circle.center().plus(Vector{
+                                 static_cast<double>(_circle.radius()), 0.0}),
+                             _circle.center(), _source_circle.circle.center()};
+    return _source_circle.angle_area.is_within(angle) ? 1.0 : 0.0;
   }
-  [[maybe_unused]] const auto angle_0 = Angle{
+  const auto angle_0 = Angle{
       _circle.center().plus(Vector{static_cast<double>(_circle.radius()), 0.0}),
       _circle.center(), intersection_points[0]};
-  [[maybe_unused]] const auto angle_1 = Angle{
+  const auto angle_1 = Angle{
       _circle.center().plus(Vector{static_cast<double>(_circle.radius()), 0.0}),
       _circle.center(), intersection_points[1]};
-  return false;
+  return (_source_circle.angle_area.is_within(angle_0) &&
+          _source_circle.angle_area.is_within(angle_1))
+             ? 1.0
+             : 0.0;
 }
 
 Circle calculate_next_circle(const SourceCircle &source_circle,

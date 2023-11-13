@@ -16,8 +16,11 @@ struct AngleArea {
   AngleArea(int area, int number_angles);
   friend constexpr auto operator<=>(const AngleArea &,
                                     const AngleArea &) = default;
-  int area = 0;
-  int nb_angles = 0;
+  bool is_within(const Angle &angle) const;
+
+private:
+  int _area = 0;
+  int _nb_angles = 0;
 };
 
 struct SourceCircle {

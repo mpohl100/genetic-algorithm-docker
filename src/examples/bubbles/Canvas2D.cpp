@@ -37,10 +37,7 @@ Angle::Angle(const Point &p1, const Point &center, const Point &p2) {
   _degrees = std::acos(cos_angle) * 180.0 / M_PI;
 }
 
-double Angle::degrees() const
-{
-  return _degrees;
-}
+double Angle::degrees() const { return _degrees; }
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
 
@@ -75,7 +72,7 @@ int Circle::radius() const { return _radius; }
 double Circle::area() const { return M_PI * std::pow(_radius, 2); }
 
 Canvas2D::Canvas2D(int xx, int yy)
-    : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)) {}
+    : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)), _points() {}
 
 void Canvas2D::draw_rectangle(const Rectangle &rectangle) {
   draw_line(rectangle.lines()[0]);
@@ -267,12 +264,18 @@ void Canvas2D::draw_line(const Line &line) {
   }
 }
 
+const std::set<Point>& Canvas2D::points() const
+{
+  return _points;
+}
+
 void Canvas2D::draw_pixel(int x, int y) {
   if (x < 0 || x >= static_cast<int>(_pixels.size()) || y < 0 ||
       y >= static_cast<int>(_pixels[0].size())) {
     return;
   }
   _pixels[x][y] = 1;
+  _points.emplace(x, y);
 };
 
 } // namespace bubbles

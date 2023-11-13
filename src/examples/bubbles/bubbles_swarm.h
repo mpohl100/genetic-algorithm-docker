@@ -34,7 +34,7 @@ struct AlreadyOptimized {
 public:
   void add_circle(const Circle &circle);
   double area() const;
-
+  const std::vector<Circle>& circles() const;
 private:
   std::vector<Circle> _circles;
 };

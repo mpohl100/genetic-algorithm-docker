@@ -26,6 +26,11 @@ double AlreadyOptimized::area() const {
   return area;
 }
 
+const std::vector<Circle>& AlreadyOptimized::circles() const
+{
+  return _circles;
+}
+
 BubbleCircle::BubbleCircle(const Circle &circle,
                            const SourceCircle &source_circle)
     : _circle{circle}, _source_circle{source_circle} {}
@@ -207,9 +212,28 @@ BubblesSwarm::BubblesSwarm(const AlreadyOptimized &already_optimized,
                            const Canvas2D &canvas)
     : _already_optimized{already_optimized}, _canvas{canvas} {}
 
-double BubblesSwarm::score([[maybe_unused]] const BubbleCircle &bubble_circle,
+double BubblesSwarm::score(const BubbleCircle &bubble_circle,
                            [[maybe_unused]] const evol::Rng &rng) const {
-  return 0.0;
+  auto fitness = 0.0;
+  // punish overlapping circles
+  for (const auto &circle : _already_optimized.circles()) {
+    const auto distance = Vector{bubble_circle.circle().center(), circle.center()}.magnitude();
+    const auto radius_sum = static_cast<double>(bubble_circle.circle().radius() + circle.radius());
+    if(distance > radius_sum) {
+      break; // no reward for circles that don't intersect
+    }
+    fitness -= std::pow(radius_sum / distance, 2.0);  
+  }
+  // punish filled pixels within the circle
+  for(const auto &point : _canvas.points()){
+    const auto distance = Vector{bubble_circle.circle().center(), point}.magnitude();
+    if(distance < bubble_circle.circle().radius()) {
+      // containing a point within the circle is 20 times worse than overlapping a different circle
+      fitness -= 20*std::pow(bubble_circle.circle().radius() / distance, 2.0);
+    }
+  }
+  fitness += bubble_circle.circle().area();
+  return fitness;
 }
 
 } // namespace bubbles

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -107,8 +108,6 @@ public:
   double area() const;
   friend constexpr auto operator<=>(const Circle &, const Circle &) = default;
 
-  std::vector<Point> points() const;
-
 private:
   Point _center;
   int _radius;
@@ -128,11 +127,13 @@ public:
   std::string getPixels() const;
   void draw_line(const Line &line);
 
+  const std::set<Point>& points() const;
 private:
   void draw_pixel(int x, int y);
   [[maybe_unused]] int _x = 1;
   [[maybe_unused]] int _y = 1;
   std::vector<std::vector<int>> _pixels;
+  std::set<Point> _points;
 };
 
 } // namespace bubbles

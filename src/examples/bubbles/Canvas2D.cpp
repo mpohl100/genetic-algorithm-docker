@@ -37,6 +37,11 @@ Angle::Angle(const Point &p1, const Point &center, const Point &p2) {
   _degrees = std::acos(cos_angle) * 180.0 / M_PI;
 }
 
+double Angle::degrees() const
+{
+  return _degrees;
+}
+
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
 
 const Point &Line::start() const { return _start; }

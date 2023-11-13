@@ -297,9 +297,9 @@ struct DefaultChallenge {
 // optimize)
 // struct Phenotype {
 //	void crossover(Phenotype const& other); make sure to randomly choose
-//what data members should be taken from this or other 	void mutate(); make sure
-//to not randomly mutate too much of your Phenotype type (only one data member
-//at a time is recommended)
+// what data members should be taken from this or other 	void mutate(); make
+// sure to not randomly mutate too much of your Phenotype type (only one data
+// member at a time is recommended)
 // std::string toString() const; provide some output for the shape of the
 // Phenotype
 //};
@@ -307,8 +307,8 @@ struct DefaultChallenge {
 // These functions must be added to your challenge type
 // struct Challenge {
 //	double score(Phenotype const& Phenotype); the Phenotype faces the
-//challenge and its performance needs to be evaluated with a double (0 means
-//bad, the higher the better the performance)
+// challenge and its performance needs to be evaluated with a double (0 means
+// bad, the higher the better the performance)
 //};
 
 template <class Pheno, class Chall, class RNG>
@@ -354,16 +354,18 @@ struct DefaultPartialChallenge {
           [&options, &rng,
            &evolCoordinator](Pheno pheno, size_t num) -> std::optional<Pheno> {
         size_t i = 0;
-        while (options.min_magnitude > pheno.magnitude() ||
-               pheno.magnitude() > options.max_magnitude) {
+        double magnitude = pheno.magnitude();
+        while (options.min_magnitude > magnitude ||
+               magnitude > options.max_magnitude) {
           pheno.mutate(rng, evolCoordinator);
+          magnitude = pheno.magnitude();
           i++;
           if (i >= num) {
             break;
           }
         }
-        if (options.min_magnitude <= pheno.magnitude() &&
-            pheno.magnitude() <= options.max_magnitude) {
+        if (options.min_magnitude <= magnitude &&
+            magnitude <= options.max_magnitude) {
           return pheno;
         } else
           return std::nullopt;
@@ -405,9 +407,9 @@ struct DefaultPartialChallenge {
 // optimize)
 // struct PartialPhenotype {
 //	void crossover(Phenotype const& other); make sure to randomly choose
-//what data members should be taken from this or other 	void mutate(); make sure
-//to not randomly mutate too much of your Phenotype type (only one data member
-//at a time is recommended)
+// what data members should be taken from this or other 	void mutate(); make
+// sure to not randomly mutate too much of your Phenotype type (only one data
+// member at a time is recommended)
 //  std::string toString() const; provide some output for the shape of the
 //  Phenotype double magnitude() const; the square root of the sum of the
 //  squares of all members
@@ -416,8 +418,8 @@ struct DefaultPartialChallenge {
 // These functions must be added to your challenge type
 // struct PartialChallenge {
 //	double score(PatialPhenotype const& Phenotype); the Phenotype faces the
-//challenge and its performance needs to be evaluated with a double (0 means
-//bad, the higher the better the performance)
+// challenge and its performance needs to be evaluated with a double (0 means
+// bad, the higher the better the performance)
 //};
 
 template <class Pheno, class Chall, class RNG>

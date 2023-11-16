@@ -14,8 +14,7 @@ bool AngleArea::is_within(const Angle &angle) const {
   return angle.degrees() >= angle_1 && angle.degrees() < angle_2;
 }
 
-Angle AngleArea::get_angle(double factor) const
-{
+Angle AngleArea::get_angle(double factor) const {
   double segment_angle = 360.0 / _nb_angles;
   double degrees = segment_angle * (static_cast<double>(_area) * factor);
   return Angle{degrees};
@@ -33,8 +32,7 @@ double AlreadyOptimized::area() const {
   return area;
 }
 
-const std::vector<Circle>& AlreadyOptimized::circles() const
-{
+const std::vector<Circle> &AlreadyOptimized::circles() const {
   return _circles;
 }
 
@@ -162,31 +160,27 @@ bool BubbleCircle::is_within_angle_of_source_circle() const {
              : 0.0;
 }
 
-Circle calculate_first_guess(const SourceCircle& sourceCircle)
-{
+Circle calculate_first_guess(const SourceCircle &sourceCircle) {
   const auto angle = sourceCircle.angle_area.get_angle(0.5);
-  return Circle{sourceCircle.circle.center().plus(Vector{static_cast<double>(sourceCircle.circle.radius()) * 2.0, 0.0}.rotate(angle)),
-                sourceCircle.circle.radius()};
+  return Circle{
+      sourceCircle.circle.center().plus(
+          Vector{static_cast<double>(sourceCircle.circle.radius()) * 2.0, 0.0}
+              .rotate(angle)),
+      sourceCircle.circle.radius()};
 }
 
-std::optional<Circle> calculate_next_circle(const SourceCircle &source_circle,
-                             const AlreadyOptimized &already_optimized,
-                             const Canvas2D &canvas) {
+std::optional<Circle>
+calculate_next_circle(const SourceCircle &source_circle,
+                      const AlreadyOptimized &already_optimized,
+                      const Canvas2D &canvas,
+                      const evol::partial::PartialEvolutionOptions &params) {
   const auto bubble_swarm = BubblesSwarm{already_optimized, canvas};
-  auto evolParam = evol::partial::PartialEvolutionOptions{};
-  evolParam.num_generations = 100;
-  evolParam.log_level = 0;
-  evolParam.num_parents = 2;
-  evolParam.num_children = 20;
-  evolParam.min_magnitude = 0.9;
-  evolParam.max_magnitude = 1.1;
-  evolParam.out = &std::cout;
   auto rng = evol::Rng{};
 
   const auto result = evol::partial::evolution(
-      BubbleCircle{calculate_first_guess(source_circle), source_circle}, bubble_swarm,
-      evolParam, rng);
-  if(result.fitness >= 0.0){
+      BubbleCircle{calculate_first_guess(source_circle), source_circle},
+      bubble_swarm, params, rng);
+  if (result.fitness >= 0.0) {
     return result.winner.circle();
   }
   return std::nullopt;
@@ -201,14 +195,16 @@ std::vector<SourceCircle> deduce_next_sourve_circles(const Circle &circle) {
   return source_circles;
 }
 
-AlreadyOptimized bubbles_algorithm(const Canvas2D &canvas, const Point &point) {
+AlreadyOptimized
+bubbles_algorithm(const Canvas2D &canvas, const Point &point,
+                  const evol::partial::PartialEvolutionOptions &params) {
   auto already_optimized = AlreadyOptimized{};
   auto queue = std::queue<SourceCircle>{};
   queue.emplace(SourceCircle{Circle{point, 1}, AngleArea{0, 6}});
   auto already_calculated = std::set<SourceCircle>{};
   while (!queue.empty()) {
     const auto next_circle =
-        calculate_next_circle(queue.front(), already_optimized, canvas);
+        calculate_next_circle(queue.front(), already_optimized, canvas, params);
     if (next_circle) {
       already_optimized.add_circle(*next_circle);
 #if 0
@@ -237,19 +233,23 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
   auto fitness = 0.0;
   // punish overlapping circles
   for (const auto &circle : _already_optimized.circles()) {
-    const auto distance = Vector{bubble_circle.circle().center(), circle.center()}.magnitude();
-    const auto radius_sum = static_cast<double>(bubble_circle.circle().radius() + circle.radius());
-    if(distance > radius_sum) {
+    const auto distance =
+        Vector{bubble_circle.circle().center(), circle.center()}.magnitude();
+    const auto radius_sum =
+        static_cast<double>(bubble_circle.circle().radius() + circle.radius());
+    if (distance > radius_sum) {
       break; // no reward for circles that don't intersect
     }
-    fitness -= std::pow(radius_sum / distance, 2.0);  
+    fitness -= std::pow(radius_sum / distance, 2.0);
   }
   // punish filled pixels within the circle
-  for(const auto &point : _canvas.points()){
-    const auto distance = Vector{bubble_circle.circle().center(), point}.magnitude();
-    if(distance < bubble_circle.circle().radius()) {
-      // containing a point within the circle is 20 times worse than overlapping a different circle
-      fitness -= 20*std::pow(bubble_circle.circle().radius() / distance, 2.0);
+  for (const auto &point : _canvas.points()) {
+    const auto distance =
+        Vector{bubble_circle.circle().center(), point}.magnitude();
+    if (distance < bubble_circle.circle().radius()) {
+      // containing a point within the circle is 20 times worse than overlapping
+      // a different circle
+      fitness -= 20 * std::pow(bubble_circle.circle().radius() / distance, 2.0);
     }
   }
   fitness += bubble_circle.circle().area();

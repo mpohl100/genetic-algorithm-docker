@@ -35,7 +35,8 @@ struct AlreadyOptimized {
 public:
   void add_circle(const Circle &circle);
   double area() const;
-  const std::vector<Circle>& circles() const;
+  const std::vector<Circle> &circles() const;
+
 private:
   std::vector<Circle> _circles;
 };
@@ -86,6 +87,8 @@ private:
 static_assert(
     evol::partial::PartialChallenge<BubblesSwarm, BubbleCircle, evol::Rng>);
 
-AlreadyOptimized bubbles_algorithm(const Canvas2D &canvas, const Point &point);
+AlreadyOptimized
+bubbles_algorithm(const Canvas2D &canvas, const Point &point,
+                  const evol::partial::PartialEvolutionOptions &params);
 
 } // namespace bubbles

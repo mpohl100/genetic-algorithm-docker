@@ -34,6 +34,7 @@ struct Angle {
   Angle(const Point &p1, const Point &center, const Point &p2);
 
   double degrees() const;
+  double radians() const;
 
 private:
   double _degrees = 0;
@@ -50,6 +51,7 @@ struct Vector {
 
   friend constexpr auto operator<=>(const Vector &, const Vector &) = default;
 
+  Vector rotate(const Angle &angle) const;
   Vector scale(double factor) const;
   double magnitude() const;
 

@@ -12,6 +12,14 @@ Vector::Vector(double xx, double yy) : x(xx), y(yy) {}
 Vector::Vector(const Point &start, const Point &end)
     : x(end.x - start.x), y(end.y - start.y) {}
 
+Vector Vector::rotate(const Angle &angle) const
+{
+  const auto radians = angle.radians();
+  const auto cos_angle = std::cos(radians);
+  const auto sin_angle = std::sin(radians);
+  return Vector{x * cos_angle - y * sin_angle, x * sin_angle + y * cos_angle};
+}
+
 Vector Vector::scale(double factor) const {
   return Vector{x * factor, y * factor};
 }
@@ -38,6 +46,11 @@ Angle::Angle(const Point &p1, const Point &center, const Point &p2) {
 }
 
 double Angle::degrees() const { return _degrees; }
+
+double Angle::radians() const
+{
+  return degrees() * M_PI / 180.0;
+}
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
 

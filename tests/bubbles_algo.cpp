@@ -13,6 +13,11 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
     canvas.draw_rectangle(rectangle);
     const auto already_optimized = bubbles::bubbles_algorithm(canvas, bubbles::Point(50, 50));
     CHECK(already_optimized.area() / rectangle.area() >= 0.9);
+    canvas.draw_circle(already_optimized.circles()[0]);
+    const auto canvas_pixels = canvas.getPixels();
+    //CHECK(canvas_pixels == std::string());
+    const auto circle = already_optimized.circles()[0];
+    std::cout << "center x: "<< circle.center().x << "center y: " << circle.center().y << "; radius: " << circle.radius() << std::endl;
   }
 }
 

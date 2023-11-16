@@ -14,6 +14,13 @@ bool AngleArea::is_within(const Angle &angle) const {
   return angle.degrees() >= angle_1 && angle.degrees() < angle_2;
 }
 
+Angle AngleArea::get_angle(double factor) const
+{
+  double segment_angle = 360.0 / _nb_angles;
+  double degrees = segment_angle * (static_cast<double>(_area) * factor);
+  return Angle{degrees};
+}
+
 void AlreadyOptimized::add_circle(const Circle &circle) {
   _circles.push_back(circle);
 }
@@ -155,7 +162,14 @@ bool BubbleCircle::is_within_angle_of_source_circle() const {
              : 0.0;
 }
 
-Circle calculate_next_circle(const SourceCircle &source_circle,
+Circle calculate_first_guess(const SourceCircle& sourceCircle)
+{
+  const auto angle = sourceCircle.angle_area.get_angle(0.5);
+  return Circle{sourceCircle.circle.center().plus(Vector{static_cast<double>(sourceCircle.circle.radius()) * 2.0, 0.0}.rotate(angle)),
+                sourceCircle.circle.radius()};
+}
+
+std::optional<Circle> calculate_next_circle(const SourceCircle &source_circle,
                              const AlreadyOptimized &already_optimized,
                              const Canvas2D &canvas) {
   const auto bubble_swarm = BubblesSwarm{already_optimized, canvas};
@@ -170,9 +184,12 @@ Circle calculate_next_circle(const SourceCircle &source_circle,
   auto rng = evol::Rng{};
 
   const auto result = evol::partial::evolution(
-      BubbleCircle{source_circle.circle, source_circle}, bubble_swarm,
+      BubbleCircle{calculate_first_guess(source_circle), source_circle}, bubble_swarm,
       evolParam, rng);
-  return result.winner.circle();
+  if(result.fitness >= 0.0){
+    return result.winner.circle();
+  }
+  return std::nullopt;
 }
 
 std::vector<SourceCircle> deduce_next_sourve_circles(const Circle &circle) {
@@ -192,8 +209,9 @@ AlreadyOptimized bubbles_algorithm(const Canvas2D &canvas, const Point &point) {
   while (!queue.empty()) {
     const auto next_circle =
         calculate_next_circle(queue.front(), already_optimized, canvas);
-    already_optimized.add_circle(next_circle);
-
+    if (next_circle) {
+      already_optimized.add_circle(*next_circle);
+#if 0
     const auto next_source_circles = deduce_next_sourve_circles(next_circle);
     for (const auto &next_source_circle : next_source_circles) {
       if (already_calculated.find(next_source_circle) ==
@@ -203,6 +221,8 @@ AlreadyOptimized bubbles_algorithm(const Canvas2D &canvas, const Point &point) {
     }
 
     already_calculated.insert(queue.front());
+#endif
+    }
     queue.pop();
   }
   return already_optimized;

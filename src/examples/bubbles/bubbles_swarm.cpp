@@ -9,9 +9,11 @@ AngleArea::AngleArea(int area, int number_angles)
     : _area{area}, _nb_angles{number_angles} {}
 
 bool AngleArea::is_within(const Angle &angle) const {
-  const auto angle_1 = 360.0 / _nb_angles * _area;
-  const auto angle_2 = 360.0 / _nb_angles * (_area + 1);
-  return angle.degrees() >= angle_1 && angle.degrees() < angle_2;
+  const auto segment_angle = 360.0 / _nb_angles;
+  const auto angle_1 = segment_angle * _area - 1e-10;
+  const auto angle_2 = segment_angle * (_area + 1) + 1e-10;
+  const auto degrees = angle.degrees();
+  return degrees >= angle_1 && degrees <= angle_2;
 }
 
 std::string AngleArea::toString() const
@@ -20,8 +22,8 @@ std::string AngleArea::toString() const
 }
 
 Angle AngleArea::get_angle(double factor) const {
-  double segment_angle = 360.0 / _nb_angles;
-  double degrees = segment_angle * (static_cast<double>(_area) * factor);
+  const auto segment_angle = 360.0 / _nb_angles;
+  const auto degrees = segment_angle * _area + segment_angle * factor;
   return Angle{degrees};
 }
 

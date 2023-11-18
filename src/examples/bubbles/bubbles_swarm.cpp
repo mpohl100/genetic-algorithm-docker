@@ -41,34 +41,20 @@ BubbleCircle::BubbleCircle(const Circle &circle,
     : _circle{circle}, _source_circle{source_circle} {}
 
 void BubbleCircle::crossover(const BubbleCircle &other) {
-  _circle = Circle{Point{(_circle.center().x + other.circle().center().x) / 2,
-                         (_circle.center().y + other.circle().center().y) / 2},
-                   (_circle.radius() + other.circle().radius()) / 2};
+  const auto new_center = Point{(_circle.center().x + other.circle().center().x) / 2,
+                                (_circle.center().y + other.circle().center().y) / 2};
+  _circle = Circle{new_center, static_cast<int>(get_radius(new_center))};
 }
 
 void BubbleCircle::mutate(
     evol::Rng &rng,
     [[maybe_unused]] const evol::EvolutionCoordinator &evolCoordinator) {
-  const auto random_number = rng.fetchUniform(0, 2, 1).top();
   // try out different valus here
-  const auto random_mutation_value =
-      static_cast<int>(rng.fetchNormal(0, 2, 1).top());
-  switch (random_number) {
-  case 0:
-    _circle = Circle{
-        Point{_circle.center().x + random_mutation_value, _circle.center().y},
-        _circle.radius()};
-    break;
-  case 1:
-    _circle = Circle{
-        Point{_circle.center().x, _circle.center().y + random_mutation_value},
-        _circle.radius()};
-    break;
-  case 2:
-    _circle =
-        Circle{_circle.center(), _circle.radius() + random_mutation_value};
-    break;
-  }
+  const auto random_mutation_value_x = rng.fetchUniform(-5, 5, 1).top();
+  const auto random_mutation_value_y = rng.fetchUniform(-5, 5, 1).top();
+  const auto new_center = Point{_circle.center().x + random_mutation_value_x,
+                                _circle.center().y + random_mutation_value_y};
+  _circle = Circle{new_center, static_cast<int>(get_radius(new_center))};
 }
 
 std::string BubbleCircle::toString() const {
@@ -158,6 +144,11 @@ bool BubbleCircle::is_within_angle_of_source_circle() const {
           _source_circle.angle_area.is_within(angle_1))
              ? 1.0
              : 0.0;
+}
+
+double BubbleCircle::get_radius(const Point &center) const
+{
+  return Vector{center, _source_circle.circle.center()}.magnitude();
 }
 
 Circle calculate_first_guess(const SourceCircle &sourceCircle) {

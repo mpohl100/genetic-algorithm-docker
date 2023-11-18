@@ -22,7 +22,9 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
     evolParams.max_magnitude = 1.1;
     const auto already_optimized =
         bubbles::bubbles_algorithm(canvas, bubbles::Point(50, 50), evolParams);
-    CHECK(already_optimized.area() / rectangle.area() >= 0.9);
+    const auto ratio = already_optimized.area() / rectangle.area();
+    CHECK(ratio >= 0.9);
+    CHECK(ratio < 1);
     canvas.draw_circle(already_optimized.circles()[0]);
     const auto canvas_pixels = canvas.getPixels();
     // CHECK(canvas_pixels == std::string());

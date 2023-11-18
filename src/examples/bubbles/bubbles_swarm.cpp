@@ -231,7 +231,8 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
     if (distance > radius_sum) {
       break; // no reward for circles that don't intersect
     }
-    fitness -= std::pow(radius_sum / distance, 2.0);
+    // scale this fitness deduction with the area of the circle
+    fitness -= std::pow(radius_sum / distance, 2.0) * bubble_circle.circle().area();
   }
   // punish filled pixels within the circle
   for (const auto &point : _canvas.points()) {
@@ -240,7 +241,8 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
     if (distance < bubble_circle.circle().radius()) {
       // containing a point within the circle is 20 times worse than overlapping
       // a different circle
-      fitness -= 20 * std::pow(bubble_circle.circle().radius() / distance, 2.0);
+      // scale this fitness deduction with the area of the circle
+      fitness -= 20 * std::pow(bubble_circle.circle().radius() / distance, 2.0) * bubble_circle.circle().area();
     }
   }
   fitness += bubble_circle.circle().area();

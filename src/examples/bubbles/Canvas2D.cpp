@@ -16,7 +16,11 @@ Vector Vector::rotate(const Angle &angle) const {
   const auto radians = angle.radians();
   const auto cos_angle = std::cos(radians);
   const auto sin_angle = std::sin(radians);
-  return Vector{x * cos_angle - y * sin_angle, x * sin_angle + y * cos_angle};
+  const auto dx = 0;
+  const auto dy = 0;
+  const auto x_rotated =      ((x - dx) * cos_angle) - ((dy - y) * sin_angle) + dx;
+  const auto y_rotated = dy - ((dy - y) * cos_angle) + ((x - dx) * sin_angle);
+  return Vector{x_rotated, y_rotated};
 }
 
 Vector Vector::scale(double factor) const {
@@ -95,11 +99,11 @@ double Rectangle::area() const {
   return _lines[0].magnitude() * _lines[1].magnitude();
 }
 
-Circle::Circle(Point center, int radius) : _center(center), _radius(radius) {}
+Circle::Circle(Point center, size_t radius) : _center(center), _radius(radius) {}
 
 const Point &Circle::center() const { return _center; }
 
-int Circle::radius() const { return std::abs(_radius); }
+int Circle::radius() const { return static_cast<int>(_radius); }
 
 double Circle::area() const { return M_PI * std::pow(_radius, 2); }
 

@@ -49,7 +49,7 @@ void BubbleCircle::crossover(const BubbleCircle &other) {
   const auto new_center =
       Point{(_circle.center().x + other.circle().center().x) / 2,
             (_circle.center().y + other.circle().center().y) / 2};
-  _circle = Circle{new_center, static_cast<int>(get_radius(new_center))};
+  _circle = Circle{new_center, get_radius(new_center)};
 }
 
 void BubbleCircle::mutate(
@@ -60,7 +60,7 @@ void BubbleCircle::mutate(
   const auto random_mutation_value_y = rng.fetchUniform(-5, 5, 1).top();
   const auto new_center = Point{_circle.center().x + random_mutation_value_x,
                                 _circle.center().y + random_mutation_value_y};
-  _circle = Circle{new_center, static_cast<int>(get_radius(new_center))};
+  _circle = Circle{new_center, get_radius(new_center)};
 }
 
 std::string BubbleCircle::toString() const {
@@ -127,11 +127,17 @@ std::vector<Point> calculate_circle_intersection(const Circle &first,
 }
 
 bool BubbleCircle::is_within_angle_of_source_circle() const {
+  const auto get_radius = [](const Vector& vec) -> size_t{
+    const auto mag = vec.magnitude();
+    if(mag >= 0){
+      return static_cast<size_t>(mag);
+    }
+    return 0;
+  };
   const auto thales_circle = Circle{
       get_mid_point(_circle.center(), _source_circle.circle.center()),
-      static_cast<int>(Vector{_circle.center(), _source_circle.circle.center()}
-                           .scale(0.5)
-                           .magnitude())};
+      get_radius(Vector{_circle.center(), _source_circle.circle.center()}
+                           .scale(0.5))};
   const auto intersection_points =
       calculate_circle_intersection(_circle, thales_circle);
   if (intersection_points.size() < 2) {
@@ -152,17 +158,22 @@ bool BubbleCircle::is_within_angle_of_source_circle() const {
              : 0.0;
 }
 
-double BubbleCircle::get_radius(const Point &center) const {
-  return Vector{center, _source_circle.circle.center()}.magnitude() - _source_circle.circle.radius();
+size_t BubbleCircle::get_radius(const Point &center) const {
+  const auto radius = Vector{center, _source_circle.circle.center()}.magnitude() - _source_circle.circle.radius();
+  if(radius >= 0.0){
+    return static_cast<size_t>(radius);
+  }
+  return 0;
 }
 
 Circle calculate_first_guess(const SourceCircle &sourceCircle) {
   const auto angle = sourceCircle.angle_area.get_angle(0.5);
+  const auto radius = static_cast<size_t>(sourceCircle.circle.radius());
   return Circle{
       sourceCircle.circle.center().plus(
           Vector{static_cast<double>(sourceCircle.circle.radius()) * 2.0, 0.0}
               .rotate(angle)),
-      sourceCircle.circle.radius()};
+      radius};
 }
 
 std::optional<Circle>
@@ -173,10 +184,12 @@ calculate_next_circle(const SourceCircle &source_circle,
   const auto bubble_swarm = BubblesSwarm{already_optimized, canvas};
   auto rng = evol::Rng{};
 
+  const auto first_guess = calculate_first_guess(source_circle);
+  std::cout << "first guess:\n" << first_guess.toString() << std::endl;
   const auto result = evol::partial::evolution(
-      BubbleCircle{calculate_first_guess(source_circle), source_circle},
+      BubbleCircle{first_guess, source_circle},
       bubble_swarm, params, rng);
-  if (result.fitness >= 0.0) {
+  if (result.fitness >= 10.0) {
     return result.winner.circle();
   }
   return std::nullopt;
@@ -184,7 +197,7 @@ calculate_next_circle(const SourceCircle &source_circle,
 
 std::vector<SourceCircle> deduce_next_sourve_circles(const Circle &circle) {
   std::vector<SourceCircle> source_circles;
-  int nb_angles = 6;
+  int nb_angles = 3;
   for (int i = 0; i < nb_angles; ++i) {
     source_circles.emplace_back(SourceCircle{circle, AngleArea{i, nb_angles}});
   }
@@ -196,7 +209,7 @@ bubbles_algorithm(const Canvas2D &canvas, const Point &point,
                   const evol::partial::PartialEvolutionOptions &params) {
   auto already_optimized = AlreadyOptimized{};
   auto queue = std::queue<SourceCircle>{};
-  queue.emplace(SourceCircle{Circle{point, 1}, AngleArea{0, 6}});
+  queue.emplace(SourceCircle{Circle{point, 1}, AngleArea{0, 3}});
   while (!queue.empty()) {
     const auto bubble_circle = queue.front();
     queue.pop(); 

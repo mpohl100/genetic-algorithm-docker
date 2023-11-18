@@ -105,7 +105,7 @@ public:
   Circle &operator=(const Circle &) = default;
   Circle(Circle &&) = default;
   Circle &operator=(Circle &&) = default;
-  Circle(Point center, int radius);
+  Circle(Point center, size_t radius);
 
   const Point &center() const;
   int radius() const;
@@ -115,7 +115,7 @@ public:
 
 private:
   Point _center;
-  int _radius;
+  size_t _radius;
 };
 
 class Canvas2D {

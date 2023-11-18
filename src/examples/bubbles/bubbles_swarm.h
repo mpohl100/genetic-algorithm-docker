@@ -62,7 +62,7 @@ struct BubbleCircle {
 
 private:
   bool is_within_angle_of_source_circle() const;
-  double get_radius(const Point &center) const;
+  size_t get_radius(const Point &center) const;
 
   Circle _circle;
   SourceCircle _source_circle;

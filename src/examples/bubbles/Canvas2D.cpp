@@ -33,6 +33,11 @@ Point Point::plus(const Vector &vec) const {
   return Point{x + static_cast<int>(vec.x), y + static_cast<int>(vec.y)};
 }
 
+std::string Point::toString() const
+{
+  return "Point{x: " + std::to_string(x) + "; y: " + std::to_string(y) + "}";
+}
+
 Angle::Angle(double degrees) : _radians(degrees / 180.0 * M_PI) {}
 
 Angle::Angle(const Point &p1, const Point &center, const Point &p2) {
@@ -48,9 +53,9 @@ Angle::Angle(const Line &line1, const Line &line2) {
 }
 
 double Angle::degrees() const {
-  auto degrees = _radians * 180.0 / M_PI;
+  const auto degrees = _radians * 180.0 / M_PI;
   if (degrees < 0) {
-    degrees += 360.0;
+    return degrees + 360.0;
   }
   return degrees;
 }
@@ -94,9 +99,14 @@ Circle::Circle(Point center, int radius) : _center(center), _radius(radius) {}
 
 const Point &Circle::center() const { return _center; }
 
-int Circle::radius() const { return _radius; }
+int Circle::radius() const { return std::abs(_radius); }
 
 double Circle::area() const { return M_PI * std::pow(_radius, 2); }
+
+std::string Circle::toString() const
+{
+  return "Circle{center: " + _center.toString() + "; radius: " + std::to_string(_radius) + "}";
+}
 
 Canvas2D::Canvas2D(int xx, int yy)
     : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)), _points() {}

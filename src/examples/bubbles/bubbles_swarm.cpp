@@ -14,6 +14,11 @@ bool AngleArea::is_within(const Angle &angle) const {
   return angle.degrees() >= angle_1 && angle.degrees() < angle_2;
 }
 
+std::string AngleArea::toString() const
+{
+  return "AngleArea{area: " + std::to_string(_area) + "; nb_angles: " + std::to_string(_nb_angles) + "}";
+}
+
 Angle AngleArea::get_angle(double factor) const {
   double segment_angle = 360.0 / _nb_angles;
   double degrees = segment_angle * (static_cast<double>(_area) * factor);
@@ -41,8 +46,9 @@ BubbleCircle::BubbleCircle(const Circle &circle,
     : _circle{circle}, _source_circle{source_circle} {}
 
 void BubbleCircle::crossover(const BubbleCircle &other) {
-  const auto new_center = Point{(_circle.center().x + other.circle().center().x) / 2,
-                                (_circle.center().y + other.circle().center().y) / 2};
+  const auto new_center =
+      Point{(_circle.center().x + other.circle().center().x) / 2,
+            (_circle.center().y + other.circle().center().y) / 2};
   _circle = Circle{new_center, static_cast<int>(get_radius(new_center))};
 }
 
@@ -146,9 +152,8 @@ bool BubbleCircle::is_within_angle_of_source_circle() const {
              : 0.0;
 }
 
-double BubbleCircle::get_radius(const Point &center) const
-{
-  return Vector{center, _source_circle.circle.center()}.magnitude();
+double BubbleCircle::get_radius(const Point &center) const {
+  return Vector{center, _source_circle.circle.center()}.magnitude() - _source_circle.circle.radius();
 }
 
 Circle calculate_first_guess(const SourceCircle &sourceCircle) {
@@ -192,25 +197,29 @@ bubbles_algorithm(const Canvas2D &canvas, const Point &point,
   auto already_optimized = AlreadyOptimized{};
   auto queue = std::queue<SourceCircle>{};
   queue.emplace(SourceCircle{Circle{point, 1}, AngleArea{0, 6}});
-  auto already_calculated = std::set<SourceCircle>{};
   while (!queue.empty()) {
+    const auto bubble_circle = queue.front();
+    queue.pop(); 
+    std::cout << "deducing next circle ... queue size: " << queue.size() << std::endl; 
+    std::cout << "circle: " << bubble_circle.circle.toString() << std::endl;
+    std::cout << "angle area: " << bubble_circle.angle_area.toString() << std::endl;
     const auto next_circle =
-        calculate_next_circle(queue.front(), already_optimized, canvas, params);
+        calculate_next_circle(bubble_circle, already_optimized, canvas, params);
     if (next_circle) {
       already_optimized.add_circle(*next_circle);
-#if 0
-    const auto next_source_circles = deduce_next_sourve_circles(next_circle);
-    for (const auto &next_source_circle : next_source_circles) {
-      if (already_calculated.find(next_source_circle) ==
-          already_calculated.end()) {
+      const auto next_source_circles = deduce_next_sourve_circles(*next_circle);
+      for (const auto &next_source_circle : next_source_circles) {
         queue.emplace(next_source_circle);
       }
+      // draw canvas with circles
+      auto draw_canvas = canvas;
+      for (const auto &circle : already_optimized.circles()) {
+        draw_canvas.draw_circle(circle);
+      }
+      const auto canvas_pixels = draw_canvas.getPixels();
+      std::cout << "queue size: " << queue.size() << std::endl;
+      //std::cout << canvas_pixels << std::endl;
     }
-
-    already_calculated.insert(queue.front());
-#endif
-    }
-    queue.pop();
   }
   return already_optimized;
 }
@@ -232,7 +241,8 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
       break; // no reward for circles that don't intersect
     }
     // scale this fitness deduction with the area of the circle
-    fitness -= std::pow(radius_sum / distance, 2.0) * bubble_circle.circle().area();
+    fitness -=
+        std::pow(radius_sum / distance, 2.0) * bubble_circle.circle().area();
   }
   // punish filled pixels within the circle
   for (const auto &point : _canvas.points()) {
@@ -242,7 +252,9 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
       // containing a point within the circle is 20 times worse than overlapping
       // a different circle
       // scale this fitness deduction with the area of the circle
-      fitness -= 20 * std::pow(bubble_circle.circle().radius() / distance, 2.0) * bubble_circle.circle().area();
+      fitness -= 20 *
+                 std::pow(bubble_circle.circle().radius() / distance, 2.0) *
+                 bubble_circle.circle().area();
     }
   }
   fitness += bubble_circle.circle().area();

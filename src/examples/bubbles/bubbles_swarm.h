@@ -17,6 +17,7 @@ struct AngleArea {
   friend constexpr auto operator<=>(const AngleArea &,
                                     const AngleArea &) = default;
   bool is_within(const Angle &angle) const;
+  std::string toString() const;
   Angle get_angle(double factor) const;
 
 private:

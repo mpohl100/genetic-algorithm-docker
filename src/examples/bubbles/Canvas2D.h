@@ -17,7 +17,7 @@ struct Point {
   Point(int xx, int yy);
 
   Point plus(const Vector &vec) const;
-
+  std::string toString() const;
   friend constexpr auto operator<=>(const Point &, const Point &) = default;
 
   int x = 0;
@@ -110,6 +110,7 @@ public:
   const Point &center() const;
   int radius() const;
   double area() const;
+  std::string toString() const;
   friend constexpr auto operator<=>(const Circle &, const Circle &) = default;
 
 private:

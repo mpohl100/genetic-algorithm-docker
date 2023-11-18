@@ -12,8 +12,7 @@ Vector::Vector(double xx, double yy) : x(xx), y(yy) {}
 Vector::Vector(const Point &start, const Point &end)
     : x(end.x - start.x), y(end.y - start.y) {}
 
-Vector Vector::rotate(const Angle &angle) const
-{
+Vector Vector::rotate(const Angle &angle) const {
   const auto radians = angle.radians();
   const auto cos_angle = std::cos(radians);
   const auto sin_angle = std::sin(radians);
@@ -34,22 +33,35 @@ Point Point::plus(const Vector &vec) const {
   return Point{x + static_cast<int>(vec.x), y + static_cast<int>(vec.y)};
 }
 
-Angle::Angle(double degrees) : _degrees(degrees) {}
+Angle::Angle(double degrees) : _radians(degrees / 180.0 * M_PI) {}
 
 Angle::Angle(const Point &p1, const Point &center, const Point &p2) {
   const auto v1 = Vector{center, p1};
   const auto v2 = Vector{center, p2};
+  _radians = radians_from_vectors(v1, v2);
+}
+
+Angle::Angle(const Line &line1, const Line &line2) {
+  const auto v1 = Vector{line1.start(), line1.end()};
+  const auto v2 = Vector{line2.start(), line2.end()};
+  _radians = radians_from_vectors(v1, v2);
+}
+
+double Angle::degrees() const {
+  auto degrees = _radians * 180.0 / M_PI;
+  if (degrees < 0) {
+    degrees += 360.0;
+  }
+  return degrees;
+}
+
+double Angle::radians() const { return _radians; }
+
+double Angle::radians_from_vectors(const Vector &v1, const Vector &v2) const {
   const auto dot_product = v1.x * v2.x + v1.y * v2.y;
   const auto magnitude_product = v1.magnitude() * v2.magnitude();
   const auto cos_angle = dot_product / magnitude_product;
-  _degrees = std::acos(cos_angle) * 180.0 / M_PI;
-}
-
-double Angle::degrees() const { return _degrees; }
-
-double Angle::radians() const
-{
-  return degrees() * M_PI / 180.0;
+  return std::acos(cos_angle);
 }
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
@@ -277,10 +289,7 @@ void Canvas2D::draw_line(const Line &line) {
   }
 }
 
-const std::set<Point>& Canvas2D::points() const
-{
-  return _points;
-}
+const std::set<Point> &Canvas2D::points() const { return _points; }
 
 void Canvas2D::draw_pixel(int x, int y) {
   if (x < 0 || x >= static_cast<int>(_pixels.size()) || y < 0 ||

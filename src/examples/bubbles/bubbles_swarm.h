@@ -59,6 +59,7 @@ struct BubbleCircle {
   double magnitude() const;
 
   const Circle &circle() const;
+  const SourceCircle &source_circle() const;
 
 private:
   bool is_within_angle_of_source_circle() const;

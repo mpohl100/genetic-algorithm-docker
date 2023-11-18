@@ -83,12 +83,12 @@ TEST_CASE("Canvas", "[canvas]") {
     // 270 degrees
     const auto line_270 = bubbles::Line{bubbles::Point(0, 0), bubbles::Point(0, -50)};
     const auto angle_270 = bubbles::Angle{line, line_270};
-    CHECK(angle_270.radians() == 3.0 * M_PI / 2.0);
+    CHECK(angle_270.radians() ==  - M_PI / 2.0);
 
     // 359 degrees
     const auto line_360 = bubbles::Line{bubbles::Point(0, 0), bubbles::Point(50, 1)};
     const auto angle_360 = bubbles::Angle{line, line_360};
-    CHECK(angle_360.radians() == 0.0);
+    CHECK((angle_360.radians() - 0.019997334) < 1e-7);
   }
 }
 

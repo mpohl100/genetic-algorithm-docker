@@ -60,8 +60,10 @@ double Angle::radians() const { return _radians; }
 double Angle::radians_from_vectors(const Vector &v1, const Vector &v2) const {
   const auto dot_product = v1.x * v2.x + v1.y * v2.y;
   const auto magnitude_product = v1.magnitude() * v2.magnitude();
+  const auto cross_product = v1.x * v2.y - v1.y * v2.x;
   const auto cos_angle = dot_product / magnitude_product;
-  return std::acos(cos_angle);
+  const auto angle = std::acos(cos_angle);
+  return cross_product < 0 ? -angle : angle;
 }
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}

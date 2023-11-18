@@ -197,7 +197,7 @@ calculate_next_circle(const SourceCircle &source_circle,
 
 std::vector<SourceCircle> deduce_next_sourve_circles(const Circle &circle) {
   std::vector<SourceCircle> source_circles;
-  int nb_angles = 3;
+  int nb_angles = 6;
   for (int i = 0; i < nb_angles; ++i) {
     source_circles.emplace_back(SourceCircle{circle, AngleArea{i, nb_angles}});
   }
@@ -209,7 +209,7 @@ bubbles_algorithm(const Canvas2D &canvas, const Point &point,
                   const evol::partial::PartialEvolutionOptions &params) {
   auto already_optimized = AlreadyOptimized{};
   auto queue = std::queue<SourceCircle>{};
-  queue.emplace(SourceCircle{Circle{point, 1}, AngleArea{0, 3}});
+  queue.emplace(SourceCircle{Circle{point, 1}, AngleArea{0, 6}});
   while (!queue.empty()) {
     const auto bubble_circle = queue.front();
     queue.pop(); 

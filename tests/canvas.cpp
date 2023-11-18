@@ -63,6 +63,33 @@ TEST_CASE("Canvas", "[canvas]") {
                                        "....XXX...\n"
                                        "..........\n"));
   }
+  SECTION("Canvas_Angle"){
+    // 0 degrees
+    const auto line = bubbles::Line{bubbles::Point(0, 0), bubbles::Point(50, 0)};
+    const auto line_0 = line;
+    const auto angle_0 = bubbles::Angle{line, line_0};
+    CHECK(angle_0.radians() == 0.0);
+
+    // 90 degrees
+    const auto line_90 = bubbles::Line{bubbles::Point(0, 0), bubbles::Point(0, 50)};
+    const auto angle_90 = bubbles::Angle{line, line_90};
+    CHECK(angle_90.radians() == M_PI / 2.0);
+
+    // 180 degrees
+    const auto line_180 = bubbles::Line{bubbles::Point(0, 0), bubbles::Point(-50, 0)};
+    const auto angle_180 = bubbles::Angle{line, line_180};
+    CHECK(angle_180.radians() == M_PI);
+
+    // 270 degrees
+    const auto line_270 = bubbles::Line{bubbles::Point(0, 0), bubbles::Point(0, -50)};
+    const auto angle_270 = bubbles::Angle{line, line_270};
+    CHECK(angle_270.radians() == 3.0 * M_PI / 2.0);
+
+    // 359 degrees
+    const auto line_360 = bubbles::Line{bubbles::Point(0, 0), bubbles::Point(50, 1)};
+    const auto angle_360 = bubbles::Angle{line, line_360};
+    CHECK(angle_360.radians() == 0.0);
+  }
 }
 
 } // namespace

@@ -24,6 +24,26 @@ struct Point {
   int y = 0;
 };
 
+class Line {
+public:
+  Line() = default;
+  Line(const Line &) = default;
+  Line &operator=(const Line &) = default;
+  Line(Line &&) = default;
+  Line &operator=(Line &&) = default;
+  Line(Point start, Point end);
+
+  const Point &start() const;
+  const Point &end() const;
+  double magnitude() const;
+
+  friend constexpr auto operator<=>(const Line &, const Line &) = default;
+
+private:
+  Point _start;
+  Point _end;
+};
+
 struct Angle {
   Angle() = default;
   Angle(const Angle &) = default;
@@ -32,12 +52,14 @@ struct Angle {
   Angle &operator=(Angle &&) = default;
   Angle(double degrees);
   Angle(const Point &p1, const Point &center, const Point &p2);
+  Angle(const Line &line1, const Line &line2);
 
   double degrees() const;
   double radians() const;
 
 private:
-  double _degrees = 0;
+  double radians_from_vectors(const Vector &v1, const Vector &v2) const;
+  double _radians = 0;
 };
 
 struct Vector {
@@ -57,26 +79,6 @@ struct Vector {
 
   double x = 0;
   double y = 0;
-};
-
-class Line {
-public:
-  Line() = default;
-  Line(const Line &) = default;
-  Line &operator=(const Line &) = default;
-  Line(Line &&) = default;
-  Line &operator=(Line &&) = default;
-  Line(Point start, Point end);
-
-  const Point &start() const;
-  const Point &end() const;
-  double magnitude() const;
-
-  friend constexpr auto operator<=>(const Line &, const Line &) = default;
-
-private:
-  Point _start;
-  Point _end;
 };
 
 class Rectangle {
@@ -129,7 +131,8 @@ public:
   std::string getPixels() const;
   void draw_line(const Line &line);
 
-  const std::set<Point>& points() const;
+  const std::set<Point> &points() const;
+
 private:
   void draw_pixel(int x, int y);
   [[maybe_unused]] int _x = 1;

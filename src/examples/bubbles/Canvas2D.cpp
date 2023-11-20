@@ -18,7 +18,7 @@ Vector Vector::rotate(const Angle &angle) const {
   const auto sin_angle = std::sin(radians);
   const auto dx = 0;
   const auto dy = 0;
-  const auto x_rotated =      ((x - dx) * cos_angle) - ((dy - y) * sin_angle) + dx;
+  const auto x_rotated = ((x - dx) * cos_angle) - ((dy - y) * sin_angle) + dx;
   const auto y_rotated = dy - ((dy - y) * cos_angle) + ((x - dx) * sin_angle);
   return Vector{x_rotated, y_rotated};
 }
@@ -37,42 +37,8 @@ Point Point::plus(const Vector &vec) const {
   return Point{x + static_cast<int>(vec.x), y + static_cast<int>(vec.y)};
 }
 
-std::string Point::toString() const
-{
+std::string Point::toString() const {
   return "Point{x: " + std::to_string(x) + "; y: " + std::to_string(y) + "}";
-}
-
-Angle::Angle(double degrees) : _radians(degrees / 180.0 * M_PI) {}
-
-Angle::Angle(const Point &p1, const Point &center, const Point &p2) {
-  const auto v1 = Vector{center, p1};
-  const auto v2 = Vector{center, p2};
-  _radians = radians_from_vectors(v1, v2);
-}
-
-Angle::Angle(const Line &line1, const Line &line2) {
-  const auto v1 = Vector{line1.start(), line1.end()};
-  const auto v2 = Vector{line2.start(), line2.end()};
-  _radians = radians_from_vectors(v1, v2);
-}
-
-double Angle::degrees() const {
-  const auto degrees = _radians * 180.0 / M_PI;
-  if (degrees < 0) {
-    return degrees + 360.0;
-  }
-  return degrees;
-}
-
-double Angle::radians() const { return _radians; }
-
-double Angle::radians_from_vectors(const Vector &v1, const Vector &v2) const {
-  const auto dot_product = v1.x * v2.x + v1.y * v2.y;
-  const auto magnitude_product = v1.magnitude() * v2.magnitude();
-  const auto cross_product = v1.x * v2.y - v1.y * v2.x;
-  const auto cos_angle = dot_product / magnitude_product;
-  const auto angle = std::acos(cos_angle);
-  return cross_product < 0 ? -angle : angle;
 }
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
@@ -99,7 +65,8 @@ double Rectangle::area() const {
   return _lines[0].magnitude() * _lines[1].magnitude();
 }
 
-Circle::Circle(Point center, size_t radius) : _center(center), _radius(radius) {}
+Circle::Circle(Point center, size_t radius)
+    : _center(center), _radius(radius) {}
 
 const Point &Circle::center() const { return _center; }
 
@@ -107,9 +74,9 @@ int Circle::radius() const { return static_cast<int>(_radius); }
 
 double Circle::area() const { return M_PI * std::pow(_radius, 2); }
 
-std::string Circle::toString() const
-{
-  return "Circle{center: " + _center.toString() + "; radius: " + std::to_string(_radius) + "}";
+std::string Circle::toString() const {
+  return "Circle{center: " + _center.toString() +
+         "; radius: " + std::to_string(_radius) + "}";
 }
 
 Canvas2D::Canvas2D(int xx, int yy)

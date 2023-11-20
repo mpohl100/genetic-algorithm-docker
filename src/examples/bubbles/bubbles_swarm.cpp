@@ -12,7 +12,8 @@ bool AngleArea::is_within(const Angle &angle) const {
   const auto segment_angle = 360.0 / _nb_angles;
   const auto angle_1 = segment_angle * _area - 1e-10;
   const auto angle_2 = segment_angle * (_area + 1) + 1e-10;
-  const auto degrees = angle.degrees();
+  const auto converted_angle = RegionedAngle<0, 360>{angle.degrees()};
+  const auto degrees = converted_angle.degrees();
   return degrees >= angle_1 && degrees <= angle_2;
 }
 
@@ -275,7 +276,7 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
   const auto punish_contained_points = [&bubble_circle](const Point &point,
                                                         double distance) {
     if (distance == 0) {
-      return - std::pow(bubble_circle.circle().area(), 2.0);
+      return -std::pow(bubble_circle.circle().area(), 2.0);
     }
     const auto ratio = bubble_circle.circle().radius() / distance;
     const auto angle = Angle{bubble_circle.circle().center(), point,
@@ -287,7 +288,7 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
     if (ratio == 0.0) {
       return 0.0;
     }
-    return - bubble_circle.circle().area() * std::pow(ratio, 2.0) * degrees;
+    return -bubble_circle.circle().area() * std::pow(ratio, 2.0) * degrees;
   };
   // punish filled pixels within the circle
   for (const auto &point : _canvas.points()) {

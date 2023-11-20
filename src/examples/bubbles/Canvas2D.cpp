@@ -31,8 +31,6 @@ double Vector::magnitude() const {
   return std::sqrt(std::pow(x, 2) + std::pow(y, 2));
 }
 
-Point::Point(int xx, int yy) : x(xx), y(yy) {}
-
 Point Point::plus(const Vector &vec) const {
   return Point{x + static_cast<int>(vec.x), y + static_cast<int>(vec.y)};
 }

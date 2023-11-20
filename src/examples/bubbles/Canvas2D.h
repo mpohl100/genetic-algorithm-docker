@@ -1,5 +1,7 @@
 #pragma once
 
+#include "value_test.h"
+
 #include <cmath>
 #include <set>
 #include <string>
@@ -12,12 +14,12 @@ template <int min_dergrees, int max_degrees> struct RegionedAngle;
 using Angle = RegionedAngle<-180, 180>;
 
 struct Point {
-  Point() = default;
-  Point(const Point &) = default;
-  Point &operator=(const Point &) = default;
-  Point(Point &&) = default;
-  Point &operator=(Point &&) = default;
-  Point(int xx, int yy);
+  constexpr Point() noexcept = default;
+  constexpr Point(const Point &) noexcept = default;
+  constexpr Point &operator=(const Point &) noexcept = default;
+  constexpr Point(Point &&) noexcept = default;
+  constexpr Point &operator=(Point &&) noexcept = default;
+  constexpr Point(int xx, int yy) noexcept : x(xx), y(yy){};
 
   Point plus(const Vector &vec) const;
   std::string toString() const;
@@ -26,6 +28,8 @@ struct Point {
   int x = 0;
   int y = 0;
 };
+static_assert(value_test::value_test<Point>(),
+              "class Point must be value type");
 
 class Line {
 public:

@@ -1,0 +1,84 @@
+#include "examples/bubbles/detection/Detection.h"
+
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+#include <clara.hpp>
+
+#include <iostream>
+
+void readImageData(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag) {
+  retflag = 1;
+  bool bSuccess = cap.read(imgOriginal); // read a new frame from video
+  if (!bSuccess)                         // if not success, break loop
+  {
+    std::cout << "Cannot read a frame from video stream" << std::endl;
+    {
+      retflag = 2;
+      return;
+    };
+  }
+}
+
+int main(int argc, char **argv) {
+  using namespace clara;
+
+  int number_webcam = 0;
+  bool help = false;
+  auto cli = Opt(number_webcam, "number_webcam")["-n"]["--number-webcam"](
+                 "The number of the webcam to use") |
+             Help(help);
+
+  auto result = cli.parse(Args(argc, argv));
+  if (!result) {
+    std::cerr << "Error in command line: " << result.errorMessage() << '\n';
+    exit(1);
+  }
+  if (help) {
+    std::cout << cli;
+    exit(0);
+  }
+
+  // cv::VideoCapture cap("D:\ToiletBank.mp4"); //capture the video from file
+  cv::VideoCapture cap(0); // capture the video from web cam
+
+  if (!cap.isOpened()) // if not success, exit program
+  {
+    std::cout << "Cannot open the web cam" << std::endl;
+    return -1;
+  }
+
+  std::string original = "Original";
+  std::string threshold = "Thresholded Image";
+  namedWindow(original, cv::WINDOW_AUTOSIZE);
+  namedWindow(threshold, cv::WINDOW_AUTOSIZE);
+
+  // int j = 0;
+  // std::array<Result, N> previous;
+  while (true) {
+    cv::Mat imgOriginal;
+    int retflag;
+    readImageData(cap, imgOriginal, retflag);
+    if (retflag == 2)
+      break;
+    cv::Mat contours = od::detect_angles(imgOriginal);
+    cv::Mat gradient = od::detect_directions(imgOriginal);
+
+    // auto partials = smooth_results(calculate_orientation(gradient), 10);
+    // for (const auto& partial : partials)
+    //	cv::circle(contours, cv::Point(int(partial.point.x),
+    //int(partial.point.y)), 5, cv::Scalar(0, 0, 256));
+    // draw_bars(contours, partials);
+
+    imshow(threshold, contours);   // show the thresholded image
+    imshow(original, imgOriginal); // show the original image
+
+    if (cv::waitKey(30) == 27) // wait for 'esc' key press for 30ms. If 'esc'
+                               // key is pressed, break loop
+    {
+      std::cout << "esc key is pressed by user" << std::endl;
+      break;
+    }
+  }
+  return 0;
+}

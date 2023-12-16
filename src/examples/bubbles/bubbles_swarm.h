@@ -16,9 +16,9 @@ struct AngleArea {
   AngleArea(int area, int number_angles);
   friend constexpr auto operator<=>(const AngleArea &,
                                     const AngleArea &) = default;
-  bool is_within(const Angle &angle) const;
+  bool is_within(const math2d::Angle &angle) const;
   std::string toString() const;
-  Angle get_angle(double factor) const;
+  math2d::Angle get_angle(double factor) const;
 
 private:
   int _area = 0;
@@ -26,7 +26,7 @@ private:
 };
 
 struct SourceCircle {
-  Circle circle;
+  math2d::Circle circle;
   AngleArea angle_area = {0, 6};
   friend constexpr auto operator<=>(const SourceCircle &,
                                     const SourceCircle &) = default;
@@ -34,12 +34,12 @@ struct SourceCircle {
 
 struct AlreadyOptimized {
 public:
-  void add_circle(const Circle &circle);
+  void add_circle(const math2d::Circle &circle);
   double area() const;
-  const std::vector<Circle> &circles() const;
+  const std::vector<math2d::Circle> &circles() const;
 
 private:
-  std::vector<Circle> _circles;
+  std::vector<math2d::Circle> _circles;
 };
 
 struct BubbleCircle {
@@ -48,7 +48,7 @@ struct BubbleCircle {
   BubbleCircle &operator=(const BubbleCircle &) = default;
   BubbleCircle(BubbleCircle &&) = default;
   BubbleCircle &operator=(BubbleCircle &&) = default;
-  BubbleCircle(const Circle &circle, const SourceCircle &source_circle);
+  BubbleCircle(const math2d::Circle &circle, const SourceCircle &source_circle);
 
   friend constexpr auto operator<=>(const BubbleCircle &,
                                     const BubbleCircle &) = default;
@@ -58,14 +58,14 @@ struct BubbleCircle {
   std::string toString() const;
   double magnitude() const;
 
-  const Circle &circle() const;
+  const math2d::Circle &circle() const;
   const SourceCircle &source_circle() const;
 
 private:
   bool is_within_angle_of_source_circle() const;
-  size_t get_radius(const Point &center) const;
+  math2d::number_type get_radius(const math2d::Point &center) const;
 
-  Circle _circle;
+  math2d::Circle _circle;
   SourceCircle _source_circle;
 };
 static_assert(evol::partial::PartialPhenotype<BubbleCircle, evol::Rng>);
@@ -91,7 +91,7 @@ static_assert(
     evol::partial::PartialChallenge<BubblesSwarm, BubbleCircle, evol::Rng>);
 
 AlreadyOptimized
-bubbles_algorithm(const Canvas2D &canvas, const Point &point,
+bubbles_algorithm(const Canvas2D &canvas, const math2d::Point &point,
                   const evol::partial::PartialEvolutionOptions &params);
 
 } // namespace bubbles

@@ -65,10 +65,10 @@ int main(int argc, char **argv) {
 
   auto canvas = bubbles::Canvas2D(100, 100);
   const auto rectangle =
-      bubbles::Rectangle{bubbles::Point(20, 20), bubbles::Point(70, 70)};
+      math2d::Rectangle{math2d::Point(20, 20), math2d::Point(70, 70)};
   canvas.draw_rectangle(rectangle);
   const auto already_optimized =
-      bubbles::bubbles_algorithm(canvas, bubbles::Point(50, 50), evolParams);
+      bubbles::bubbles_algorithm(canvas, math2d::Point(50, 50), evolParams);
   canvas.draw_circle(already_optimized.circles()[0]);
   const auto canvas_pixels = canvas.getPixels();
   std::cout << '\n';

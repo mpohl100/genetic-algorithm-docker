@@ -3,6 +3,8 @@
 #include <queue>
 #include <set>
 
+using namespace math2d;
+
 namespace bubbles {
 
 AngleArea::AngleArea(int area, int number_angles)
@@ -134,12 +136,12 @@ std::vector<Point> calculate_circle_intersection(const Circle &first,
 }
 
 bool BubbleCircle::is_within_angle_of_source_circle() const {
-  const auto get_radius = [](const Vector &vec) -> size_t {
+  const auto get_radius = [](const Vector &vec) -> math2d::number_type {
     const auto mag = vec.magnitude();
     if (mag >= 0) {
-      return static_cast<size_t>(mag);
+      return mag;
     }
-    return 0;
+    return 0.0;
   };
   const auto thales_circle = Circle{
       get_mid_point(_circle.center(), _source_circle.circle.center()),
@@ -165,22 +167,22 @@ bool BubbleCircle::is_within_angle_of_source_circle() const {
              : 0.0;
 }
 
-size_t BubbleCircle::get_radius(const Point &center) const {
+math2d::number_type BubbleCircle::get_radius(const Point &center) const {
   const auto radius =
       Vector{center, _source_circle.circle.center()}.magnitude() -
       _source_circle.circle.radius();
   if (radius >= 0.0) {
-    return static_cast<size_t>(radius);
+    return radius;
   }
-  return 0;
+  return 0.0;
 }
 
 Circle calculate_first_guess(const SourceCircle &sourceCircle) {
   const auto angle = sourceCircle.angle_area.get_angle(0.5);
-  const auto radius = static_cast<size_t>(sourceCircle.circle.radius());
+  const auto radius = sourceCircle.circle.radius();
   return Circle{
       sourceCircle.circle.center().plus(
-          Vector{static_cast<double>(sourceCircle.circle.radius()) * 2.0, 0.0}
+          Vector{sourceCircle.circle.radius() * 2.0, 0.0}
               .rotate(angle)),
       radius};
 }
@@ -266,7 +268,7 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
     const auto distance =
         Vector{bubble_circle.circle().center(), circle.center()}.magnitude();
     const auto radius_sum =
-        static_cast<double>(bubble_circle.circle().radius() + circle.radius());
+        bubble_circle.circle().radius() + circle.radius();
     if (distance > radius_sum) {
       break; // no reward for circles that don't intersect
     }

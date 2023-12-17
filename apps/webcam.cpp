@@ -24,9 +24,11 @@ int main(int argc, char **argv) {
   using namespace clara;
 
   int number_webcam = 0;
+  std::string path = "";
   bool help = false;
   auto cli = Opt(number_webcam, "number_webcam")["-n"]["--number-webcam"](
                  "The number of the webcam to use") |
+             Opt(path, "path")["-p"]["--path"]("The path to the video file") |
              Help(help);
 
   auto result = cli.parse(Args(argc, argv));
@@ -40,13 +42,22 @@ int main(int argc, char **argv) {
   }
 
   // cv::VideoCapture cap("D:\ToiletBank.mp4"); //capture the video from file
-  cv::VideoCapture cap(0); // capture the video from web cam
-
-  if (!cap.isOpened()) // if not success, exit program
-  {
-    std::cout << "Cannot open the web cam" << std::endl;
-    return -1;
-  }
+  cv::VideoCapture cap;
+  if (path != "") {
+    cap = cv::VideoCapture{path};
+    if (!cap.isOpened()) // if not success, exit program
+    {
+      std::cout << "Cannot open the video file" << std::endl;
+      return -1;
+    }
+  } else {
+    cap = cv::VideoCapture{number_webcam};
+    if (!cap.isOpened()) // if not success, exit program
+    {
+      std::cout << "Cannot open the webcam" << std::endl;
+      return -1;
+    }
+  } // capture the video from web cam
 
   std::string original = "Original";
   std::string threshold = "Thresholded Image";
@@ -72,6 +83,8 @@ int main(int argc, char **argv) {
 
     imshow(threshold, contours);   // show the thresholded image
     imshow(original, imgOriginal); // show the original image
+
+    std::cout << "Frame processed!" << std::endl;
 
     if (cv::waitKey(30) == 27) // wait for 'esc' key press for 30ms. If 'esc'
                                // key is pressed, break loop

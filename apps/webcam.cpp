@@ -24,11 +24,14 @@ int main(int argc, char **argv) {
   using namespace clara;
 
   int number_webcam = 0;
+  int rings = 1;
   std::string path = "";
   bool help = false;
   auto cli = Opt(number_webcam, "number_webcam")["-n"]["--number-webcam"](
                  "The number of the webcam to use") |
              Opt(path, "path")["-p"]["--path"]("The path to the video file") |
+             Opt(rings, "rings")["-r"]["--rings"](
+                 "The number of rings to use for smoothing") |
              Help(help);
 
   auto result = cli.parse(Args(argc, argv));
@@ -61,8 +64,12 @@ int main(int argc, char **argv) {
 
   std::string original = "Original";
   std::string threshold = "Thresholded Image";
+  std::string smoothed_angles = "Smoothed Angles";
+  std::string smoothed_gradient = "Smoothed Gradient";
   namedWindow(original, cv::WINDOW_AUTOSIZE);
   namedWindow(threshold, cv::WINDOW_AUTOSIZE);
+  namedWindow(smoothed_angles, cv::WINDOW_AUTOSIZE);
+  namedWindow(smoothed_gradient, cv::WINDOW_AUTOSIZE);
 
   // int j = 0;
   // std::array<Result, N> previous;
@@ -75,14 +82,19 @@ int main(int argc, char **argv) {
     cv::Mat contours = od::detect_angles(imgOriginal);
     cv::Mat gradient = od::detect_directions(imgOriginal);
 
+    auto smoothed_contours_mat = smooth_angles(gradient, rings, true);
+    auto smoothed_gradient_mat = smooth_angles(gradient, rings, false);
+
     // auto partials = smooth_results(calculate_orientation(gradient), 10);
     // for (const auto& partial : partials)
     //	cv::circle(contours, cv::Point(int(partial.point.x),
-    //int(partial.point.y)), 5, cv::Scalar(0, 0, 256));
+    // int(partial.point.y)), 5, cv::Scalar(0, 0, 256));
     // draw_bars(contours, partials);
 
     imshow(threshold, contours);   // show the thresholded image
     imshow(original, imgOriginal); // show the original image
+    imshow(smoothed_angles, smoothed_contours_mat);   // the smoothed contours
+    imshow(smoothed_gradient, smoothed_gradient_mat); // the smoothed gradient
 
     std::cout << "Frame processed!" << std::endl;
 

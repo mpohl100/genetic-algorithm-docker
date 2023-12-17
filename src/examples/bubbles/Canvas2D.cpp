@@ -1,5 +1,6 @@
 #include "Canvas2D.h"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -19,20 +20,145 @@ void Canvas2D::draw_rectangle(const Rectangle &rectangle) {
   draw_line(rectangle.lines()[3]);
 }
 
+class Pattern {
+  int x, y;
+  std::vector<char> pattern;
+
+public:
+  Pattern(int _x, int _y, const std::vector<char> &_pattern)
+      : x(_x), y(_y), pattern(_pattern) {}
+  Pattern() = default;
+  Pattern(const Pattern &) = default;
+  Pattern &operator=(const Pattern &) = default;
+  Pattern(Pattern &&) = default;
+  Pattern &operator=(Pattern &&) = default;
+
+  int getX() const { return x; }
+
+  int getY() const { return y; }
+
+  const std::vector<char> &getPattern() const { return pattern; }
+
+  static Pattern newPattern(int x, int y, const std::vector<char> &pattern) {
+    return Pattern(x, y, pattern);
+  }
+};
+
 void Canvas2D::draw_circle(const Circle &circle) {
-  int centerX = circle.center().x;
-  int centerY = circle.center().y;
-  int radius = circle.radius();
-  for (int x = centerX - radius; x <= centerX + radius; x++) {
-    for (int y = centerY - radius; y <= centerY + radius; y++) {
-      // Use the circle equation to determine if a point is on the circle's
-      // outline
-      if (std::abs(std::pow(static_cast<int>(x) - centerX, 2) +
-                   std::pow(static_cast<int>(y) - centerY, 2) -
-                   std::pow(radius, 2)) < 1.5) {
-        draw_pixel(x, y);
+  const Point circleCenter = circle.center();
+  const auto circleRadius = circle.radius();
+  constexpr double offset = 5.0;
+  int start_x = static_cast<int>(circleCenter.x - circleRadius - offset);
+  int end_x = static_cast<int>(circleCenter.x + circleRadius + offset);
+  int start_y = static_cast<int>(circleCenter.y - circleRadius - offset);
+  int end_y = static_cast<int>(circleCenter.y + circleRadius + offset);
+
+  std::vector<std::vector<Pattern>> allPatterns;
+
+  for (int y = start_y; y < end_y; ++y) {
+    std::vector<Pattern> linePatterns;
+
+    for (int x = start_x; x < end_x; ++x) {
+      Pattern previousPattern;
+
+      if (linePatterns.empty()) {
+        previousPattern = Pattern::newPattern(x - 1, y, {'.'});
+      } else {
+        previousPattern = linePatterns.back();
+      }
+
+      const auto currentPoint = Point{static_cast<math2d::number_type>(x),
+                                      static_cast<math2d::number_type>(y)};
+      float distance = Vector{circleCenter.x - currentPoint.x,
+                              circleCenter.y - currentPoint.y}
+                           .magnitude();
+
+      if (distance <= circleRadius) {
+        linePatterns.push_back(Pattern::newPattern(
+            x, y, {previousPattern.getPattern().back(), 'X'}));
+      } else {
+        linePatterns.push_back(Pattern::newPattern(
+            x, y, {previousPattern.getPattern().back(), '.'}));
       }
     }
+
+    if (!linePatterns.empty()) {
+      allPatterns.push_back(linePatterns);
+    }
+  }
+
+  std::vector<Pattern> previousPattern;
+
+  for (const auto &linePatterns : allPatterns) {
+    auto startPattern = std::find_if(
+        linePatterns.begin(), linePatterns.end(), [](const Pattern &pattern) {
+          return pattern.getPattern() == std::vector<char>{'.', 'X'};
+        });
+
+    if (startPattern == linePatterns.end()) {
+      continue;
+    }
+
+    auto endPattern = std::find_if(
+        linePatterns.begin(), linePatterns.end(), [](const Pattern &pattern) {
+          return pattern.getPattern() == std::vector<char>{'X', '.'};
+        });
+
+    if (endPattern == linePatterns.end()) {
+      continue;
+    }
+
+    bool previousPatternFound = true;
+
+    auto previousStartPattern = std::find_if(
+        previousPattern.begin(), previousPattern.end(),
+        [](const Pattern &pattern) {
+          return pattern.getPattern() == std::vector<char>{'.', 'X'};
+        });
+
+    if (previousStartPattern == previousPattern.end()) {
+      previousPatternFound = false;
+    }
+
+    auto previousEndPattern = std::find_if(
+        previousPattern.begin(), previousPattern.end(),
+        [](const Pattern &pattern) {
+          return pattern.getPattern() == std::vector<char>{'X', '.'};
+        });
+
+    if (previousEndPattern == previousPattern.end()) {
+      previousPatternFound = false;
+    }
+
+    if (!previousPatternFound) {
+      // First line
+      for (int x = startPattern->getX(); x < endPattern->getX(); ++x) {
+        draw_pixel(x, linePatterns[0].getY(), 2);
+      }
+    } else {
+      int previousStartX = previousStartPattern->getX();
+      int currentStartX = startPattern->getX();
+      int previousEndX = previousEndPattern->getX();
+      int currentEndX = endPattern->getX();
+
+      if (previousStartX > currentStartX) {
+        std::swap(previousStartX, currentStartX);
+      }
+
+      if (previousEndX > currentEndX) {
+        std::swap(previousEndX, currentEndX);
+      }
+
+      for (int x = previousStartX; x < currentStartX + 1; ++x) {
+        draw_pixel(x, linePatterns[0].getY(), 2);
+      }
+
+      for (int x = previousEndX; x < currentEndX + 1; ++x) {
+        draw_pixel(x, linePatterns[0].getY(), 2);
+      }
+    }
+
+    previousPattern = linePatterns;
   }
 }
 
@@ -40,7 +166,9 @@ std::string Canvas2D::getPixels() const {
   std::string ret;
   for (const auto &line : _pixels) {
     for (const auto &val : line) {
-      if (val > 0) {
+      if (val == 2) {
+        ret += "O";
+      } else if (val == 1) {
         ret += "X";
       } else {
         ret += ".";
@@ -62,17 +190,17 @@ void Canvas2D::draw_line(const Line &line) {
   int dY = end.y - start.y;
   Point current_point = start;
   // draw start and end point
-  draw_pixel(start.x, start.y);
-  draw_pixel(end.x, end.y);
+  draw_pixel(start.x, start.y, 1);
+  draw_pixel(end.x, end.y, 1);
   if (dX == 0) {
     if (dY >= 0) {
       for (size_t i = 0; i <= static_cast<size_t>(dY); ++i) {
-        draw_pixel(current_point.x, current_point.y);
+        draw_pixel(current_point.x, current_point.y, 1);
         current_point.y++;
       }
     } else {
       for (size_t i = 0; i <= static_cast<size_t>(-dY); ++i) {
-        draw_pixel(current_point.x, current_point.y);
+        draw_pixel(current_point.x, current_point.y, 1);
         current_point.y--;
       }
     }
@@ -83,12 +211,12 @@ void Canvas2D::draw_line(const Line &line) {
       if constexpr (dolog)
         std::cout << "x positive\n";
       for (size_t i = 0; i <= static_cast<size_t>(dX); ++i) {
-        draw_pixel(current_point.x, current_point.y);
+        draw_pixel(current_point.x, current_point.y, 1);
         current_point.x++;
       }
     } else {
       for (size_t i = 0; i <= static_cast<size_t>(-dX); ++i) {
-        draw_pixel(current_point.x, current_point.y);
+        draw_pixel(current_point.x, current_point.y, 1);
         current_point.x--;
       }
     }
@@ -180,7 +308,7 @@ void Canvas2D::draw_line(const Line &line) {
       if (current_point != end) {
         throw std::runtime_error("end point not hit in draw_line.");
       }
-      draw_pixel(current_point.x, current_point.y);
+      draw_pixel(current_point.x, current_point.y, 1);
       break;
     }
     if constexpr (dolog) {
@@ -188,7 +316,7 @@ void Canvas2D::draw_line(const Line &line) {
                 << "; y=" << current_point.y << "; dX=" << dX << "; dY=" << dY
                 << '\n';
     }
-    draw_pixel(current_point.x, current_point.y);
+    draw_pixel(current_point.x, current_point.y, 1);
     const auto direction = go_x(went_x, went_y);
     switch (direction) {
     case Direction::X:
@@ -204,12 +332,12 @@ void Canvas2D::draw_line(const Line &line) {
 
 const std::set<Point> &Canvas2D::points() const { return _points; }
 
-void Canvas2D::draw_pixel(int x, int y) {
+void Canvas2D::draw_pixel(int x, int y, int value) {
   if (x < 0 || x >= static_cast<int>(_pixels.size()) || y < 0 ||
       y >= static_cast<int>(_pixels[0].size())) {
     return;
   }
-  _pixels[x][y] = 1;
+  _pixels[x][y] = value;
   _points.emplace(x, y);
 };
 

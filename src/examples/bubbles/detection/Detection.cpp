@@ -22,12 +22,12 @@ cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles, i
   cv::Mat result = angles.clone();
   std::vector<const cv::Vec3b *> rows;
   cv::Vec3b *resultRow = nullptr;
-  for (size_t i = 0; i < 2 * rings + 1; ++i)
+  for (int i = 0; i < 2 * rings + 1; ++i)
     rows.push_back(nullptr);
   for (int i = rings; i < angles.rows - rings; ++i) {
     resultRow = result.ptr<cv::Vec3b>(i);
     size_t index = 0;
-    for (size_t j = i - rings; j < i + rings + 1; ++j)
+    for (int j = i - rings; j < i + rings + 1; ++j)
       rows[index++] = angles.ptr<cv::Vec3b>(j);
     for (int j = rings; j < angles.cols - rings; ++j) {
       double sumAngle = 0;

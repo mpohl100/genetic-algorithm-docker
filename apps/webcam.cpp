@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
 
   int number_webcam = 0;
   int rings = 1;
+  int threshold = 20;
   std::string path = "";
   bool help = false;
   auto cli = Opt(number_webcam, "number_webcam")["-n"]["--number-webcam"](
@@ -32,6 +33,8 @@ int main(int argc, char **argv) {
              Opt(path, "path")["-p"]["--path"]("The path to the video file") |
              Opt(rings, "rings")["-r"]["--rings"](
                  "The number of rings to use for smoothing") |
+             Opt(threshold, "threshold")["-t"]["--threshold"](
+                 "The threshold to use for smoothing") |
              Help(help);
 
   auto result = cli.parse(Args(argc, argv));
@@ -82,8 +85,8 @@ int main(int argc, char **argv) {
     cv::Mat contours = od::detect_angles(imgOriginal);
     cv::Mat gradient = od::detect_directions(imgOriginal);
 
-    auto smoothed_contours_mat = smooth_angles(gradient, rings, true);
-    auto smoothed_gradient_mat = smooth_angles(gradient, rings, false);
+    auto smoothed_contours_mat = smooth_angles(gradient, rings, true, threshold);
+    auto smoothed_gradient_mat = smooth_angles(gradient, rings, false, threshold);
 
     // auto partials = smooth_results(calculate_orientation(gradient), 10);
     // for (const auto& partial : partials)

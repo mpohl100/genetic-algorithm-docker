@@ -18,7 +18,7 @@ cv::Mat detect_angles(cv::Mat const &bgrImg) {
   return detail::detect_edges<detail::DetectionType::Angle>(bgrImg);
 }
 
-cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles) {
+cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles, int threshold) {
   cv::Mat result = angles.clone();
   std::vector<const cv::Vec3b *> rows;
   cv::Vec3b *resultRow = nullptr;
@@ -49,10 +49,10 @@ cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles) {
 
       int nb = 2 * rings + 1;
       nb *= nb; // squared
-      if (sumLen / nb < 20) {
-        resultRow[j][0] = 256;
-        resultRow[j][1] = 256;
-        resultRow[j][2] = 256;
+      if (sumLen / nb < threshold) {
+        resultRow[j][0] = 255;
+        resultRow[j][1] = 255;
+        resultRow[j][2] = 255;
       } else {
         double angle = sumAngle / sumLen;
         double len = sumLen / nb;

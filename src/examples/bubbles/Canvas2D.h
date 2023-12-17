@@ -1,7 +1,7 @@
 #pragma once
 
-#include "value_test.h"
 #include "examples/bubbles/math2d.h"
+#include "value_test.h"
 
 #include <cmath>
 #include <set>
@@ -27,7 +27,7 @@ public:
   const std::set<math2d::Point> &points() const;
 
 private:
-  void draw_pixel(int x, int y);
+  void draw_pixel(int x, int y, int value);
   [[maybe_unused]] int _x = 1;
   [[maybe_unused]] int _y = 1;
   std::vector<std::vector<int>> _pixels;

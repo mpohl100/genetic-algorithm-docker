@@ -6,6 +6,7 @@
 #include <clara.hpp>
 
 #include <iostream>
+#include <stdexcept>
 
 void readImageData(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag) {
   retflag = 1;
@@ -19,6 +20,45 @@ void readImageData(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag) {
     };
   }
 }
+
+class VideoCollector {
+public:
+  VideoCollector(const std::string &path, const std::string &appendedStr,
+                 const cv::VideoCapture &input_cap)
+      : _output_edges{getVideoName(path, appendedStr),
+                      static_cast<int>(input_cap.get(cv::CAP_PROP_FOURCC)),
+                      input_cap.get(cv::CAP_PROP_FPS),
+                      cv::Size(input_cap.get(cv::CAP_PROP_FRAME_WIDTH),
+                               input_cap.get(cv::CAP_PROP_FRAME_HEIGHT))} {
+    if (!_output_edges.isOpened()) {
+      std::cout << "!!! Output video edgescould not be opened" << std::endl;
+      throw std::runtime_error("Cannot open output video for edges");
+    }
+  }
+
+  ~VideoCollector() { _output_edges.release(); }
+
+  void feed(const cv::Mat &frame) { _output_edges.write(frame); }
+
+private:
+  std::string getVideoName(const std::string &path,
+                           const std::string &appendedStr) {
+    // Find the position of the last '/' character in the path
+    size_t lastSlashPos = path.find_last_of('/');
+
+    // Extract the <my_name> part from the path
+    std::string myName = path.substr(lastSlashPos + 1,
+                                     path.find_last_of('.') - lastSlashPos - 1);
+
+    // Construct the new video name by appending _<appendedStr> to <my_name>
+    std::string newVideoName =
+        path.substr(0, lastSlashPos + 1) + myName + "_" + appendedStr + ".mp4";
+
+    return newVideoName;
+  };
+  // members
+  cv::VideoWriter _output_edges;
+};
 
 int main(int argc, char **argv) {
   using namespace clara;
@@ -47,7 +87,6 @@ int main(int argc, char **argv) {
     exit(0);
   }
 
-  // cv::VideoCapture cap("D:\ToiletBank.mp4"); //capture the video from file
   cv::VideoCapture cap;
   if (path != "") {
     cap = cv::VideoCapture{path};
@@ -65,17 +104,18 @@ int main(int argc, char **argv) {
     }
   } // capture the video from web cam
 
+  auto collectorEdges = VideoCollector{path, "edge", cap};
+
   std::string original = "Original";
   std::string threshold = "Thresholded Image";
   std::string smoothed_angles = "Smoothed Angles";
   std::string smoothed_gradient = "Smoothed Gradient";
-  namedWindow(original, cv::WINDOW_AUTOSIZE);
-  namedWindow(threshold, cv::WINDOW_AUTOSIZE);
-  namedWindow(smoothed_angles, cv::WINDOW_AUTOSIZE);
-  namedWindow(smoothed_gradient, cv::WINDOW_AUTOSIZE);
+  // namedWindow(original, cv::WINDOW_AUTOSIZE);
+  // namedWindow(threshold, cv::WINDOW_AUTOSIZE);
+  // namedWindow(smoothed_angles, cv::WINDOW_AUTOSIZE);
+  // namedWindow(smoothed_gradient, cv::WINDOW_AUTOSIZE);
 
-  // int j = 0;
-  // std::array<Result, N> previous;
+  int i = 0;
   while (true) {
     cv::Mat imgOriginal;
     int retflag;
@@ -85,21 +125,20 @@ int main(int argc, char **argv) {
     cv::Mat contours = od::detect_angles(imgOriginal);
     cv::Mat gradient = od::detect_directions(imgOriginal);
 
-    auto smoothed_contours_mat = od::smooth_angles(gradient, rings, true, gradient_threshold);
-    auto smoothed_gradient_mat = od::smooth_angles(gradient, rings, false, gradient_threshold);
+    auto smoothed_contours_mat =
+        od::smooth_angles(gradient, rings, true, gradient_threshold);
+    auto smoothed_gradient_mat =
+        od::smooth_angles(gradient, rings, false, gradient_threshold);
 
-    // auto partials = smooth_results(calculate_orientation(gradient), 10);
-    // for (const auto& partial : partials)
-    //	cv::circle(contours, cv::Point(int(partial.point.x),
-    // int(partial.point.y)), 5, cv::Scalar(0, 0, 256));
-    // draw_bars(contours, partials);
+    // imshow(threshold, contours);   // show the thresholded image
+    // imshow(original, imgOriginal); // show the original image
+    // imshow(smoothed_angles, smoothed_contours_mat);   // the smoothed
+    // contours imshow(smoothed_gradient, smoothed_gradient_mat); // the
+    // smoothed gradient
 
-    imshow(threshold, contours);   // show the thresholded image
-    imshow(original, imgOriginal); // show the original image
-    imshow(smoothed_angles, smoothed_contours_mat);   // the smoothed contours
-    imshow(smoothed_gradient, smoothed_gradient_mat); // the smoothed gradient
+    collectorEdges.feed(gradient);
 
-    std::cout << "Frame processed!" << std::endl;
+    std::cout << "Frame " << ++i << " processed!" << std::endl;
 
     if (cv::waitKey(30) == 27) // wait for 'esc' key press for 30ms. If 'esc'
                                // key is pressed, break loop

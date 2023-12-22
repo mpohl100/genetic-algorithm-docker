@@ -149,6 +149,7 @@ public:
   Circle &operator=(Circle &&) = default;
   Circle(Point center, number_type radius);
 
+  Rectangle bounding_box() const;
   const Point &center() const;
   number_type radius() const;
   number_type area() const;

@@ -311,13 +311,17 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
 
 double calculate_fitness(const Circle &circle, const Canvas2D &canvas) {
   auto fitness = 0.0;
-  for (const auto &point : canvas.points()) {
-    const auto distance = Vector{circle.center(), point}.magnitude();
-    if (distance < circle.radius()) {
-      fitness += -std::pow(circle.radius() / distance, 2.0);
-    }
+  // if center outside canvas
+  if (!canvas.is_within(circle.center())) {
+    return -200.0;
   }
-  if(fitness >= 0.0){
+  const auto circle_intersects_point = [&circle](const Point &point) {
+    const auto distance = Vector{circle.center(), point}.magnitude();
+    return distance < circle.radius();
+  };
+  bool any_intersections = canvas.tiles().for_each(circle.bounding_box(),
+                                                   circle_intersects_point);
+  if(!any_intersections){
     fitness += circle.area();
   }
   return fitness;
@@ -379,8 +383,8 @@ AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
           already_put_in_queue.insert(next_circle);
         }
       }
-      std::cout << "queue size: " << queue.size() << std::endl;
       if(debug){
+        std::cout << "queue size: " << queue.size() << std::endl;
         copied_canvas.draw_circle(circle);
         std::cout << copied_canvas.getPixels() << std::endl;
       }

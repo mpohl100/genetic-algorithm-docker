@@ -7,25 +7,52 @@
 
 namespace tiles {
 
+template <class T>
 struct Tile {
-  std::set<math2d::Point> _points;
+  std::set<T> _points;
 };
 
+template<class T>
 class Tiles {
 public:
   Tiles() = default;
+  ~Tiles() = default;
   Tiles(const Tiles &) = default;
   Tiles &operator=(const Tiles &) = default;
   Tiles(Tiles &&) = default;
   Tiles &operator=(Tiles &&) = default;
-  Tiles(int xx, int yy, int N);
 
-  void addPoint(const math2d::Point &point) {
-    _tiles[getX(point.x)][getY(point.y)]._points.insert(point);
+  Tiles(int xx, int yy, int N) : _x(xx), _y(yy), _N(N), _tiles{} {
+  // allocate tiles
+  for (size_t x = 0; x <= getX(xx); ++x) {
+    std::vector<Tile<T>> line;
+    for (size_t y = 0; y <= getY(yy); ++y) {
+      line.emplace_back(Tile<T>{});
+    }
+    _tiles.emplace_back(line);
+  }
+}
+
+  void addType(const T &t) {
+    if constexpr (std::is_same_v<T, math2d::Point>){
+      _tiles[getX(t.x)][getY(t.y)]._points.insert(t);
+    }
+    else if constexpr(std::is_same_v<T, math2d::Circle>){
+      const auto bounding_box = t.bounding_box();
+      size_t start_x = getX(bounding_box.lines()[0].start().x);
+      size_t end_x = getX(bounding_box.lines()[1].end().x);
+      size_t start_y = getY(bounding_box.lines()[0].start().y);
+      size_t end_y = getY(bounding_box.lines()[1].end().y);
+      for (size_t x = start_x; x <= end_x; ++x) {
+        for (size_t y = start_y; y <= end_y; ++y) {
+          _tiles[x][y]._points.insert(t);
+        }
+      }
+    }
   }
 
   bool for_each(const math2d::Rectangle &rectangle,
-                std::function<bool(math2d::Point)> func) const {
+                std::function<bool(T)> func) const {
     size_t start_x = getX(rectangle.lines()[0].start().x);
     size_t end_x = getX(rectangle.lines()[1].end().x);
     size_t start_y = getY(rectangle.lines()[0].start().y);
@@ -57,7 +84,7 @@ private:
   int _x = 0;
   int _y = 0;
   int _N = 0;
-  std::vector<std::vector<Tile>> _tiles;
+  std::vector<std::vector<Tile<T>>> _tiles;
 };
 
 } // namespace tiles

@@ -10,8 +10,8 @@ using namespace math2d;
 
 namespace bubbles {
 
-Canvas2D::Canvas2D(int xx, int yy)
-    : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)), _points() {}
+Canvas2D::Canvas2D(int xx, int yy, int N)
+    : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)), _points(), _tiles{xx, yy, N} {}
 
 void Canvas2D::draw_rectangle(const Rectangle &rectangle) {
   draw_line(rectangle.lines()[0]);
@@ -179,6 +179,11 @@ std::string Canvas2D::getPixels() const {
   return ret;
 }
 
+bool Canvas2D::is_within(const Point &point) const
+{
+  return point.x >= 0 && point.x < _x && point.y >= 0 && point.y < _y;
+}
+
 void Canvas2D::draw_line(const Line &line) {
   auto start = line.start();
   auto end = line.end();
@@ -332,6 +337,11 @@ void Canvas2D::draw_line(const Line &line) {
 
 const std::set<Point> &Canvas2D::points() const { return _points; }
 
+const tiles::Tiles& Canvas2D::tiles() const
+{
+  return _tiles;
+}
+
 void Canvas2D::draw_pixel(int x, int y, int value) {
   if (x < 0 || x >= static_cast<int>(_pixels.size()) || y < 0 ||
       y >= static_cast<int>(_pixels[0].size())) {
@@ -339,6 +349,7 @@ void Canvas2D::draw_pixel(int x, int y, int value) {
   }
   _pixels[x][y] = value;
   _points.emplace(x, y);
+  _tiles.addPoint(Point(x, y));
 };
 
 } // namespace bubbles

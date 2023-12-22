@@ -64,6 +64,12 @@ double Rectangle::area() const {
 Circle::Circle(Point center, number_type radius)
     : _center(center), _radius(radius) {}
 
+Rectangle Circle::bounding_box() const
+{
+    return Rectangle(Point(_center.x - _radius, _center.y - _radius),
+                     Point(_center.x + _radius, _center.y + _radius));
+}
+
 const Point &Circle::center() const { return _center; }
 
 number_type Circle::radius() const { return _radius; }

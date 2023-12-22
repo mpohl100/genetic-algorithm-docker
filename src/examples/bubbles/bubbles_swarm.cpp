@@ -352,7 +352,10 @@ AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
                                         const math2d::Point &point) {
   auto already_optimized = AlreadyOptimized{};
   auto queue = std::queue<Circle>{};
-  queue.emplace(Circle{point, 0.5});
+  const auto start_circle = Circle{point, 0.5};
+  queue.emplace(start_circle);
+  std::set<Circle> already_put_in_queue;
+  already_put_in_queue.insert(start_circle);
   while (!queue.empty()) {
     const auto circle = queue.front();
     queue.pop();
@@ -361,8 +364,9 @@ AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
       already_optimized.add_circle(circle);
       const auto next_circles = deduce_octagon_circles(circle);
       for(const auto &next_circle : next_circles){
-        if(!already_optimized.contains(next_circle)){
+        if(already_put_in_queue.find(next_circle) == already_put_in_queue.end() && !already_optimized.contains(next_circle)){
           queue.emplace(next_circle);
+          already_put_in_queue.insert(next_circle);
         }
       }
     }

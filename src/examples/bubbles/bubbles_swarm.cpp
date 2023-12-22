@@ -32,6 +32,7 @@ Angle AngleArea::get_angle(double factor) const {
 
 void AlreadyOptimized::add_circle(const Circle &circle) {
   _circles.push_back(circle);
+  _sortedCircles.insert(circle);
 }
 
 double AlreadyOptimized::area() const {
@@ -45,6 +46,12 @@ double AlreadyOptimized::area() const {
 const std::vector<Circle> &AlreadyOptimized::circles() const {
   return _circles;
 }
+
+bool contains(const math2d::Circle &circle) const
+{
+  return _sortedCircles.find(circle) != _sortedCircles.end();
+}
+
 
 BubbleCircle::BubbleCircle(const Circle &circle,
                            const SourceCircle &source_circle)
@@ -182,8 +189,7 @@ Circle calculate_first_guess(const SourceCircle &sourceCircle) {
   const auto radius = sourceCircle.circle.radius();
   return Circle{
       sourceCircle.circle.center().plus(
-          Vector{sourceCircle.circle.radius() * 2.0, 0.0}
-              .rotate(angle)),
+          Vector{sourceCircle.circle.radius() * 2.0, 0.0}.rotate(angle)),
       radius};
 }
 
@@ -267,8 +273,7 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
   for (const auto &circle : _already_optimized.circles()) {
     const auto distance =
         Vector{bubble_circle.circle().center(), circle.center()}.magnitude();
-    const auto radius_sum =
-        bubble_circle.circle().radius() + circle.radius();
+    const auto radius_sum = bubble_circle.circle().radius() + circle.radius();
     if (distance > radius_sum) {
       break; // no reward for circles that don't intersect
     }
@@ -302,6 +307,67 @@ double BubblesSwarm::score(const BubbleCircle &bubble_circle,
   }
   fitness += bubble_circle.circle().area();
   return fitness;
+}
+
+double calculate_fitness(const Circle &circle, const Canvas2D &canvas) {
+  auto fitness = 0.0;
+  for (const auto &point : canvas.points()) {
+    const auto distance = Vector{circle.center(), point}.magnitude();
+    if (distance < circle.radius()) {
+      fitness += -std::pow(circle.radius() / distance, 2.0);
+    }
+  }
+  if(fitness >= 0.0){
+    fitness += circle.area();
+  }
+  return fitness;
+}
+
+std::array<Circle, 8> deduce_octagon_circles(const Circle &circle)
+{
+  std::array<Circle, 8> ret;
+  const auto vector_1 = Vector{Point(0,0), Point(1,0)};
+  constexpr auto sqrt_2 = std::sqrt(2);
+  const auto vector_sqrt_2 = Vector{Point(0,0), Point(sqrt_2,0)};
+  // circle 1
+  ret[0] = Circle{circle.center().plus(vector_1.scale(circle.radius())), circle.radius()};
+  // circle 2
+  ret[1] = Circle{circle.center().plus(vector_sqrt_2.scale(circle.radius()).rotate(Angle{45})), circle.radius()};
+  // circle 3
+  ret[2] = Circle{circle.center().plus(vector_1.scale(circle.radius()).rotate(Angle{90})), circle.radius()};
+  // circle 4
+  ret[3] = Circle{circle.center().plus(vector_sqrt_2.scale(circle.radius()).rotate(Angle{135})), circle.radius()};
+  // circle 5
+  ret[4] = Circle{circle.center().plus(vector_1.scale(circle.radius()).rotate(Angle{180})), circle.radius()};
+  // circle 6
+  ret[5] = Circle{circle.center().plus(vector_sqrt_2.scale(circle.radius()).rotate(Angle{225})), circle.radius()};
+  // circle 7
+  ret[6] = Circle{circle.center().plus(vector_1.scale(circle.radius()).rotate(Angle{270})), circle.radius()};
+  // circle 8
+  ret[7] = Circle{circle.center().plus(vector_sqrt_2.scale(circle.radius()).rotate(Angle{315})), circle.radius()}; 
+  return ret;
+}
+
+AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
+                                        const math2d::Point &point) {
+  auto already_optimized = AlreadyOptimized{};
+  auto queue = std::queue<Circle>{};
+  queue.emplace(Circle{point, 0.5});
+  while (!queue.empty()) {
+    const auto circle = queue.front();
+    queue.pop();
+    const auto fitness = calculate_fitness(circle, canvas);
+    if(fitness > 0){
+      already_optimized.add_circle(circle);
+      const auto next_circles = deduce_octagon_circles(circle);
+      for(const auto &next_circle : next_circles){
+        if(!already_optimized.contains(next_circle)){
+          queue.emplace(next_circle);
+        }
+      }
+    }
+  }
+  return already_optimized;
 }
 
 } // namespace bubbles

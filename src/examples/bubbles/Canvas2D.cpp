@@ -337,7 +337,7 @@ void Canvas2D::draw_line(const Line &line) {
 
 const std::set<Point> &Canvas2D::points() const { return _points; }
 
-const tiles::Tiles& Canvas2D::tiles() const
+const tiles::Tiles<math2d::Point>& Canvas2D::tiles() const
 {
   return _tiles;
 }
@@ -349,7 +349,7 @@ void Canvas2D::draw_pixel(int x, int y, int value) {
   }
   _pixels[x][y] = value;
   _points.emplace(x, y);
-  _tiles.addPoint(Point(x, y));
+  _tiles.addType(Point(x, y));
 };
 
 } // namespace bubbles

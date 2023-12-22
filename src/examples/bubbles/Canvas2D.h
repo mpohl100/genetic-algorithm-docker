@@ -27,14 +27,14 @@ public:
   bool is_within(const math2d::Point &point) const;
 
   const std::set<math2d::Point> &points() const;
-  const tiles::Tiles& tiles() const;
+  const tiles::Tiles<math2d::Point>& tiles() const;
 private:
   void draw_pixel(int x, int y, int value);
   [[maybe_unused]] int _x = 1;
   [[maybe_unused]] int _y = 1;
   std::vector<std::vector<int>> _pixels;
   std::set<math2d::Point> _points;
-  tiles::Tiles _tiles;
+  tiles::Tiles<math2d::Point> _tiles;
 };
 
 } // namespace bubbles

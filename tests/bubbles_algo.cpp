@@ -63,22 +63,14 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
     CHECK(angle_area_5.is_within(math2d::Angle{360}));
     CHECK(!angle_area_5.is_within(math2d::Angle{361}));
   }
-#if 0
+#if 1
   SECTION("BubblesAlgoIntegration") {
     auto canvas = bubbles::Canvas2D(100, 100);
     const auto rectangle =
         math2d::Rectangle{math2d::Point(20, 20), math2d::Point(70, 70)};
     canvas.draw_rectangle(rectangle);
-    auto evolParams = evol::partial::PartialEvolutionOptions{};
-    evolParams.num_generations = 100;
-    evolParams.log_level = 0;
-    evolParams.num_parents = 2;
-    evolParams.num_children = 20;
-    evolParams.out = &std::cout;
-    evolParams.min_magnitude = 0.9;
-    evolParams.max_magnitude = 1.1;
     const auto already_optimized =
-        bubbles::bubbles_algorithm(canvas, math2d::Point(50, 50), evolParams);
+        bubbles::bubbles_algorithm_slow(canvas, math2d::Point(50, 50));
     const auto ratio = already_optimized.area() / rectangle.area();
     CHECK(ratio >= 0.9);
     CHECK(ratio < 1);

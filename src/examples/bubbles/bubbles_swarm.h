@@ -3,6 +3,7 @@
 #include "evol.h"
 
 #include <optional>
+#include <set>
 #include <vector>
 
 namespace bubbles {
@@ -38,8 +39,11 @@ public:
   double area() const;
   const std::vector<math2d::Circle> &circles() const;
 
+  bool contains(const math2d::Circle &circle) const;
+
 private:
   std::vector<math2d::Circle> _circles;
+  std::set<math2d::Circle> _sortedCircles;
 };
 
 struct BubbleCircle {
@@ -93,5 +97,8 @@ static_assert(
 AlreadyOptimized
 bubbles_algorithm(const Canvas2D &canvas, const math2d::Point &point,
                   const evol::partial::PartialEvolutionOptions &params);
+
+AlreadyOptimized
+bubbles_algorithm_slow(const Canvas2D &canvas, const math2d::Point &point);
 
 } // namespace bubbles

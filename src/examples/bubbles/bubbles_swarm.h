@@ -1,4 +1,5 @@
 #include "Canvas2D.h"
+#include "Tiles.h"
 
 #include "evol.h"
 
@@ -35,6 +36,13 @@ struct SourceCircle {
 
 struct AlreadyOptimized {
 public:
+  AlreadyOptimized() = default;
+  AlreadyOptimized(const AlreadyOptimized &) = default;
+  AlreadyOptimized &operator=(const AlreadyOptimized &) = default;
+  AlreadyOptimized(AlreadyOptimized &&) = default;
+  AlreadyOptimized &operator=(AlreadyOptimized &&) = default;
+  AlreadyOptimized(const Canvas2D& canvas) : _tiles{canvas.tiles()} {}
+
   void add_circle(const math2d::Circle &circle);
   double area() const;
   const std::vector<math2d::Circle> &circles() const;
@@ -44,6 +52,7 @@ public:
 private:
   std::vector<math2d::Circle> _circles;
   std::set<math2d::Circle> _sortedCircles;
+  Tiles<math2d::Circle> _tiles;
 };
 
 struct BubbleCircle {

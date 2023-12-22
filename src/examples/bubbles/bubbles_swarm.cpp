@@ -33,6 +33,7 @@ Angle AngleArea::get_angle(double factor) const {
 void AlreadyOptimized::add_circle(const Circle &circle) {
   _circles.push_back(circle);
   _sortedCircles.insert(circle);
+  _tiles.addType(circle);
 }
 
 double AlreadyOptimized::area() const {
@@ -49,7 +50,12 @@ const std::vector<Circle> &AlreadyOptimized::circles() const {
 
 bool AlreadyOptimized::contains(const math2d::Circle &circle) const
 {
-  return _sortedCircles.find(circle) != _sortedCircles.end();
+  const auto any_circle_intersects = [&circle](const Circle &other_circle){
+    const auto distance = Vector{circle.center(), other_circle.center()}.magnitude();
+    const auto radius_sum = circle.radius() + other_circle.radius();
+    return distance < radius_sum;
+  };
+  return _tiles.for_each(circle.bounding_box(), any_circle_intersects);
 }
 
 
@@ -357,12 +363,12 @@ AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
                                         const math2d::Point &point) {
   constexpr auto debug = false;
   auto copied_canvas = canvas;
-  auto already_optimized = AlreadyOptimized{};
+  auto already_optimized = AlreadyOptimized{canvas};
   auto queue = std::queue<Circle>{};
   const auto start_circle = Circle{point, 0.5};
   queue.emplace(start_circle);
-  std::set<Circle> already_put_in_queue;
-  already_put_in_queue.insert(start_circle);
+  //std::set<Circle> already_put_in_queue;
+  //already_put_in_queue.insert(start_circle);
   while (!queue.empty()) {
     const auto circle = queue.front();
     queue.pop();
@@ -371,16 +377,16 @@ AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
       already_optimized.add_circle(circle);
       const auto next_circles = deduce_octagon_circles(circle);
       for(const auto &next_circle : next_circles){
-        bool circle_already_inqueue = already_put_in_queue.find(next_circle) == already_put_in_queue.end();
+        //bool circle_already_inqueue = already_put_in_queue.find(next_circle) == already_put_in_queue.end();
         bool circle_not_already_optimized = !already_optimized.contains(next_circle);
         if(debug){
           std::cout << "next circle: " << next_circle.toString() << std::endl;
           std::cout << "circle already in queue: " << circle_already_inqueue << std::endl;
           std::cout << "circle not already optimized: " << circle_not_already_optimized << std::endl;
         }
-        if(circle_already_inqueue && circle_not_already_optimized){
+        if(circle_not_already_optimized){
           queue.emplace(next_circle);
-          already_put_in_queue.insert(next_circle);
+          //already_put_in_queue.insert(next_circle);
         }
       }
       if(debug){

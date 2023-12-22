@@ -47,7 +47,7 @@ const std::vector<Circle> &AlreadyOptimized::circles() const {
   return _circles;
 }
 
-bool contains(const math2d::Circle &circle) const
+bool AlreadyOptimized::contains(const math2d::Circle &circle) const
 {
   return _sortedCircles.find(circle) != _sortedCircles.end();
 }
@@ -327,29 +327,32 @@ std::array<Circle, 8> deduce_octagon_circles(const Circle &circle)
 {
   std::array<Circle, 8> ret;
   const auto vector_1 = Vector{Point(0,0), Point(1,0)};
-  constexpr auto sqrt_2 = std::sqrt(2);
+  constexpr auto sqrt_2 = 1.4142135623730950488016887242097;
   const auto vector_sqrt_2 = Vector{Point(0,0), Point(sqrt_2,0)};
+  const double distance_midpoints = 1;
   // circle 1
-  ret[0] = Circle{circle.center().plus(vector_1.scale(circle.radius())), circle.radius()};
+  ret[0] = Circle{circle.center().plus(vector_1.scale(distance_midpoints)), circle.radius()};
   // circle 2
-  ret[1] = Circle{circle.center().plus(vector_sqrt_2.scale(circle.radius()).rotate(Angle{45})), circle.radius()};
+  ret[1] = Circle{circle.center().plus(vector_sqrt_2.scale(distance_midpoints).rotate(Angle{45})), circle.radius()};
   // circle 3
-  ret[2] = Circle{circle.center().plus(vector_1.scale(circle.radius()).rotate(Angle{90})), circle.radius()};
+  ret[2] = Circle{circle.center().plus(vector_1.scale(distance_midpoints).rotate(Angle{90})), circle.radius()};
   // circle 4
-  ret[3] = Circle{circle.center().plus(vector_sqrt_2.scale(circle.radius()).rotate(Angle{135})), circle.radius()};
+  ret[3] = Circle{circle.center().plus(vector_sqrt_2.scale(distance_midpoints).rotate(Angle{135})), circle.radius()};
   // circle 5
-  ret[4] = Circle{circle.center().plus(vector_1.scale(circle.radius()).rotate(Angle{180})), circle.radius()};
+  ret[4] = Circle{circle.center().plus(vector_1.scale(distance_midpoints).rotate(Angle{180})), circle.radius()};
   // circle 6
-  ret[5] = Circle{circle.center().plus(vector_sqrt_2.scale(circle.radius()).rotate(Angle{225})), circle.radius()};
+  ret[5] = Circle{circle.center().plus(vector_sqrt_2.scale(distance_midpoints).rotate(Angle{225})), circle.radius()};
   // circle 7
-  ret[6] = Circle{circle.center().plus(vector_1.scale(circle.radius()).rotate(Angle{270})), circle.radius()};
+  ret[6] = Circle{circle.center().plus(vector_1.scale(distance_midpoints).rotate(Angle{270})), circle.radius()};
   // circle 8
-  ret[7] = Circle{circle.center().plus(vector_sqrt_2.scale(circle.radius()).rotate(Angle{315})), circle.radius()}; 
+  ret[7] = Circle{circle.center().plus(vector_sqrt_2.scale(distance_midpoints).rotate(Angle{315})), circle.radius()}; 
   return ret;
 }
 
 AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
                                         const math2d::Point &point) {
+  constexpr auto debug = true;
+  auto copied_canvas = canvas;
   auto already_optimized = AlreadyOptimized{};
   auto queue = std::queue<Circle>{};
   const auto start_circle = Circle{point, 0.5};
@@ -364,10 +367,22 @@ AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
       already_optimized.add_circle(circle);
       const auto next_circles = deduce_octagon_circles(circle);
       for(const auto &next_circle : next_circles){
-        if(already_put_in_queue.find(next_circle) == already_put_in_queue.end() && !already_optimized.contains(next_circle)){
+        bool circle_already_inqueue = already_put_in_queue.find(next_circle) == already_put_in_queue.end();
+        bool circle_not_already_optimized = !already_optimized.contains(next_circle);
+        if(debug){
+          std::cout << "next circle: " << next_circle.toString() << std::endl;
+          std::cout << "circle already in queue: " << circle_already_inqueue << std::endl;
+          std::cout << "circle not already optimized: " << circle_not_already_optimized << std::endl;
+        }
+        if(circle_already_inqueue && circle_not_already_optimized){
           queue.emplace(next_circle);
           already_put_in_queue.insert(next_circle);
         }
+      }
+      std::cout << "queue size: " << queue.size() << std::endl;
+      if(debug){
+        copied_canvas.draw_circle(circle);
+        std::cout << copied_canvas.getPixels() << std::endl;
       }
     }
   }

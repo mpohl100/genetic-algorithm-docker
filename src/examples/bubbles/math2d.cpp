@@ -30,7 +30,7 @@ double Vector::magnitude() const {
 }
 
 Point Point::plus(const Vector &vec) const {
-  return Point{x + static_cast<int>(vec.x), y + static_cast<int>(vec.y)};
+  return Point{x + vec.x, y + vec.y};
 }
 
 std::string Point::toString() const {

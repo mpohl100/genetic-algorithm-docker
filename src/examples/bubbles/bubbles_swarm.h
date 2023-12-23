@@ -41,18 +41,24 @@ public:
   AlreadyOptimized &operator=(const AlreadyOptimized &) = default;
   AlreadyOptimized(AlreadyOptimized &&) = default;
   AlreadyOptimized &operator=(AlreadyOptimized &&) = default;
-  AlreadyOptimized(const Canvas2D& canvas) : _tiles{canvas.tiles()} {}
+  AlreadyOptimized(int N, const Canvas2D& canvas) : _tiles{canvas.width(), canvas.height(), N}
+  , _tilesAlreadyTried{canvas.width(), canvas.height(), N}
+  {
+  }
 
   void add_circle(const math2d::Circle &circle);
+  void add_tried_circle(const math2d::Circle &circle);
   double area() const;
   const std::vector<math2d::Circle> &circles() const;
 
   bool contains(const math2d::Circle &circle) const;
+  bool contains_already_tried(const math2d::Circle &circle) const;
 
 private:
   std::vector<math2d::Circle> _circles;
   std::set<math2d::Circle> _sortedCircles;
-  Tiles<math2d::Circle> _tiles;
+  tiles::Tiles<math2d::Circle> _tiles;
+  tiles::Tiles<math2d::Circle> _tilesAlreadyTried;
 };
 
 struct BubbleCircle {

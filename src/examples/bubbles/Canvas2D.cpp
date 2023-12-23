@@ -342,6 +342,16 @@ const tiles::Tiles<math2d::Point>& Canvas2D::tiles() const
   return _tiles;
 }
 
+  int Canvas2D::width() const
+  {
+    return _x;
+  }
+
+  int Canvas2D::height() const
+  {
+    return _y;
+  }
+
 void Canvas2D::draw_pixel(int x, int y, int value) {
   if (x < 0 || x >= static_cast<int>(_pixels.size()) || y < 0 ||
       y >= static_cast<int>(_pixels[0].size())) {

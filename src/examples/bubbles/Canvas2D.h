@@ -28,6 +28,8 @@ public:
 
   const std::set<math2d::Point> &points() const;
   const tiles::Tiles<math2d::Point>& tiles() const;
+  int width() const;
+  int height() const;
 private:
   void draw_pixel(int x, int y, int value);
   [[maybe_unused]] int _x = 1;

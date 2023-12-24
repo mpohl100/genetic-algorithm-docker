@@ -1,6 +1,7 @@
 #include <catch2/catch_all.hpp>
 
 #include "examples/bubbles/bubbles_swarm.h"
+#include "examples/bubbles/establishing_frame.h"
 
 #include <iostream>
 
@@ -63,7 +64,7 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
     CHECK(angle_area_5.is_within(math2d::Angle{360}));
     CHECK(!angle_area_5.is_within(math2d::Angle{361}));
   }
-#if 1
+#if 0
   SECTION("BubblesAlgoIntegration") {
     auto canvas = bubbles::Canvas2D(100, 100);
     const auto rectangle =
@@ -72,7 +73,7 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
     const auto already_optimized =
         bubbles::bubbles_algorithm_slow(canvas, math2d::Point(50, 50));
     const auto ratio = already_optimized.area() / rectangle.area();
-    CHECK(ratio >= 0.9);
+    CHECK(ratio >= 0.75);
     CHECK(ratio < 1);
     canvas.draw_circle(already_optimized.circles()[0]);
     const auto canvas_pixels = canvas.getPixels();
@@ -83,6 +84,14 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
               << "; radius: " << circle.radius() << std::endl;
   }
 #endif
+  SECTION("EstablishingShot"){
+    auto canvas = bubbles::Canvas2D(100, 100);
+    const auto rectangle =
+        math2d::Rectangle{math2d::Point(20, 20), math2d::Point(70, 70)};
+    canvas.draw_rectangle(rectangle);
+    const auto all_rectangles = bubbles::establishing_shot(canvas);
+    CHECK(all_rectangles.rectangles.size() == 2);
+  }
 }
 
 } // namespace

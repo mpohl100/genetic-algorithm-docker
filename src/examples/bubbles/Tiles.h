@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <set>
+#include <stdexcept>
 
 namespace tiles {
 
@@ -73,11 +74,17 @@ public:
 private:
   size_t getX(double x) const {
     double total_tiles_in_x_direction = _x / _N;
+    if(total_tiles_in_x_direction == 0){
+      throw std::runtime_error("total_tiles_in_x_direction == 0");
+    }
     return static_cast<size_t>(x / total_tiles_in_x_direction);
   }
 
   size_t getY(double y) const {
     double total_tiles_in_y_direction = _y / _N;
+    if(total_tiles_in_y_direction == 0){
+      throw std::runtime_error("total_tiles_in_y_direction == 0");
+    }
     return static_cast<size_t>(y / total_tiles_in_y_direction);
   }
 

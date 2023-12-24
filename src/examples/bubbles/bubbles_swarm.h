@@ -49,10 +49,12 @@ public:
   void add_circle(const math2d::Circle &circle);
   void add_tried_circle(const math2d::Circle &circle);
   double area() const;
+  math2d::Rectangle bounding_box() const;
   const std::vector<math2d::Circle> &circles() const;
 
   bool contains(const math2d::Circle &circle) const;
   bool contains_already_tried(const math2d::Circle &circle) const;
+  void for_each_tried_circle(std::function<bool(const math2d::Circle&)> func) const;
 
 private:
   std::vector<math2d::Circle> _circles;

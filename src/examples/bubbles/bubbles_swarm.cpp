@@ -41,6 +41,25 @@ void AlreadyOptimized::add_tried_circle(const math2d::Circle &circle)
   _tilesAlreadyTried.addType(circle);
 }
 
+math2d::Rectangle AlreadyOptimized::bounding_box() const
+{
+  if(_circles.empty()){
+    return Rectangle{Point{0,0}, Point{0,0}};
+  }
+  const auto first_circle = _circles[0];
+  auto min_x = first_circle.center().x - first_circle.radius();
+  auto max_x = first_circle.center().x + first_circle.radius();
+  auto min_y = first_circle.center().y - first_circle.radius();
+  auto max_y = first_circle.center().y + first_circle.radius();
+  for(const auto &circle : _circles){
+    min_x = std::min(min_x, circle.center().x - circle.radius());
+    max_x = std::max(max_x, circle.center().x + circle.radius());
+    min_y = std::min(min_y, circle.center().y - circle.radius());
+    max_y = std::max(max_y, circle.center().y + circle.radius());
+  }
+  return Rectangle{Point{min_x, min_y}, Point{max_x, max_y}};
+}
+
 double AlreadyOptimized::area() const {
   auto area = 0.0;
   for (const auto &circle : _circles) {
@@ -71,6 +90,11 @@ bool AlreadyOptimized::contains_already_tried(const math2d::Circle &circle) cons
     return distance < radius_sum;
   };
   return _tilesAlreadyTried.for_each(circle.bounding_box(), any_circle_intersects);
+}
+
+void AlreadyOptimized::for_each_tried_circle(std::function<bool(const math2d::Circle&)> func) const
+{
+  _tilesAlreadyTried.for_each(bounding_box(), func);
 }
 
 

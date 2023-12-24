@@ -71,6 +71,27 @@ public:
     return false;
   }
 
+  bool contains(const T &type){
+    if constexpr (std::is_same_v<T, math2d::Point>){
+      return _tiles[getX(type.x)][getY(type.y)]._points.contains(type);
+    }
+    else if constexpr(std::is_same_v<T, math2d::Circle>){
+      const auto bounding_box = type.bounding_box();
+      size_t start_x = getX(bounding_box.lines()[0].start().x);
+      size_t end_x = getX(bounding_box.lines()[1].end().x);
+      size_t start_y = getY(bounding_box.lines()[0].start().y);
+      size_t end_y = getY(bounding_box.lines()[1].end().y);
+      for (size_t x = start_x; x <= end_x; ++x) {
+        for (size_t y = start_y; y <= end_y; ++y) {
+          if(_tiles[x][y]._points.contains(type)){
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
 private:
   size_t getX(double x) const {
     double total_tiles_in_x_direction = _x / _N;

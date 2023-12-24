@@ -17,6 +17,9 @@ struct Rectangle{
     Rectangle(Rectangle&&) = default;
     Rectangle& operator=(Rectangle&&) = default;
     Rectangle(const math2d::Rectangle& rectangle);
+
+    math2d::Rectangle to_math2d_rectangle() const;
+
     int x = 0;
     int y = 0;
     int width = 1;

@@ -14,7 +14,14 @@ Rectangle::Rectangle(const math2d::Rectangle &rectangle)
       height{static_cast<int>(rectangle.lines()[1].end().y -
                               rectangle.lines()[0].start().y)} {}
 
-                              
+math2d::Rectangle Rectangle::to_math2d_rectangle() const
+{
+  return math2d::Rectangle{math2d::Point{static_cast<math2d::number_type>(x),
+                                         static_cast<math2d::number_type>(y)},
+                           math2d::Point{static_cast<math2d::number_type>(x + width),
+                                         static_cast<math2d::number_type>(y + height)}};
+}
+
 AllRectangles establishing_shot(const Canvas2D &canvas) {
   AllRectangles allRectangles;
   tiles::Tiles<math2d::Point> allTriedPoints{canvas.width(), canvas.height(),

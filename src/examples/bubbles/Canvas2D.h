@@ -25,13 +25,13 @@ public:
   std::string getPixels() const;
   void draw_line(const math2d::Line &line);
   bool is_within(const math2d::Point &point) const;
+  void draw_pixel(int x, int y, int value);
 
   const std::set<math2d::Point> &points() const;
   const tiles::Tiles<math2d::Point>& tiles() const;
   int width() const;
   int height() const;
 private:
-  void draw_pixel(int x, int y, int value);
   [[maybe_unused]] int _x = 1;
   [[maybe_unused]] int _y = 1;
   std::vector<std::vector<int>> _pixels;

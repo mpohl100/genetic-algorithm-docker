@@ -400,7 +400,7 @@ std::array<Circle, 8> deduce_octagon_circles(const Circle &circle)
 
 AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
                                         const math2d::Point &point) {
-  constexpr auto debug = false;
+  constexpr auto debug = true;
   auto copied_canvas = canvas;
   auto already_optimized = AlreadyOptimized{10, canvas};
   auto queue = std::queue<Circle>{};
@@ -433,8 +433,8 @@ AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
       }
       if(debug){
         std::cout << "queue size: " << queue.size() << std::endl;
-        copied_canvas.draw_circle(circle);
-        std::cout << copied_canvas.getPixels() << std::endl;
+        //copied_canvas.draw_circle(circle);
+        //std::cout << copied_canvas.getPixels() << std::endl;
       }
     }
   }

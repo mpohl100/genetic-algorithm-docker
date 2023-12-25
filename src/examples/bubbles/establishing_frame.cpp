@@ -23,11 +23,15 @@ math2d::Rectangle Rectangle::to_math2d_rectangle() const
 }
 
 AllRectangles establishing_shot(const Canvas2D &canvas) {
+  constexpr auto debug = true;
   AllRectangles allRectangles;
   tiles::Tiles<math2d::Point> allTriedPoints{canvas.width(), canvas.height(),
                                              10};
   for (int x = 0; x < canvas.width(); ++x) {
     for (int y = 0; y < canvas.height(); ++y) {
+      if constexpr (debug) {
+        std::cout << "x: " << x << " y: " << y << std::endl;
+      }
       const auto point = math2d::Point{static_cast<math2d::number_type>(x),
                                        static_cast<math2d::number_type>(y)};
       if (allTriedPoints.contains(point)) {
@@ -53,7 +57,11 @@ AllRectangles establishing_shot(const Canvas2D &canvas) {
       const auto bounding_box = already_optimized.bounding_box();
       if (bounding_box.area() > 5) // magic number at the moment
       {
-        allRectangles.rectangles.push_back(Rectangle{bounding_box});
+        const auto found_rectangle = math2d::expand_rectangle(bounding_box, 5);
+        if constexpr (debug){
+            std::cout << "Found rectangle: " << found_rectangle.toString() << std::endl;
+        }
+        allRectangles.rectangles.push_back(Rectangle{found_rectangle});
       }
     }
   }

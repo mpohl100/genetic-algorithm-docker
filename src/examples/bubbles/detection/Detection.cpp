@@ -18,7 +18,8 @@ cv::Mat detect_angles(cv::Mat const &bgrImg) {
   return detail::detect_edges<detail::DetectionType::Angle>(bgrImg);
 }
 
-cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles, int threshold) {
+cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles,
+                      int threshold) {
   cv::Mat result = angles.clone();
   std::vector<const cv::Vec3b *> rows;
   cv::Vec3b *resultRow = nullptr;
@@ -81,6 +82,18 @@ cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles, i
     }
   }
   return result;
+}
+
+bubbles::Canvas2D create_canvas(const cv::Mat &angles) {
+  auto canvas = bubbles::Canvas2D(angles.cols, angles.rows);
+  for (int x = 0; x < angles.rows; ++x) {
+    for (int y = 0; y < angles.cols; ++y) {
+      if (angles.at<cv::Vec3b>(x, y)[0] == 255) {
+        canvas.draw_pixel(x, y, 1);
+      }
+    }
+  }
+  return canvas;
 }
 
 } // namespace od

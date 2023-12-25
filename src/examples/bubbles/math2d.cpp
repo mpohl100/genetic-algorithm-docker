@@ -61,6 +61,23 @@ double Rectangle::area() const {
   return _lines[0].magnitude() * _lines[1].magnitude();
 }
 
+std::string Rectangle::toString() const
+{
+    return "Rectangle{top_left: " + _lines[0].start().toString() +
+           "; bottom_right: " + _lines[1].end().toString() + "}";
+}
+
+
+Rectangle expand_rectangle(const Rectangle &rect, number_type offset)
+{
+    const auto &top_left = rect.lines()[0].start();
+    const auto &bottom_right = rect.lines()[1].end();
+    return Rectangle(Point(top_left.x - offset, top_left.y - offset),
+                     Point(bottom_right.x + offset, bottom_right.y + offset));
+
+}
+
+
 Circle::Circle(Point center, number_type radius)
     : _center(center), _radius(radius) {}
 

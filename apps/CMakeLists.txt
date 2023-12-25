@@ -24,5 +24,5 @@ target_include_directories(establishing_shot PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 add_executable(webcam webcam.cpp)
 target_include_directories(webcam PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(webcam clara::clara detection ${OpenCV_LIBS})
+target_link_libraries(webcam clara::clara detection bubbles ${OpenCV_LIBS})
 target_include_directories(webcam PUBLIC ${CMAKE_SOURCE_DIR}/src)

@@ -15,6 +15,8 @@ int main(int argc, char **argv) {
   int rectangle_y = 50;
   size_t N_rectangles_x = 2;
   size_t N_rectangles_y = 2;
+  size_t canvas_width = 100;
+  size_t canvas_height = 100;
   bool help = false;
   auto cli =
       Opt(tl_x, "tl_x")["-t"]["--tl-x"]("The top left x coordinate") |
@@ -27,6 +29,12 @@ int main(int argc, char **argv) {
           "N_x")["-x"]["--N-x"]("The number of rectangles in x direction") |
       Opt(N_rectangles_y,
           "N_y")["-y"]["--N-y"]("The number of rectangles in y direction") |
+      Opt(canvas_width,
+          "canvas_width")["-w"]["--canvas-width"]("The width of the canvas") |
+      Opt(canvas_height, "canvas_height")["-h"]["--canvas-height"]("The "
+                                                                   "height of "
+                                                                   "the "
+                                                                   "canvas") |
       Help(help);
 
   auto result = cli.parse(Args(argc, argv));
@@ -39,7 +47,7 @@ int main(int argc, char **argv) {
     exit(0);
   }
 
-  auto canvas = bubbles::Canvas2D(100, 100);
+  auto canvas = bubbles::Canvas2D(canvas_width, canvas_height);
   for (size_t i = 0; i < N_rectangles_x; ++i) {
     for (size_t j = 0; j < N_rectangles_y; ++j) {
       const auto rectangle = math2d::Rectangle{

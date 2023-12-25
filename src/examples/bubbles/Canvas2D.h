@@ -32,9 +32,11 @@ public:
   const tiles::Tiles<math2d::Point>& tiles() const;
   int width() const;
   int height() const;
+  int N() const;
 private:
   [[maybe_unused]] int _x = 1;
   [[maybe_unused]] int _y = 1;
+  int _N = 10;
   matrix::Matrix<int> _pixels;
   std::set<math2d::Point> _points;
   tiles::Tiles<math2d::Point> _tiles;

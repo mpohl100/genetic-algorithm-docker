@@ -38,11 +38,12 @@ int main(int argc, char **argv) {
   }
 
   auto canvas = bubbles::Canvas2D(100, 100);
+  auto tried_circles = tiles::CircleTiles(canvas.width(), canvas.height(), 10);
   const auto rectangle =
       math2d::Rectangle{math2d::Point(tl_x, tl_y), math2d::Point(tl_x + rectangle_x, tl_y + rectangle_y)};
   canvas.draw_rectangle(rectangle);
   const auto already_optimized =
-      bubbles::bubbles_algorithm_slow(canvas, math2d::Point(start_x, start_y));
+      bubbles::bubbles_algorithm_slow(canvas, math2d::Point(start_x, start_y), tried_circles);
   for(const auto& circle : already_optimized.circles()) {
     canvas.draw_circle(circle);
   }

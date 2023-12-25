@@ -115,4 +115,7 @@ private:
   matrix::Matrix<Tile<T>> _tiles;
 };
 
+
+using CircleTiles = Tiles<math2d::Circle>;
+
 } // namespace tiles

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Matrix.h"
 #include "math2d.h"
 
 #include <functional>
@@ -23,20 +24,11 @@ public:
   Tiles(Tiles &&) = default;
   Tiles &operator=(Tiles &&) = default;
 
-  Tiles(int xx, int yy, int N) : _x(xx), _y(yy), _N(N), _tiles{} {
-  // allocate tiles
-  for (size_t x = 0; x <= getX(xx); ++x) {
-    std::vector<Tile<T>> line;
-    for (size_t y = 0; y <= getY(yy); ++y) {
-      line.emplace_back(Tile<T>{});
-    }
-    _tiles.emplace_back(line);
-  }
-}
+  Tiles(int xx, int yy, int N) : _x(xx), _y(yy), _N(N), _tiles{getX(xx)+ 1, getY(yy) + 1} {}
 
   void addType(const T &t) {
     if constexpr (std::is_same_v<T, math2d::Point>){
-      _tiles[getX(t.x)][getY(t.y)]._points.insert(t);
+      _tiles.get(getX(t.x),getY(t.y))._points.insert(t);
     }
     else if constexpr(std::is_same_v<T, math2d::Circle>){
       const auto bounding_box = t.bounding_box();
@@ -46,7 +38,7 @@ public:
       size_t end_y = getY(bounding_box.lines()[1].end().y);
       for (size_t x = start_x; x <= end_x; ++x) {
         for (size_t y = start_y; y <= end_y; ++y) {
-          _tiles[x][y]._points.insert(t);
+          _tiles.get(x, y)._points.insert(t);
         }
       }
     }
@@ -60,7 +52,7 @@ public:
     size_t end_y = getY(rectangle.lines()[1].end().y);
     for (size_t x = start_x; x <= end_x; ++x) {
       for (size_t y = start_y; y <= end_y; ++y) {
-        for (const auto &point : _tiles[x][y]._points) {
+        for (const auto &point : _tiles.get(x, y)._points) {
           bool ret = func(point);
           if(ret){
             return true;
@@ -73,7 +65,7 @@ public:
 
   bool contains(const T &type){
     if constexpr (std::is_same_v<T, math2d::Point>){
-      return _tiles[getX(type.x)][getY(type.y)]._points.contains(type);
+      return _tiles.get(getX(type.x), getY(type.y))._points.contains(type);
     }
     else if constexpr(std::is_same_v<T, math2d::Circle>){
       const auto bounding_box = type.bounding_box();
@@ -83,7 +75,7 @@ public:
       size_t end_y = getY(bounding_box.lines()[1].end().y);
       for (size_t x = start_x; x <= end_x; ++x) {
         for (size_t y = start_y; y <= end_y; ++y) {
-          if(_tiles[x][y]._points.contains(type)){
+          if(_tiles.get(x, y)._points.contains(type)){
             return true;
           }
         }
@@ -112,7 +104,7 @@ private:
   int _x = 0;
   int _y = 0;
   int _N = 0;
-  std::vector<std::vector<Tile<T>>> _tiles;
+  matrix::Matrix<Tile<T>> _tiles;
 };
 
 } // namespace tiles

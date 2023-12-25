@@ -11,7 +11,7 @@ using namespace math2d;
 namespace bubbles {
 
 Canvas2D::Canvas2D(int xx, int yy, int N)
-    : _x(xx), _y(yy), _pixels(xx, std::vector<int>(yy, 0)), _points(), _tiles{xx, yy, N} {}
+    : _x(xx), _y(yy), _pixels(xx, yy), _points(), _tiles{xx, yy, N} {}
 
 void Canvas2D::draw_rectangle(const Rectangle &rectangle) {
   draw_line(rectangle.lines()[0]);
@@ -164,8 +164,9 @@ void Canvas2D::draw_circle(const Circle &circle) {
 
 std::string Canvas2D::getPixels() const {
   std::string ret;
-  for (const auto &line : _pixels) {
-    for (const auto &val : line) {
+  for (size_t x = 0; x < _pixels.width(); ++x) {
+    for (size_t y = 0; y < _pixels.height(); ++y) {
+      const auto val = _pixels.get(x, y);
       if (val == 2) {
         ret += "O";
       } else if (val == 1) {
@@ -353,11 +354,11 @@ const tiles::Tiles<math2d::Point>& Canvas2D::tiles() const
   }
 
 void Canvas2D::draw_pixel(int x, int y, int value) {
-  if (x < 0 || x >= static_cast<int>(_pixels.size()) || y < 0 ||
-      y >= static_cast<int>(_pixels[0].size())) {
+  if (x < 0 || x >= static_cast<int>(_pixels.width()) || y < 0 ||
+      y >= static_cast<int>(_pixels.height())) {
     return;
   }
-  _pixels[x][y] = value;
+  _pixels.get(x, y) = value;
   _points.emplace(x, y);
   _tiles.addType(Point(x, y));
 };

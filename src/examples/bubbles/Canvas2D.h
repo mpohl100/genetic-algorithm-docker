@@ -2,6 +2,7 @@
 
 #include "examples/bubbles/Tiles.h"
 #include "examples/bubbles/math2d.h"
+#include "examples/bubbles/Matrix.h"
 #include "value_test.h"
 
 #include <cmath>
@@ -34,7 +35,7 @@ public:
 private:
   [[maybe_unused]] int _x = 1;
   [[maybe_unused]] int _y = 1;
-  std::vector<std::vector<int>> _pixels;
+  matrix::Matrix<int> _pixels;
   std::set<math2d::Point> _points;
   tiles::Tiles<math2d::Point> _tiles;
 };

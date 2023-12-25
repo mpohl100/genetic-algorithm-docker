@@ -23,7 +23,7 @@ math2d::Rectangle Rectangle::to_math2d_rectangle() const
 }
 
 AllRectangles establishing_shot(const Canvas2D &canvas) {
-  constexpr auto debug = true;
+  constexpr auto debug = false;
   AllRectangles allRectangles;
   tiles::Tiles<math2d::Point> allTriedPoints{canvas.width(), canvas.height(),
                                              10};

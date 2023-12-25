@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
           "rectangle_x")["-r"]["--rectangle-x"]("The rectangle x coordinate") |
       Opt(rectangle_y, "rectangle_y")["-s"]["--rectangle-y"]("The rectangle y "
                                                              "coordinate") |
-      Opt(tile_size, "tile_size")["-ts"]["--tile-size"]("The tile size") |
+      Opt(tile_size, "tile_size")["-n"]["--tile-size"]("The tile size") |
       Opt(N_rectangles_x,
           "N_x")["-x"]["--N-x"]("The number of rectangles in x direction") |
       Opt(N_rectangles_y,

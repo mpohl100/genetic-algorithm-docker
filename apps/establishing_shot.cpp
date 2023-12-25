@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
   int tl_y = 20;
   int rectangle_x = 50;
   int rectangle_y = 50;
+  int tile_size = 10;
   size_t N_rectangles_x = 2;
   size_t N_rectangles_y = 2;
   size_t canvas_width = 100;
@@ -25,6 +26,7 @@ int main(int argc, char **argv) {
           "rectangle_x")["-r"]["--rectangle-x"]("The rectangle x coordinate") |
       Opt(rectangle_y, "rectangle_y")["-s"]["--rectangle-y"]("The rectangle y "
                                                              "coordinate") |
+      Opt(tile_size, "tile_size")["-ts"]["--tile-size"]("The tile size") |
       Opt(N_rectangles_x,
           "N_x")["-x"]["--N-x"]("The number of rectangles in x direction") |
       Opt(N_rectangles_y,
@@ -47,7 +49,7 @@ int main(int argc, char **argv) {
     exit(0);
   }
 
-  auto canvas = bubbles::Canvas2D(canvas_width, canvas_height);
+  auto canvas = bubbles::Canvas2D(canvas_width, canvas_height, tile_size);
   for (size_t i = 0; i < N_rectangles_x; ++i) {
     for (size_t j = 0; j < N_rectangles_y; ++j) {
       const auto rectangle = math2d::Rectangle{

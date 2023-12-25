@@ -42,7 +42,6 @@ public:
   AlreadyOptimized(AlreadyOptimized &&) = default;
   AlreadyOptimized &operator=(AlreadyOptimized &&) = default;
   AlreadyOptimized(int N, const Canvas2D& canvas) : _tiles{canvas.width(), canvas.height(), N}
-  , _tilesAlreadyTried{canvas.width(), canvas.height(), N}
   {
   }
 
@@ -53,14 +52,11 @@ public:
   const std::vector<math2d::Circle> &circles() const;
 
   bool contains(const math2d::Circle &circle) const;
-  bool contains_already_tried(const math2d::Circle &circle) const;
-  void for_each_tried_circle(std::function<bool(const math2d::Circle&)> func) const;
 
 private:
   std::vector<math2d::Circle> _circles;
   std::set<math2d::Circle> _sortedCircles;
   tiles::Tiles<math2d::Circle> _tiles;
-  tiles::Tiles<math2d::Circle> _tilesAlreadyTried;
 };
 
 struct BubbleCircle {
@@ -116,6 +112,6 @@ bubbles_algorithm(const Canvas2D &canvas, const math2d::Point &point,
                   const evol::partial::PartialEvolutionOptions &params);
 
 AlreadyOptimized
-bubbles_algorithm_slow(const Canvas2D &canvas, const math2d::Point &point);
+bubbles_algorithm_slow(const Canvas2D &canvas, const math2d::Point &point, tiles::CircleTiles& already_tried);
 
 } // namespace bubbles

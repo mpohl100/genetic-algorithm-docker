@@ -11,7 +11,7 @@ using namespace math2d;
 namespace bubbles {
 
 Canvas2D::Canvas2D(int xx, int yy, int N)
-    : _x(xx), _y(yy), _pixels(xx, yy), _points(), _tiles{xx, yy, N} {}
+    : _x(xx), _y(yy), _N(N), _pixels(xx, yy), _points(), _tiles{xx, yy, N} {}
 
 void Canvas2D::draw_rectangle(const Rectangle &rectangle) {
   draw_line(rectangle.lines()[0]);
@@ -180,8 +180,7 @@ std::string Canvas2D::getPixels() const {
   return ret;
 }
 
-bool Canvas2D::is_within(const Point &point) const
-{
+bool Canvas2D::is_within(const Point &point) const {
   return point.x >= 0 && point.x < _x && point.y >= 0 && point.y < _y;
 }
 
@@ -338,20 +337,13 @@ void Canvas2D::draw_line(const Line &line) {
 
 const std::set<Point> &Canvas2D::points() const { return _points; }
 
-const tiles::Tiles<math2d::Point>& Canvas2D::tiles() const
-{
-  return _tiles;
-}
+const tiles::Tiles<math2d::Point> &Canvas2D::tiles() const { return _tiles; }
 
-  int Canvas2D::width() const
-  {
-    return _x;
-  }
+int Canvas2D::width() const { return _x; }
 
-  int Canvas2D::height() const
-  {
-    return _y;
-  }
+int Canvas2D::height() const { return _y; }
+
+int Canvas2D::N() const { return _N; }
 
 void Canvas2D::draw_pixel(int x, int y, int value) {
   if (x < 0 || x >= static_cast<int>(_pixels.width()) || y < 0 ||

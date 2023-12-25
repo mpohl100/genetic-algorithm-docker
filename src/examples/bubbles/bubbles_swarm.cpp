@@ -36,22 +36,16 @@ void AlreadyOptimized::add_circle(const Circle &circle) {
   _tiles.addType(circle);
 }
 
-void AlreadyOptimized::add_tried_circle(const math2d::Circle &circle)
-{
-  _tilesAlreadyTried.addType(circle);
-}
-
-math2d::Rectangle AlreadyOptimized::bounding_box() const
-{
-  if(_circles.empty()){
-    return Rectangle{Point{0,0}, Point{0,0}};
+math2d::Rectangle AlreadyOptimized::bounding_box() const {
+  if (_circles.empty()) {
+    return Rectangle{Point{0, 0}, Point{0, 0}};
   }
   const auto first_circle = _circles[0];
   auto min_x = first_circle.center().x - first_circle.radius();
   auto max_x = first_circle.center().x + first_circle.radius();
   auto min_y = first_circle.center().y - first_circle.radius();
   auto max_y = first_circle.center().y + first_circle.radius();
-  for(const auto &circle : _circles){
+  for (const auto &circle : _circles) {
     min_x = std::min(min_x, circle.center().x - circle.radius());
     max_x = std::max(max_x, circle.center().x + circle.radius());
     min_y = std::min(min_y, circle.center().y - circle.radius());
@@ -72,31 +66,15 @@ const std::vector<Circle> &AlreadyOptimized::circles() const {
   return _circles;
 }
 
-bool AlreadyOptimized::contains(const math2d::Circle &circle) const
-{
-  const auto any_circle_intersects = [&circle](const Circle &other_circle){
-    const auto distance = Vector{circle.center(), other_circle.center()}.magnitude();
+bool AlreadyOptimized::contains(const math2d::Circle &circle) const {
+  const auto any_circle_intersects = [&circle](const Circle &other_circle) {
+    const auto distance =
+        Vector{circle.center(), other_circle.center()}.magnitude();
     const auto radius_sum = circle.radius() + other_circle.radius();
     return distance < radius_sum;
   };
   return _tiles.for_each(circle.bounding_box(), any_circle_intersects);
 }
-
-bool AlreadyOptimized::contains_already_tried(const math2d::Circle &circle) const
-{
-  const auto any_circle_intersects = [&circle](const Circle &other_circle){
-    const auto distance = Vector{circle.center(), other_circle.center()}.magnitude();
-    const auto radius_sum = circle.radius() + other_circle.radius();
-    return distance < radius_sum;
-  };
-  return _tilesAlreadyTried.for_each(circle.bounding_box(), any_circle_intersects);
-}
-
-void AlreadyOptimized::for_each_tried_circle(std::function<bool(const math2d::Circle&)> func) const
-{
-  _tilesAlreadyTried.for_each(bounding_box(), func);
-}
-
 
 BubbleCircle::BubbleCircle(const Circle &circle,
                            const SourceCircle &source_circle)
@@ -364,77 +342,105 @@ double calculate_fitness(const Circle &circle, const Canvas2D &canvas) {
     const auto distance = Vector{circle.center(), point}.magnitude();
     return distance < circle.radius();
   };
-  bool any_intersections = canvas.tiles().for_each(circle.bounding_box(),
-                                                   circle_intersects_point);
-  if(!any_intersections){
+  bool any_intersections =
+      canvas.tiles().for_each(circle.bounding_box(), circle_intersects_point);
+  if (!any_intersections) {
     fitness += circle.area();
   }
   return fitness;
 }
 
-std::array<Circle, 8> deduce_octagon_circles(const Circle &circle)
-{
+std::array<Circle, 8> deduce_octagon_circles(const Circle &circle) {
   std::array<Circle, 8> ret;
-  const auto vector_1 = Vector{Point(0,0), Point(1,0)};
+  const auto vector_1 = Vector{Point(0, 0), Point(1, 0)};
   constexpr auto sqrt_2 = 1.4142135623730950488016887242097;
-  const auto vector_sqrt_2 = Vector{Point(0,0), Point(sqrt_2,0)};
+  const auto vector_sqrt_2 = Vector{Point(0, 0), Point(sqrt_2, 0)};
   const double distance_midpoints = 1;
   // circle 1
-  ret[0] = Circle{circle.center().plus(vector_1.scale(distance_midpoints)), circle.radius()};
+  ret[0] = Circle{circle.center().plus(vector_1.scale(distance_midpoints)),
+                  circle.radius()};
   // circle 2
-  ret[1] = Circle{circle.center().plus(vector_sqrt_2.scale(distance_midpoints).rotate(Angle{45})), circle.radius()};
+  ret[1] =
+      Circle{circle.center().plus(
+                 vector_sqrt_2.scale(distance_midpoints).rotate(Angle{45})),
+             circle.radius()};
   // circle 3
-  ret[2] = Circle{circle.center().plus(vector_1.scale(distance_midpoints).rotate(Angle{90})), circle.radius()};
+  ret[2] = Circle{circle.center().plus(
+                      vector_1.scale(distance_midpoints).rotate(Angle{90})),
+                  circle.radius()};
   // circle 4
-  ret[3] = Circle{circle.center().plus(vector_sqrt_2.scale(distance_midpoints).rotate(Angle{135})), circle.radius()};
+  ret[3] =
+      Circle{circle.center().plus(
+                 vector_sqrt_2.scale(distance_midpoints).rotate(Angle{135})),
+             circle.radius()};
   // circle 5
-  ret[4] = Circle{circle.center().plus(vector_1.scale(distance_midpoints).rotate(Angle{180})), circle.radius()};
+  ret[4] = Circle{circle.center().plus(
+                      vector_1.scale(distance_midpoints).rotate(Angle{180})),
+                  circle.radius()};
   // circle 6
-  ret[5] = Circle{circle.center().plus(vector_sqrt_2.scale(distance_midpoints).rotate(Angle{225})), circle.radius()};
+  ret[5] =
+      Circle{circle.center().plus(
+                 vector_sqrt_2.scale(distance_midpoints).rotate(Angle{225})),
+             circle.radius()};
   // circle 7
-  ret[6] = Circle{circle.center().plus(vector_1.scale(distance_midpoints).rotate(Angle{270})), circle.radius()};
+  ret[6] = Circle{circle.center().plus(
+                      vector_1.scale(distance_midpoints).rotate(Angle{270})),
+                  circle.radius()};
   // circle 8
-  ret[7] = Circle{circle.center().plus(vector_sqrt_2.scale(distance_midpoints).rotate(Angle{315})), circle.radius()}; 
+  ret[7] =
+      Circle{circle.center().plus(
+                 vector_sqrt_2.scale(distance_midpoints).rotate(Angle{315})),
+             circle.radius()};
   return ret;
 }
 
 AlreadyOptimized bubbles_algorithm_slow(const Canvas2D &canvas,
-                                        const math2d::Point &point) {
+                                        const math2d::Point &point,
+                                        tiles::CircleTiles &already_tried) {
   constexpr auto debug = false;
   auto copied_canvas = canvas;
   auto already_optimized = AlreadyOptimized{10, canvas};
   auto queue = std::queue<Circle>{};
   const auto start_circle = Circle{point, 0.5};
+
   queue.emplace(start_circle);
-  //std::set<Circle> already_put_in_queue;
-  //already_put_in_queue.insert(start_circle);
-  already_optimized.add_tried_circle(start_circle);
+  already_tried.addType(start_circle);
+
   while (!queue.empty()) {
     const auto circle = queue.front();
     queue.pop();
-    //already_put_in_queue.erase(circle);
     const auto fitness = calculate_fitness(circle, canvas);
-    if(fitness > 0){
+    if (fitness > 0) {
       already_optimized.add_circle(circle);
       const auto next_circles = deduce_octagon_circles(circle);
-      for(const auto &next_circle : next_circles){
-        bool circle_not_already_inqueue = !already_optimized.contains_already_tried(next_circle);
-        bool circle_not_already_optimized = !already_optimized.contains(next_circle);
-        if(debug){
+      for (const auto &next_circle : next_circles) {
+        const auto any_circle_intersects = [&next_circle](
+                                               const Circle &other_circle) {
+          const auto distance =
+              Vector{next_circle.center(), other_circle.center()}.magnitude();
+          const auto radius_sum = next_circle.radius() + other_circle.radius();
+          return distance < radius_sum;
+        };
+        bool circle_not_already_inqueue = !already_tried.for_each(
+            next_circle.bounding_box(), any_circle_intersects);
+        bool circle_not_already_optimized =
+            !already_optimized.contains(next_circle);
+        if (debug) {
           std::cout << "next circle: " << next_circle.toString() << std::endl;
-          std::cout << "circle not already in queue: " << circle_not_already_inqueue << std::endl;
-          std::cout << "circle not already optimized: " << circle_not_already_optimized << std::endl;
+          std::cout << "circle not already in queue: "
+                    << circle_not_already_inqueue << std::endl;
+          std::cout << "circle not already optimized: "
+                    << circle_not_already_optimized << std::endl;
         }
-        if(circle_not_already_inqueue && circle_not_already_optimized){
+        if (circle_not_already_inqueue && circle_not_already_optimized) {
           queue.emplace(next_circle);
-          //already_put_in_queue.insert(next_circle);
-          already_optimized.add_tried_circle(next_circle);
+          already_tried.addType(next_circle);
         }
       }
-      if(debug){
+      if (debug) {
         std::cout << "queue size: " << queue.size() << std::endl;
-        //copied_canvas.draw_circle(circle);
-        //std::cout << copied_canvas.getPixels() << std::endl;
+        // copied_canvas.draw_circle(circle);
+        // std::cout << copied_canvas.getPixels() << std::endl;
       }
     }
   }

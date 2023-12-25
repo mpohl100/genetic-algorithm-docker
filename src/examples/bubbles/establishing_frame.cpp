@@ -25,8 +25,8 @@ math2d::Rectangle Rectangle::to_math2d_rectangle() const
 AllRectangles establishing_shot(const Canvas2D &canvas) {
   constexpr auto debug = false;
   AllRectangles allRectangles;
-  tiles::Tiles<math2d::Point> allTriedPoints{canvas.width(), canvas.height(),
-                                             10};
+  tiles::CircleTiles allTriedCircles{canvas.width(), canvas.height(), canvas.N()};
+
   for (int x = 0; x < canvas.width(); ++x) {
     for (int y = 0; y < canvas.height(); ++y) {
       if constexpr (debug) {
@@ -34,26 +34,14 @@ AllRectangles establishing_shot(const Canvas2D &canvas) {
       }
       const auto point = math2d::Point{static_cast<math2d::number_type>(x),
                                        static_cast<math2d::number_type>(y)};
-      if (allTriedPoints.contains(point)) {
+      const auto point_in_circle = [point](const math2d::Circle &circle) {
+        const auto distance = math2d::Vector{point, circle.center()}.magnitude();
+        return distance < circle.radius();
+      };
+      if (allTriedCircles.for_each(math2d::Rectangle{point, point}, point_in_circle)) {
         continue;
       }
-      const auto already_optimized = bubbles_algorithm_slow(canvas, point);
-      const auto add_tried_points = [&allTriedPoints](const auto &circle) {
-        const auto rect = circle.bounding_box();
-        const auto start_x = static_cast<int>(rect.lines()[0].start().x);
-        const auto end_x = static_cast<int>(rect.lines()[1].end().x);
-        const auto start_y = static_cast<int>(rect.lines()[0].start().y);
-        const auto end_y = static_cast<int>(rect.lines()[1].end().y);
-        for (int x = start_x; x <= end_x; ++x) {
-          for (int y = start_y; y <= end_y; ++y) {
-            allTriedPoints.addType(
-                math2d::Point{static_cast<math2d::number_type>(x),
-                              static_cast<math2d::number_type>(y)});
-          }
-        }
-        return false;
-      };
-      already_optimized.for_each_tried_circle(add_tried_points);
+      const auto already_optimized = bubbles_algorithm_slow(canvas, point, allTriedCircles);
       const auto bounding_box = already_optimized.bounding_box();
       if (bounding_box.area() > 5) // magic number at the moment
       {

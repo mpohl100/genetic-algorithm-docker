@@ -136,9 +136,12 @@ public:
 
   std::vector<Line> lines() const;
   number_type area() const;
+  std::string toString() const;
 
   std::vector<Line> _lines;
 };
+
+Rectangle expand_rectangle(const Rectangle &rect, number_type offset);  
 
 class Circle {
 public:

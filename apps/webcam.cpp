@@ -1,4 +1,5 @@
 #include "examples/bubbles/detection/Detection.h"
+#include "examples/bubbles/establishing_frame.h"
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -105,6 +106,7 @@ int main(int argc, char **argv) {
   } // capture the video from web cam
 
   auto collectorEdges = VideoCollector{path, "edge", cap};
+  auto collectorResult = VideoCollector{path, "result", cap};
 
   std::string original = "Original";
   std::string threshold = "Thresholded Image";
@@ -130,6 +132,19 @@ int main(int argc, char **argv) {
     auto smoothed_gradient_mat =
         od::smooth_angles(gradient, rings, false, gradient_threshold);
 
+    const auto canvas = od::create_canvas(smoothed_contours_mat);
+
+    const auto all_rectangles = bubbles::establishing_shot(canvas);
+
+    // draw all rectangles on copy of imgOriginal
+    auto imgOriginalResult = imgOriginal.clone();
+    for (const auto &rectangle : all_rectangles.rectangles) {
+      const auto cv_rectangle =
+          cv::Rect{rectangle.x, rectangle.y,
+                   rectangle.width, rectangle.height};
+      cv::rectangle(imgOriginalResult, cv_rectangle, cv::Scalar(0, 255, 0), 2);
+    }
+
     // imshow(threshold, contours);   // show the thresholded image
     // imshow(original, imgOriginal); // show the original image
     // imshow(smoothed_angles, smoothed_contours_mat);   // the smoothed
@@ -137,6 +152,7 @@ int main(int argc, char **argv) {
     // smoothed gradient
 
     collectorEdges.feed(gradient);
+    collectorResult.feed(imgOriginalResult);
 
     std::cout << "Frame " << ++i << " processed!" << std::endl;
 

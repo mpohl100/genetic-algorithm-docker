@@ -89,7 +89,7 @@ bubbles::Canvas2D create_canvas(const cv::Mat &angles) {
   for (int x = 0; x < angles.rows; ++x) {
     for (int y = 0; y < angles.cols; ++y) {
       if (angles.at<cv::Vec3b>(x, y)[0] == 255) {
-        canvas.draw_pixel(x, y, 1);
+        canvas.draw_pixel(y, x, 1);
       }
     }
   }

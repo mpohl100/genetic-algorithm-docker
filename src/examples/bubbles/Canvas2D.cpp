@@ -355,4 +355,6 @@ void Canvas2D::draw_pixel(int x, int y, int value) {
   _tiles.addType(Point(x, y));
 };
 
+int Canvas2D::pixel(int x, int y) const { return _pixels.get(x, y); }
+
 } // namespace bubbles

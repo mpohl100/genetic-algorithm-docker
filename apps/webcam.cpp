@@ -106,7 +106,9 @@ int main(int argc, char **argv) {
   } // capture the video from web cam
 
   auto collectorEdges = VideoCollector{path, "edge", cap};
+  auto collectorSmoothed = VideoCollector{path, "smoothed", cap};
   auto collectorResult = VideoCollector{path, "result", cap};
+  auto collectorGradientResult = VideoCollector{path, "result_gradient", cap};
 
   std::string original = "Original";
   std::string threshold = "Thresholded Image";
@@ -134,17 +136,28 @@ int main(int argc, char **argv) {
 
     const auto canvas = od::create_canvas(smoothed_contours_mat);
 
-    const auto all_rectangles = bubbles::establishing_shot(canvas);
+    const auto all_rectangles = bubbles::establishing_shot_slices(canvas);
 
     // draw all rectangles on copy of imgOriginal
     auto imgOriginalResult = imgOriginal.clone();
     for (const auto &rectangle : all_rectangles.rectangles) {
-      const auto cv_rectangle =
-          cv::Rect{rectangle.x, rectangle.y,
-                   rectangle.width, rectangle.height};
+      int rectX = std::max(0, rectangle.x);
+      int rectY = std::max(0, rectangle.y);
+      int rectWidth = std::min(imgOriginalResult.cols - rectX, rectangle.width);
+      int rectHeight = std::min(imgOriginalResult.rows - rectY, rectangle.height);
+      const auto cv_rectangle = cv::Rect{rectX, rectY, rectWidth, rectHeight};
       cv::rectangle(imgOriginalResult, cv_rectangle, cv::Scalar(0, 255, 0), 2);
     }
 
+    auto imgGradientResult = gradient.clone();
+    for (const auto &rectangle : all_rectangles.rectangles) {
+      int rectX = std::max(0, rectangle.x);
+      int rectY = std::max(0, rectangle.y);
+      int rectWidth = std::min(imgGradientResult.cols - rectX, rectangle.width);
+      int rectHeight = std::min(imgGradientResult.rows - rectY, rectangle.height);
+      const auto cv_rectangle = cv::Rect{rectX, rectY, rectWidth, rectHeight};
+      cv::rectangle(imgGradientResult, cv_rectangle, cv::Scalar(0, 255, 0), 2);
+    }
     // imshow(threshold, contours);   // show the thresholded image
     // imshow(original, imgOriginal); // show the original image
     // imshow(smoothed_angles, smoothed_contours_mat);   // the smoothed
@@ -152,7 +165,9 @@ int main(int argc, char **argv) {
     // smoothed gradient
 
     collectorEdges.feed(gradient);
+    collectorSmoothed.feed(smoothed_contours_mat);
     collectorResult.feed(imgOriginalResult);
+    collectorGradientResult.feed(imgGradientResult);
 
     std::cout << "Frame " << ++i << " processed!" << std::endl;
 

@@ -73,7 +73,10 @@ struct Slice {
                                     const Slice &rhs) = default;
 
   bool touches(const Slice &other) const {
-    return other.start.x <= end.x || start.x <= other.end.x;
+    return (start >= other.start && start <= other.end) ||
+           (end >= other.start && end <= other.end) ||
+           (other.start >= start && other.start <= end) ||
+           (other.end >= start && other.end <= end);
   }
 };
 
@@ -120,9 +123,8 @@ struct Slices {
     if (line_number == slices.size() - 1) {
       return {};
     }
-    // std::cout << "get_touching_slices line_number: " << line_number <<
-    // std::endl; std::cout << "slices.size(): " << slices_of_object.size() <<
-    // std::endl;
+    std::cout << "get_touching_slices line_number: " << line_number <<
+    std::endl; std::cout << "slices.size(): " << slices_of_object.size() << std::endl;
     auto &next_line = slices[line_number + 1];
     std::vector<AnnotatedSlice> ret;
     for (const auto &annotatedSlice : slices_of_object) {
@@ -132,8 +134,10 @@ struct Slices {
         }
       }
     }
+    std::cout << "ret size: " << ret.size() << std::endl;
     const auto last = std::unique(ret.begin(), ret.end());
     ret.erase(last, ret.end());
+    std::cout << "after unique ret size: " << ret.size() << std::endl;
     std::sort(ret.begin(), ret.end());
     std::vector<AnnotatedSlice> cleared_next_line;
     std::set_difference(next_line.begin(), next_line.end(), ret.begin(),
@@ -201,7 +205,9 @@ std::vector<Slices> deduce_objects(Slices &slices) {
     current_object.slices.push_back(current_slices);
     while (!current_slices.empty()) {
       current_slices = slices.get_touching_slices(current_slices);
+      current_object.slices.push_back(current_slices);
     }
+    objects.push_back(current_object);
   }
   return objects;
 }

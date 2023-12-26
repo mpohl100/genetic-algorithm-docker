@@ -39,6 +39,8 @@ public:
   Line &operator=(Line &&) = default;
   Line(Point start, Point end);
 
+  bool intersects(const Line &other) const;
+
   const Point &start() const;
   const Point &end() const;
   number_type magnitude() const;
@@ -133,6 +135,8 @@ public:
   Rectangle(Point tl, Point br);
 
   friend auto operator<=>(const Rectangle &, const Rectangle &) = default;
+
+  bool intersects(const Rectangle &other) const;
 
   std::vector<Line> lines() const;
   number_type area() const;

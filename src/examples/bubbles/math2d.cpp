@@ -39,6 +39,35 @@ std::string Point::toString() const {
 
 Line::Line(Point start, Point end) : _start(start), _end(end) {}
 
+bool Line::intersects(const Line &other) const
+{
+    const auto &p = _start;
+    const auto &q = other._start;
+    const auto &r = Vector(_start, _end);
+    const auto &s = Vector(other._start, other._end);
+    const auto r_cross_s = r.x * s.y - r.y * s.x;
+    const auto q_minus_p = Vector(q, p);
+    const auto q_minus_p_cross_r = q_minus_p.x * r.y - q_minus_p.y * r.x;
+    const auto q_minus_p_cross_s = q_minus_p.x * s.y - q_minus_p.y * s.x;
+    if (r_cross_s == 0 && q_minus_p_cross_r == 0) {
+        // lines are collinear
+        const auto t0 = q_minus_p.x / r.x;
+        const auto t1 = (q_minus_p.x + s.x) / r.x;
+        const auto t2 = q_minus_p.y / r.y;
+        const auto t3 = (q_minus_p.y + s.y) / r.y;
+        const auto t_min = std::min({t0, t1, t2, t3});
+        const auto t_max = std::max({t0, t1, t2, t3});
+        return t_min <= 1 && t_max >= 0;
+    }
+    if (r_cross_s == 0 && q_minus_p_cross_r != 0) {
+        // lines are parallel and non-intersecting
+        return false;
+    }
+    const auto t = q_minus_p_cross_s / r_cross_s;
+    const auto u = q_minus_p_cross_r / r_cross_s;
+    return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+
 const Point &Line::start() const { return _start; }
 
 const Point &Line::end() const { return _end; }
@@ -53,6 +82,18 @@ Rectangle::Rectangle(Point tl, Point br) : _lines() {
   _lines.emplace_back(Point(br.x, tl.y), br);
   _lines.emplace_back(br, Point(tl.x, br.y));
   _lines.emplace_back(Point(tl.x, br.y), tl);
+}
+
+bool Rectangle::intersects(const Rectangle &other) const{
+    const auto &other_lines = other.lines();
+    for (const auto &line : _lines) {
+        for (const auto &other_line : other_lines) {
+            if (line.intersects(other_line)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 std::vector<Line> Rectangle::lines() const { return _lines; }

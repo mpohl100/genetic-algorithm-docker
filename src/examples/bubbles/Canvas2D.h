@@ -27,6 +27,7 @@ public:
   void draw_line(const math2d::Line &line);
   bool is_within(const math2d::Point &point) const;
   void draw_pixel(int x, int y, int value);
+  int pixel(int x, int y) const;
 
   const std::set<math2d::Point> &points() const;
   const tiles::Tiles<math2d::Point>& tiles() const;

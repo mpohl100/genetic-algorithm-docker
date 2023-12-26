@@ -90,6 +90,9 @@ struct Slices {
   bool contains_slices() const {
     for (const auto &slice_line : slices) {
       if (!slice_line.empty()) {
+        std::cout << "slice line not empty" << slice_line.size()
+                  << " line number: " << slice_line.back().line_number
+                  << std::endl;
         return true;
       }
     }
@@ -117,6 +120,9 @@ struct Slices {
     if (line_number == slices.size() - 1) {
       return {};
     }
+    // std::cout << "get_touching_slices line_number: " << line_number <<
+    // std::endl; std::cout << "slices.size(): " << slices_of_object.size() <<
+    // std::endl;
     auto &next_line = slices[line_number + 1];
     std::vector<AnnotatedSlice> ret;
     for (const auto &annotatedSlice : slices_of_object) {
@@ -128,6 +134,7 @@ struct Slices {
     }
     const auto last = std::unique(ret.begin(), ret.end());
     ret.erase(last, ret.end());
+    std::sort(ret.begin(), ret.end());
     std::vector<AnnotatedSlice> cleared_next_line;
     std::set_difference(next_line.begin(), next_line.end(), ret.begin(),
                         ret.end(), std::back_inserter(cleared_next_line));
@@ -156,14 +163,14 @@ Slices deduce_slices(const Canvas2D &canvas) {
   Slices slices;
   std::optional<AnnotatedSlice> current_slice = std::nullopt;
   for (int y = 0; y < canvas.height(); ++y) {
-    slices.slices.push_back(std::vector<AnnotatedSlice>{});
+    auto current_line = std::vector<AnnotatedSlice>{};
     for (int x = 0; x < canvas.width(); ++x) {
       const auto point = math2d::Point{static_cast<math2d::number_type>(x),
                                        static_cast<math2d::number_type>(y)};
       const auto current_pixel_value = canvas.pixel(x, y);
-      if (current_pixel_value == 0) {
+      if (current_pixel_value == 1) {
         if (current_slice.has_value()) {
-          slices.slices.back().push_back(current_slice.value());
+          current_line.push_back(current_slice.value());
           current_slice = std::nullopt;
         }
       } else {
@@ -176,8 +183,10 @@ Slices deduce_slices(const Canvas2D &canvas) {
       }
     }
     if (current_slice.has_value()) {
-      slices.slices.back().push_back(current_slice.value());
+      current_line.push_back(current_slice.value());
+      current_slice = std::nullopt;
     }
+    slices.slices.push_back(current_line);
   }
   return slices;
 }
@@ -210,8 +219,27 @@ AllRectangles deduce_rectangles(std::vector<Slices> objects) {
 }
 
 AllRectangles establishing_shot_slices(const Canvas2D &canvas) {
+  constexpr auto debug = true;
+  if constexpr (debug) {
+    std::cout << "establishing_shot_slices" << std::endl;
+    std::cout << "deducing slices ..." << std::endl;
+  }
   auto slices = deduce_slices(canvas);
+  if constexpr (debug) {
+    std::cout << "slices: " << std::endl;
+    for (const auto &slice_line : slices.slices) {
+      for (const auto &slice : slice_line) {
+        std::cout << slice.slice.start.toString() << " "
+                  << slice.slice.end.toString() << " | ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << "deducing objects ..." << std::endl;
+  }
   const auto objects = deduce_objects(slices);
+  if constexpr (debug) {
+    std::cout << "deducing rectangles ..." << std::endl;
+  }
   return deduce_rectangles(objects);
 }
 

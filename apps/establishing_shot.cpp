@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
       canvas.draw_rectangle(rectangle);
     }
   }
-  const auto all_rectangles = bubbles::establishing_shot(canvas);
+  const auto all_rectangles = bubbles::establishing_shot_slices(canvas);
   for (const auto &rectangle : all_rectangles.rectangles) {
     canvas.draw_rectangle(rectangle.to_math2d_rectangle());
   }

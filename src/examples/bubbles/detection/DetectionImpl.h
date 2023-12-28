@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Rectangle.h"
+
 #include "opencv2/imgproc.hpp"
 
 #include <iostream>
@@ -65,7 +67,7 @@ inline auto gradient(int tl, int tc, int tr, int cl, int cc, int cr, int bl,
  * super high descent and a black pixel means a planar surface
  */
 template <DetectionType detectionType>
-inline cv::Mat detect_edges(cv::Mat const &bgrImg) {
+inline cv::Mat detect_edges(cv::Mat const &bgrImg, const od::Rectangle& rectangle) {
   cv::Mat ret;
   if constexpr (detectionType == DetectionType::Edge)
     cv::cvtColor(bgrImg, ret, cv::COLOR_BGR2GRAY);
@@ -75,14 +77,14 @@ inline cv::Mat detect_edges(cv::Mat const &bgrImg) {
   const cv::Vec3b *imgUpper;
   const cv::Vec3b *imgCenter;
   const cv::Vec3b *imgLower;
-  for (int i = 1; i < bgrImg.rows - 1; ++i) {
+  for (int i = od::row_min(1, rectangle); i < od::row_max(bgrImg.rows - 1, rectangle); ++i) {
     if constexpr (detectionType == DetectionType::Gradient ||
                   detectionType == DetectionType::Angle)
       retCenter = ret.ptr<cv::Vec3b>(i);
     imgUpper = bgrImg.ptr<cv::Vec3b>(i - 1);
     imgCenter = bgrImg.ptr<cv::Vec3b>(i);
     imgLower = bgrImg.ptr<cv::Vec3b>(i + 1);
-    for (int j = 1; j < bgrImg.cols - 1; ++j) {
+    for (int j = od::col_min(1, rectangle); j < od::col_max(bgrImg.cols - 1, rectangle); ++j) {
       int max = 0;
       int sum = 0;
       int degrees = 0;

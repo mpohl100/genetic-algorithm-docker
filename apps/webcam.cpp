@@ -67,16 +67,29 @@ int main(int argc, char **argv) {
   int number_webcam = 0;
   int rings = 1;
   int gradient_threshold = 20;
+  int rectangle_tl_x = 0;
+  int rectangle_tl_y = 0;
+  int rectangle_width = -1;
+  int rectangle_height = -1;
   std::string path = "";
   bool help = false;
-  auto cli = Opt(number_webcam, "number_webcam")["-n"]["--number-webcam"](
-                 "The number of the webcam to use") |
-             Opt(path, "path")["-p"]["--path"]("The path to the video file") |
-             Opt(rings, "rings")["-r"]["--rings"](
-                 "The number of rings to use for smoothing") |
-             Opt(gradient_threshold, "threshold")["-t"]["--threshold"](
-                 "The threshold to use for smoothing") |
-             Help(help);
+  auto cli =
+      Opt(number_webcam, "number_webcam")["-n"]["--number-webcam"](
+          "The number of the webcam to use") |
+      Opt(path, "path")["-p"]["--path"]("The path to the video file") |
+      Opt(rings, "rings")["-r"]["--rings"](
+          "The number of rings to use for smoothing") |
+      Opt(gradient_threshold, "threshold")["-t"]["--threshold"](
+          "The threshold to use for smoothing") |
+      Opt(rectangle_tl_x, "rectangle_tl_x")["-x"]["--rectangle-tl-x"](
+          "The top left x coordinate") |
+      Opt(rectangle_tl_y, "rectangle_tl_y")["-y"]["--rectangle-tl-y"](
+          "The top left y coordinate") |
+      Opt(rectangle_width,
+          "rectangle_width")["-w"]["--rectangle-width"]("The rectangle width") |
+      Opt(rectangle_height, "rectangle_height")["-h"]["--rectangle-height"](
+          "The rectangle height") |
+      Help(help);
 
   auto result = cli.parse(Args(argc, argv));
   if (!result) {
@@ -124,19 +137,23 @@ int main(int argc, char **argv) {
     cv::Mat imgOriginal;
     int retflag;
     readImageData(cap, imgOriginal, retflag);
+    const auto &rectangle = bubbles::Rectangle{
+        rectangle_tl_x, rectangle_tl_y,
+        rectangle_width == -1 ? imgOriginal.cols : rectangle_width,
+        rectangle_height == -1 ? imgOriginal.rows : rectangle_height};
     if (retflag == 2)
       break;
-    cv::Mat contours = od::detect_angles(imgOriginal);
-    cv::Mat gradient = od::detect_directions(imgOriginal);
+    cv::Mat contours = od::detect_angles(imgOriginal, rectangle);
+    cv::Mat gradient = od::detect_directions(imgOriginal, rectangle);
 
     auto smoothed_contours_mat =
-        od::smooth_angles(gradient, rings, true, gradient_threshold);
+        od::smooth_angles(gradient, rings, true, gradient_threshold, rectangle);
     auto smoothed_gradient_mat =
-        od::smooth_angles(gradient, rings, false, gradient_threshold);
+        od::smooth_angles(gradient, rings, false, gradient_threshold, rectangle);
 
-    const auto canvas = od::create_canvas(smoothed_contours_mat);
+    const auto canvas = od::create_canvas(smoothed_contours_mat, rectangle);
 
-    const auto all_rectangles = bubbles::establishing_shot_slices(canvas);
+    const auto all_rectangles = bubbles::establishing_shot_slices(canvas, rectangle);
 
     // draw all rectangles on copy of imgOriginal
     auto imgOriginalResult = imgOriginal.clone();
@@ -144,7 +161,8 @@ int main(int argc, char **argv) {
       int rectX = std::max(0, rectangle.x);
       int rectY = std::max(0, rectangle.y);
       int rectWidth = std::min(imgOriginalResult.cols - rectX, rectangle.width);
-      int rectHeight = std::min(imgOriginalResult.rows - rectY, rectangle.height);
+      int rectHeight =
+          std::min(imgOriginalResult.rows - rectY, rectangle.height);
       const auto cv_rectangle = cv::Rect{rectX, rectY, rectWidth, rectHeight};
       cv::rectangle(imgOriginalResult, cv_rectangle, cv::Scalar(0, 255, 0), 2);
     }
@@ -154,7 +172,8 @@ int main(int argc, char **argv) {
       int rectX = std::max(0, rectangle.x);
       int rectY = std::max(0, rectangle.y);
       int rectWidth = std::min(imgGradientResult.cols - rectX, rectangle.width);
-      int rectHeight = std::min(imgGradientResult.rows - rectY, rectangle.height);
+      int rectHeight =
+          std::min(imgGradientResult.rows - rectY, rectangle.height);
       const auto cv_rectangle = cv::Rect{rectX, rectY, rectWidth, rectHeight};
       cv::rectangle(imgGradientResult, cv_rectangle, cv::Scalar(0, 255, 0), 2);
     }

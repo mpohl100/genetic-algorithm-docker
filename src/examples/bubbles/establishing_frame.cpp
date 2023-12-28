@@ -10,22 +10,6 @@
 
 namespace bubbles {
 
-Rectangle::Rectangle(const math2d::Rectangle &rectangle)
-    : x{static_cast<int>(rectangle.lines()[0].start().x)},
-      y{static_cast<int>(rectangle.lines()[0].start().y)},
-      width{static_cast<int>(rectangle.lines()[1].end().x -
-                             rectangle.lines()[0].start().x)},
-      height{static_cast<int>(rectangle.lines()[1].end().y -
-                              rectangle.lines()[0].start().y)} {}
-
-math2d::Rectangle Rectangle::to_math2d_rectangle() const {
-  return math2d::Rectangle{
-      math2d::Point{static_cast<math2d::number_type>(x),
-                    static_cast<math2d::number_type>(y)},
-      math2d::Point{static_cast<math2d::number_type>(x + width),
-                    static_cast<math2d::number_type>(y + height)}};
-}
-
 AllRectangles establishing_shot(const Canvas2D &canvas) {
   constexpr auto debug = false;
   AllRectangles allRectangles;
@@ -156,12 +140,12 @@ struct Slices {
   }
 };
 
-Slices deduce_slices(const Canvas2D &canvas) {
+Slices deduce_slices(const Canvas2D &canvas, const Rectangle& rectangle) {
   Slices slices;
   std::optional<AnnotatedSlice> current_slice = std::nullopt;
-  for (int y = 0; y < canvas.height(); ++y) {
+  for (int y = od::row_min(0, rectangle); y < od::row_max(canvas.height(), rectangle); ++y) {
     auto current_line = std::vector<AnnotatedSlice>{};
-    for (int x = 0; x < canvas.width(); ++x) {
+    for (int x = od::col_min(0, rectangle); x < od::col_max(canvas.width(), rectangle); ++x) {
       const auto point = math2d::Point{static_cast<math2d::number_type>(x),
                                        static_cast<math2d::number_type>(y)};
       const auto current_pixel_value = canvas.pixel(x, y);
@@ -217,13 +201,13 @@ AllRectangles deduce_rectangles(std::vector<Slices> objects) {
   return ret;
 }
 
-AllRectangles establishing_shot_slices(const Canvas2D &canvas) {
+AllRectangles establishing_shot_slices(const Canvas2D &canvas, const Rectangle& rectangle) {
   constexpr auto debug = false;
   if constexpr (debug) {
     std::cout << "establishing_shot_slices" << std::endl;
     std::cout << "deducing slices ..." << std::endl;
   }
-  auto slices = deduce_slices(canvas);
+  auto slices = deduce_slices(canvas, rectangle);
   if constexpr (debug) {
     std::cout << "slices: " << std::endl;
     for (const auto &slice_line : slices.slices) {

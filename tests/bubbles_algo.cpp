@@ -89,7 +89,7 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
     const auto rectangle =
         math2d::Rectangle{math2d::Point(20, 20), math2d::Point(70, 70)};
     canvas.draw_rectangle(rectangle);
-    const auto all_rectangles = bubbles::establishing_shot_slices(canvas);
+    const auto all_rectangles = bubbles::establishing_shot_slices(canvas, bubbles::Rectangle{0,0, canvas.width(), canvas.height()});
     CHECK(all_rectangles.rectangles.size() == 2);
   }
 }

@@ -5,8 +5,9 @@
 #include <iostream>
 
 namespace od {
-cv::Mat detect_directions(cv::Mat const &bgrImg) {
-  return detail::detect_edges<detail::DetectionType::Gradient>(bgrImg);
+
+cv::Mat detect_directions(cv::Mat const &bgrImg, const Rectangle& rectangle) {
+  return detail::detect_edges<detail::DetectionType::Gradient>(bgrImg, rectangle);
 }
 
 // cv::Mat detect_edges_gray(cv::Mat const& bgrImg)
@@ -14,23 +15,23 @@ cv::Mat detect_directions(cv::Mat const &bgrImg) {
 //	return detail::detect_edges<detail::DetectionType::Edge>(bgrImg);
 // }
 
-cv::Mat detect_angles(cv::Mat const &bgrImg) {
-  return detail::detect_edges<detail::DetectionType::Angle>(bgrImg);
+cv::Mat detect_angles(cv::Mat const &bgrImg, const Rectangle& rectangle) {
+  return detail::detect_edges<detail::DetectionType::Angle>(bgrImg, rectangle);
 }
 
 cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles,
-                      int threshold) {
+                      int threshold, const Rectangle& rectangle) {
   cv::Mat result = angles.clone();
   std::vector<const cv::Vec3b *> rows;
   cv::Vec3b *resultRow = nullptr;
   for (int i = 0; i < 2 * rings + 1; ++i)
     rows.push_back(nullptr);
-  for (int i = rings; i < angles.rows - rings; ++i) {
+  for (int i = row_min(rings, rectangle); i < row_max(angles.rows - rings, rectangle); ++i) {
     resultRow = result.ptr<cv::Vec3b>(i);
     size_t index = 0;
     for (int j = i - rings; j < i + rings + 1; ++j)
       rows[index++] = angles.ptr<cv::Vec3b>(j);
-    for (int j = rings; j < angles.cols - rings; ++j) {
+    for (int j = col_min(rings, rectangle); j < col_max(angles.cols - rings, rectangle); ++j) {
       double sumAngle = 0;
       double sumLen = 0;
 
@@ -84,10 +85,10 @@ cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles,
   return result;
 }
 
-bubbles::Canvas2D create_canvas(const cv::Mat &angles) {
+bubbles::Canvas2D create_canvas(const cv::Mat &angles, const Rectangle& rectangle) {
   auto canvas = bubbles::Canvas2D(angles.cols, angles.rows);
-  for (int x = 0; x < angles.rows; ++x) {
-    for (int y = 0; y < angles.cols; ++y) {
+  for (int x = row_min(0, rectangle); x < row_max(angles.rows, rectangle); ++x) {
+    for (int y = col_min(0, rectangle); y < col_max(angles.cols, rectangle); ++y) {
       if (angles.at<cv::Vec3b>(x, y)[0] == 255) {
         canvas.draw_pixel(y, x, 1);
       }

@@ -6,3 +6,4 @@ set( BUBBLES_SOURCES Canvas2D.cpp bubbles_swarm.cpp establishing_frame.cpp math2
 
 add_library( bubbles SHARED ${BUBBLES_SOURCES} )
 target_include_directories(bubbles PUBLIC {CMAKE_SOURCE_DIR}/src)
+target_link_libraries(bubbles detection)

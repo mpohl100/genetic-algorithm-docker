@@ -5,6 +5,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include <clara.hpp>
+#include <taskflow/taskflow.hpp>
 
 #include <iostream>
 #include <stdexcept>
@@ -133,27 +134,69 @@ int main(int argc, char **argv) {
   // namedWindow(smoothed_gradient, cv::WINDOW_AUTOSIZE);
 
   int i = 0;
+  tf::Executor executor(4);
   while (true) {
     cv::Mat imgOriginal;
     int retflag;
     readImageData(cap, imgOriginal, retflag);
-    const auto &rectangle = bubbles::Rectangle{
+    auto rectangle = bubbles::Rectangle{
         rectangle_tl_x, rectangle_tl_y,
         rectangle_width == -1 ? imgOriginal.cols : rectangle_width,
         rectangle_height == -1 ? imgOriginal.rows : rectangle_height};
-    if (retflag == 2)
+    
+    if (retflag == 2) {
       break;
-    cv::Mat contours = od::detect_angles(imgOriginal, rectangle);
-    cv::Mat gradient = od::detect_directions(imgOriginal, rectangle);
+    }
 
-    auto smoothed_contours_mat =
-        od::smooth_angles(gradient, rings, true, gradient_threshold, rectangle);
-    auto smoothed_gradient_mat =
-        od::smooth_angles(gradient, rings, false, gradient_threshold, rectangle);
+    cv::Mat contours;
+    cv::Mat gradient;
+    cv::Mat smoothed_contours_mat;
+    cv::Mat smoothed_gradient_mat;
+    bubbles::Canvas2D canvas;
+    bubbles::AllRectangles all_rectangles;
 
-    const auto canvas = od::create_canvas(smoothed_contours_mat, rectangle);
+    [[maybe_unused]] const auto calcCountours = [&]() {
+      contours = od::detect_angles(imgOriginal, rectangle);
+      //std::cout << "contours processed" << std::endl;
+    };
+    const auto calcGradient = [&, rectangle]() {
+      gradient = od::detect_directions(imgOriginal, rectangle);
+      //std::cout << "gradient processed" << std::endl;
+    };
 
-    const auto all_rectangles = bubbles::establishing_shot_slices(canvas, rectangle);
+    const auto calcSmoothedContours = [&, rectangle, rings, gradient_threshold]() {
+      smoothed_contours_mat = od::smooth_angles(gradient, rings, true,
+                                                gradient_threshold, rectangle);
+      //std::cout << "smoothed contours processed" << std::endl;
+    };
+    [[maybe_unused]] const auto calcSmoothedGradient = [&]() {
+      smoothed_gradient_mat = od::smooth_angles(gradient, rings, false,
+                                                gradient_threshold, rectangle);
+      //std::cout << "smoothed gradient processed" << std::endl;
+    };
+
+    const auto populateCanvas = [&, rectangle]() {
+      canvas = od::create_canvas(smoothed_contours_mat, rectangle);
+      //std::cout << "canvas processed" << std::endl;
+    };
+    const auto calcAllRectangles = [&, rectangle]() {
+      all_rectangles = bubbles::establishing_shot_slices(canvas, rectangle);
+      //std::cout << "all rectangles processed" << std::endl;
+    };
+
+    tf::Taskflow taskflow;
+    // const auto calcCountoursTask = executor.emplace(calcCountours);
+    auto calcGradientTask = taskflow.emplace(calcGradient);
+    auto calcSmoothedContoursTask = taskflow.emplace(calcSmoothedContours);
+    //auto calcSmoothedGradientTask = taskflow.emplace(calcSmoothedGradient);
+    auto populateCanvasTask = taskflow.emplace(populateCanvas);
+    auto calcAllRectanglesTask = taskflow.emplace(calcAllRectangles);
+
+    calcSmoothedContoursTask.succeed(calcGradientTask);
+    populateCanvasTask.succeed(calcSmoothedContoursTask);
+    calcAllRectanglesTask.succeed(populateCanvasTask);
+
+    executor.run(taskflow).wait();
 
     // draw all rectangles on copy of imgOriginal
     auto imgOriginalResult = imgOriginal.clone();

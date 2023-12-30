@@ -73,6 +73,13 @@ struct AnnotatedSlice {
 
 struct Slices {
   std::vector<std::vector<AnnotatedSlice>> slices;
+  math2d::Point top_left = math2d::Point{0, 0};
+
+  Slices(const Slices &) = default;
+  Slices(Slices &&) = default;
+  Slices &operator=(const Slices &) = default;
+  Slices &operator=(Slices &&) = default;
+  Slices(math2d::Point top_left) : top_left{top_left} {}
 
   bool contains_slices() const {
     for (const auto &slice_line : slices) {
@@ -101,10 +108,11 @@ struct Slices {
     }
     const auto last_slice = slices_of_object.back();
     const auto line_number = last_slice.line_number;
-    if (line_number == slices.size() - 1) {
+    if (get_index(line_number) == slices.size() - 1) {
       return {};
     }
-    auto &next_line = slices[line_number + 1];
+    const auto next_line_index = get_index(line_number + 1);
+    auto &next_line = slices[next_line_index];
     std::vector<AnnotatedSlice> ret;
     for (const auto &annotatedSlice : slices_of_object) {
       for (const auto &slice : next_line) {
@@ -119,7 +127,7 @@ struct Slices {
     std::vector<AnnotatedSlice> cleared_next_line;
     std::set_difference(next_line.begin(), next_line.end(), ret.begin(),
                         ret.end(), std::back_inserter(cleared_next_line));
-    slices[line_number + 1] = cleared_next_line;
+    slices[next_line_index] = cleared_next_line;
     return ret;
   }
 
@@ -138,14 +146,23 @@ struct Slices {
     }
     return Rectangle{min_x, min_y, max_x - min_x, max_y - min_y};
   }
+
+private:
+  size_t get_index(size_t line_number) const {
+    return line_number - top_left.y;
+  }
 };
 
-Slices deduce_slices(const Canvas2D &canvas, const Rectangle& rectangle) {
-  Slices slices;
+Slices deduce_slices(const Canvas2D &canvas, const Rectangle &rectangle) {
+  auto slices =
+      Slices{math2d::Point{static_cast<math2d::number_type>(rectangle.x),
+                           static_cast<math2d::number_type>(rectangle.y)}};
   std::optional<AnnotatedSlice> current_slice = std::nullopt;
-  for (int y = od::row_min(0, rectangle); y < od::row_max(canvas.height(), rectangle); ++y) {
+  for (int y = od::row_min(0, rectangle);
+       y < od::row_max(canvas.height(), rectangle); ++y) {
     auto current_line = std::vector<AnnotatedSlice>{};
-    for (int x = od::col_min(0, rectangle); x < od::col_max(canvas.width(), rectangle); ++x) {
+    for (int x = od::col_min(0, rectangle);
+         x < od::col_max(canvas.width(), rectangle); ++x) {
       const auto point = math2d::Point{static_cast<math2d::number_type>(x),
                                        static_cast<math2d::number_type>(y)};
       const auto current_pixel_value = canvas.pixel(x, y);
@@ -178,7 +195,8 @@ std::vector<Slices> deduce_objects(Slices &slices) {
     std::vector<AnnotatedSlice> current_slices;
     const auto first_slice = slices.get_first_slice();
     current_slices.push_back(first_slice);
-    Slices current_object;
+    auto current_object = Slices{
+        math2d::Point{first_slice.slice.start.x, first_slice.slice.start.y}};
     current_object.slices.push_back(current_slices);
     while (!current_slices.empty()) {
       current_slices = slices.get_touching_slices(current_slices);
@@ -201,7 +219,8 @@ AllRectangles deduce_rectangles(std::vector<Slices> objects) {
   return ret;
 }
 
-AllRectangles establishing_shot_slices(const Canvas2D &canvas, const Rectangle& rectangle) {
+AllRectangles establishing_shot_slices(const Canvas2D &canvas,
+                                       const Rectangle &rectangle) {
   constexpr auto debug = false;
   if constexpr (debug) {
     std::cout << "establishing_shot_slices" << std::endl;

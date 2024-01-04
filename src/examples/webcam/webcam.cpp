@@ -9,7 +9,7 @@ namespace webcam {
 VideoCollector::VideoCollector(const std::string &path,
                                const std::string &appendedStr,
                                const cv::VideoCapture &input_cap)
-    : _output_edges{getVideoName(path, appendedStr),
+    : _output_edges{get_video_name(path, appendedStr),
                     static_cast<int>(input_cap.get(cv::CAP_PROP_FOURCC)),
                     input_cap.get(cv::CAP_PROP_FPS),
                     cv::Size(input_cap.get(cv::CAP_PROP_FRAME_WIDTH),
@@ -24,8 +24,8 @@ VideoCollector::~VideoCollector() { _output_edges.release(); }
 
 void VideoCollector::feed(const cv::Mat &frame) { _output_edges.write(frame); }
 
-std::string VideoCollector::getVideoName(const std::string &path,
-                                         const std::string &appendedStr) {
+std::string VideoCollector::get_video_name(const std::string &path,
+                                           const std::string &appendedStr) {
   // Find the position of the last '/' character in the path
   size_t lastSlashPos = path.find_last_of('/');
 
@@ -40,10 +40,10 @@ std::string VideoCollector::getVideoName(const std::string &path,
   return newVideoName;
 };
 
-FrameData processFrame(const cv::Mat &imgOriginal,
-                       const bubbles::Rectangle &rectangle,
-                       tf::Executor &executor, int rings,
-                       int gradient_threshold) {
+FrameData process_frame(const cv::Mat &imgOriginal,
+                        const bubbles::Rectangle &rectangle,
+                        tf::Executor &executor, int rings,
+                        int gradient_threshold) {
   auto frame_data = FrameData{};
 
   const auto create_task_flow = [&](const bubbles::Rectangle &rectangle) {

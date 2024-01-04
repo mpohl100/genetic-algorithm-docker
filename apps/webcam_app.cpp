@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
     if (retflag == 2) {
       break;
     }
-    const auto frame_data = webcam::processFrame(
+    const auto frame_data = webcam::process_frame(
         imgOriginal, rectangle, executor, rings, gradient_threshold);
 
     // draw all rectangles on copy of imgOriginal

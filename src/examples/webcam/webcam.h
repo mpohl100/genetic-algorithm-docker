@@ -15,15 +15,15 @@ public:
   VideoCollector(const std::string &path, const std::string &appendedStr,
                  const cv::VideoCapture &input_cap);
 
-~VideoCollector();
+  ~VideoCollector();
 
-void feed(const cv::Mat &frame);
+  void feed(const cv::Mat &frame);
 
 private:
-std::string getVideoName(const std::string &path,
-                         const std::string &appendedStr);
-// members
-cv::VideoWriter _output_edges;
+  std::string get_video_name(const std::string &path,
+                             const std::string &appendedStr);
+  // members
+  cv::VideoWriter _output_edges;
 };
 
 struct FrameData {
@@ -35,9 +35,9 @@ struct FrameData {
   bubbles::AllRectangles all_rectangles;
 };
 
-FrameData processFrame(const cv::Mat &imgOriginal,
-                       const bubbles::Rectangle &rectangle,
-                       tf::Executor &executor, int rings,
-                       int gradient_threshold);
+FrameData process_frame(const cv::Mat &imgOriginal,
+                        const bubbles::Rectangle &rectangle,
+                        tf::Executor &executor, int rings,
+                        int gradient_threshold);
 
 } // namespace webcam

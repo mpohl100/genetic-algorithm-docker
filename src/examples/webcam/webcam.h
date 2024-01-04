@@ -26,6 +26,8 @@ private:
   cv::VideoWriter _output_edges;
 };
 
+void read_image_data(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag);
+
 struct FrameData {
   cv::Mat contours;
   cv::Mat gradient;

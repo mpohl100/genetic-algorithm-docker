@@ -11,19 +11,6 @@
 #include <iostream>
 #include <stdexcept>
 
-void readImageData(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag) {
-  retflag = 1;
-  bool bSuccess = cap.read(imgOriginal); // read a new frame from video
-  if (!bSuccess)                         // if not success, break loop
-  {
-    std::cout << "Cannot read a frame from video stream" << std::endl;
-    {
-      retflag = 2;
-      return;
-    };
-  }
-}
-
 int main(int argc, char **argv) {
   using namespace clara;
 
@@ -101,7 +88,7 @@ int main(int argc, char **argv) {
   while (true) {
     cv::Mat imgOriginal;
     int retflag;
-    readImageData(cap, imgOriginal, retflag);
+    webcam::read_image_data(cap, imgOriginal, retflag);
     auto rectangle = bubbles::Rectangle{
         rectangle_tl_x, rectangle_tl_y,
         rectangle_width == -1 ? imgOriginal.cols : rectangle_width,

@@ -1,5 +1,6 @@
 #include "examples/bubbles/detection/Detection.h"
 #include "examples/bubbles/establishing_frame.h"
+#include "examples/webcam/webcam.h"
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -21,111 +22,6 @@ void readImageData(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag) {
       return;
     };
   }
-}
-
-class VideoCollector {
-public:
-  VideoCollector(const std::string &path, const std::string &appendedStr,
-                 const cv::VideoCapture &input_cap)
-      : _output_edges{getVideoName(path, appendedStr),
-                      static_cast<int>(input_cap.get(cv::CAP_PROP_FOURCC)),
-                      input_cap.get(cv::CAP_PROP_FPS),
-                      cv::Size(input_cap.get(cv::CAP_PROP_FRAME_WIDTH),
-                               input_cap.get(cv::CAP_PROP_FRAME_HEIGHT))} {
-    if (!_output_edges.isOpened()) {
-      std::cout << "!!! Output video edgescould not be opened" << std::endl;
-      throw std::runtime_error("Cannot open output video for edges");
-    }
-  }
-
-  ~VideoCollector() { _output_edges.release(); }
-
-  void feed(const cv::Mat &frame) { _output_edges.write(frame); }
-
-private:
-  std::string getVideoName(const std::string &path,
-                           const std::string &appendedStr) {
-    // Find the position of the last '/' character in the path
-    size_t lastSlashPos = path.find_last_of('/');
-
-    // Extract the <my_name> part from the path
-    std::string myName = path.substr(lastSlashPos + 1,
-                                     path.find_last_of('.') - lastSlashPos - 1);
-
-    // Construct the new video name by appending _<appendedStr> to <my_name>
-    std::string newVideoName =
-        path.substr(0, lastSlashPos + 1) + myName + "_" + appendedStr + ".mp4";
-
-    return newVideoName;
-  };
-  // members
-  cv::VideoWriter _output_edges;
-};
-
-struct FrameData {
-  cv::Mat contours;
-  cv::Mat gradient;
-  cv::Mat smoothed_contours_mat;
-  cv::Mat smoothed_gradient_mat;
-  bubbles::Canvas2D canvas;
-  bubbles::AllRectangles all_rectangles;
-};
-
-FrameData processFrame(const cv::Mat &imgOriginal,
-                       const bubbles::Rectangle &rectangle,
-                       tf::Executor &executor, int rings,
-                       int gradient_threshold) {
-  auto frame_data = FrameData{};
-
-  const auto create_task_flow = [&](const bubbles::Rectangle & rectangle) {
-    const auto calcGradient = [&, rectangle]() {
-      frame_data.gradient = od::detect_directions(imgOriginal, rectangle);
-      // std::cout << "gradient processed" << std::endl;
-    };
-
-    const auto calcSmoothedContours = [&, rectangle, rings,
-                                       gradient_threshold]() {
-      frame_data.smoothed_contours_mat = od::smooth_angles(
-          frame_data.gradient, rings, true, gradient_threshold, rectangle);
-      // std::cout << "smoothed contours processed" << std::endl;
-    };
-    [[maybe_unused]] const auto calcSmoothedGradient = [&]() {
-      frame_data.smoothed_gradient_mat = od::smooth_angles(
-          frame_data.gradient, rings, false, gradient_threshold, rectangle);
-      // std::cout << "smoothed gradient processed" << std::endl;
-    };
-
-    const auto populateCanvas = [&, rectangle]() {
-      frame_data.canvas =
-          od::create_canvas(frame_data.smoothed_contours_mat, rectangle);
-      // std::cout << "canvas processed" << std::endl;
-    };
-    const auto calcAllRectangles = [&, rectangle]() {
-      frame_data.all_rectangles =
-          bubbles::establishing_shot_slices(frame_data.canvas, rectangle);
-      // std::cout << "all rectangles processed" << std::endl;
-    };
-
-    tf::Taskflow taskflow;
-    // const auto calcCountoursTask = executor.emplace(calcCountours);
-    auto calcGradientTask = taskflow.emplace(calcGradient);
-    auto calcSmoothedContoursTask = taskflow.emplace(calcSmoothedContours);
-    // auto calcSmoothedGradientTask = taskflow.emplace(calcSmoothedGradient);
-    auto populateCanvasTask = taskflow.emplace(populateCanvas);
-    auto calcAllRectanglesTask = taskflow.emplace(calcAllRectangles);
-
-    calcSmoothedContoursTask.succeed(calcGradientTask);
-    populateCanvasTask.succeed(calcSmoothedContoursTask);
-    calcAllRectanglesTask.succeed(populateCanvasTask);
-
-    return taskflow;
-  };
-
-  auto taskflow = create_task_flow(rectangle);
-
-  executor.run(taskflow).wait();
-
-  return frame_data;
 }
 
 int main(int argc, char **argv) {
@@ -185,10 +81,11 @@ int main(int argc, char **argv) {
     }
   } // capture the video from web cam
 
-  auto collectorEdges = VideoCollector{path, "edge", cap};
-  auto collectorSmoothed = VideoCollector{path, "smoothed", cap};
-  auto collectorResult = VideoCollector{path, "result", cap};
-  auto collectorGradientResult = VideoCollector{path, "result_gradient", cap};
+  auto collectorEdges = webcam::VideoCollector{path, "edge", cap};
+  auto collectorSmoothed = webcam::VideoCollector{path, "smoothed", cap};
+  auto collectorResult = webcam::VideoCollector{path, "result", cap};
+  auto collectorGradientResult =
+      webcam::VideoCollector{path, "result_gradient", cap};
 
   std::string original = "Original";
   std::string threshold = "Thresholded Image";
@@ -213,8 +110,8 @@ int main(int argc, char **argv) {
     if (retflag == 2) {
       break;
     }
-    const auto frame_data = processFrame(imgOriginal, rectangle, executor,
-                                         rings, gradient_threshold);
+    const auto frame_data = webcam::processFrame(
+        imgOriginal, rectangle, executor, rings, gradient_threshold);
 
     // draw all rectangles on copy of imgOriginal
     auto imgOriginalResult = imgOriginal.clone();

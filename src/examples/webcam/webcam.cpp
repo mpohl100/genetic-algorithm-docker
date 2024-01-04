@@ -40,6 +40,19 @@ std::string VideoCollector::get_video_name(const std::string &path,
   return newVideoName;
 };
 
+void read_image_data(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag) {
+  retflag = 1;
+  bool bSuccess = cap.read(imgOriginal); // read a new frame from video
+  if (!bSuccess)                         // if not success, break loop
+  {
+    std::cout << "Cannot read a frame from video stream" << std::endl;
+    {
+      retflag = 2;
+      return;
+    };
+  }
+}
+
 FrameData process_frame(const cv::Mat &imgOriginal,
                         const bubbles::Rectangle &rectangle,
                         tf::Executor &executor, int rings,

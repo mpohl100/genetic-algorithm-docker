@@ -62,40 +62,40 @@ FrameData::FrameData(const cv::Mat &imgOriginal)
       smoothed_gradient_mat{imgOriginal.clone()},
       canvas{imgOriginal.cols, imgOriginal.rows}, all_rectangles{} {}
 
-std::pair<tf::Future<void>, tf::Taskflow>
-process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
-              const bubbles::Rectangle &rectangle, tf::Executor &executor,
-              int rings, int gradient_threshold) {
+tf::Future<void> process_frame(FrameData &frame_data,
+                               const cv::Mat &imgOriginal,
+                               const bubbles::Rectangle &rectangle,
+                               tf::Executor &executor, tf::Taskflow &taskflow,
+                               int rings, int gradient_threshold) {
   const auto create_task_flow = [&](const bubbles::Rectangle &rectangle) {
     const auto calcGradient = [&, rectangle]() {
       od::detect_directions(frame_data.gradient, imgOriginal, rectangle);
-      // std::cout << "gradient processed" << std::endl;
+      std::cout << "gradient processed" << std::endl;
     };
 
     const auto calcSmoothedContours = [&, rectangle, rings,
                                        gradient_threshold]() {
       od::smooth_angles(frame_data.smoothed_contours_mat, frame_data.gradient,
                         rings, true, gradient_threshold, rectangle);
-      // std::cout << "smoothed contours processed" << std::endl;
+      std::cout << "smoothed contours processed" << std::endl;
     };
     [[maybe_unused]] const auto calcSmoothedGradient = [&]() {
       od::smooth_angles(frame_data.smoothed_gradient_mat, frame_data.gradient,
                         rings, false, gradient_threshold, rectangle);
-      // std::cout << "smoothed gradient processed" << std::endl;
+      std::cout << "smoothed gradient processed" << std::endl;
     };
 
     const auto populateCanvas = [&, rectangle]() {
       od::create_canvas(frame_data.canvas, frame_data.smoothed_contours_mat,
                         rectangle);
-      // std::cout << "canvas processed" << std::endl;
+      std::cout << "canvas processed" << std::endl;
     };
     const auto calcAllRectangles = [&, rectangle]() {
       bubbles::establishing_shot_slices(frame_data.all_rectangles,
                                         frame_data.canvas, rectangle);
-      // std::cout << "all rectangles processed" << std::endl;
+      std::cout << "all rectangles processed" << std::endl;
     };
 
-    tf::Taskflow taskflow;
     // const auto calcCountoursTask = executor.emplace(calcCountours);
     auto calcGradientTask = taskflow.emplace(calcGradient);
     auto calcSmoothedContoursTask = taskflow.emplace(calcSmoothedContours);
@@ -106,14 +106,12 @@ process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
     calcSmoothedContoursTask.succeed(calcGradientTask);
     populateCanvasTask.succeed(calcSmoothedContoursTask);
     calcAllRectanglesTask.succeed(populateCanvasTask);
-
-    return taskflow;
   };
 
-  auto taskflow = create_task_flow(rectangle);
+  create_task_flow(rectangle);
 
   auto fut = executor.run(taskflow);
-  return {std::move(fut), std::move(taskflow)};
+  return fut;
 }
 
 std::vector<bubbles::Rectangle>
@@ -141,12 +139,19 @@ FrameData process_frame_quadview(const cv::Mat &imgOriginal,
                                  int gradient_threshold, int nb_splits) {
   auto frame_data = FrameData{imgOriginal};
   const auto rectangles = split_rectangle(rectangle, nb_splits);
-  std::vector<std::pair<tf::Future<void>, tf::Taskflow>> futs;
+  std::vector<tf::Future<void>> futs;
+  std::vector<tf::Taskflow> taskflows;
   for (const auto &rect : rectangles) {
+    taskflows.emplace_back(tf::Taskflow{});
     futs.emplace_back(process_frame(frame_data, imgOriginal, rect, executor,
-                                    rings, gradient_threshold));
+                                    taskflows.back(), rings,
+                                    gradient_threshold));
   }
-  executor.wait_for_all();
+  std::cout << "kicked off all tasks" << std::endl;
+  for (auto &fut : futs) {
+    std::cout << "waiting for task to finish" << std::endl;
+    fut.wait();
+  }
   return frame_data;
 }
 

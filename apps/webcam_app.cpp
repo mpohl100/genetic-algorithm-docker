@@ -97,10 +97,17 @@ int main(int argc, char **argv) {
     if (retflag == 2) {
       break;
     }
+#if SINGLE_THREADED
     auto frame_data = webcam::FrameData{imgOriginal};
-    auto [fut, taskflow] = webcam::process_frame(frame_data, imgOriginal, rectangle, executor, rings,
-                          gradient_threshold);
+    tf::Taskflow taskflow;
+    auto fut =
+        webcam::process_frame(frame_data, imgOriginal, rectangle, executor,
+                              taskflow, rings, gradient_threshold);
     fut.wait();
+#else
+    auto frame_data = webcam::process_frame_quadview(
+        imgOriginal, rectangle, executor, rings, gradient_threshold);
+#endif
 
     // draw all rectangles on copy of imgOriginal
     auto imgOriginalResult = imgOriginal.clone();

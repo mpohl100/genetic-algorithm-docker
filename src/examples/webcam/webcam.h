@@ -45,10 +45,10 @@ struct FrameData {
   FrameData(const cv::Mat &imgOriginal);
 };
 
-std::pair<tf::Future<void>, tf::Taskflow>
+tf::Future<void>
 process_frame(FrameData &frameData, const cv::Mat &imgOriginal,
               const bubbles::Rectangle &rectangle, tf::Executor &executor,
-              int rings, int gradient_threshold);
+              tf::Taskflow &taskflow, int rings, int gradient_threshold);
 
 FrameData process_frame_quadview(const cv::Mat &imgOriginal,
                                  const bubbles::Rectangle &rectangle,

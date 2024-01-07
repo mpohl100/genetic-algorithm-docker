@@ -38,7 +38,8 @@ TEST_CASE("Webcam", "[webcam]") {
     const auto rectangle =
         bubbles::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
     auto frame_data = webcam::FrameData{imgOriginal};
-    auto [fut, taskflow] = webcam::process_frame(frame_data, imgOriginal, rectangle, executor, rings,
+    tf::Taskflow taskflow;
+    auto fut = webcam::process_frame(frame_data, imgOriginal, rectangle, executor, taskflow, rings,
                           gradient_threshold);
     fut.wait();
 

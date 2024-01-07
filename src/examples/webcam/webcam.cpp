@@ -73,13 +73,13 @@ void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
 
     const auto calcSmoothedContours = [&, rectangle, rings,
                                        gradient_threshold]() {
-      frame_data.smoothed_contours_mat = od::smooth_angles(
-          frame_data.gradient, rings, true, gradient_threshold, rectangle);
+      od::smooth_angles(frame_data.smoothed_contours_mat, frame_data.gradient,
+                        rings, true, gradient_threshold, rectangle);
       // std::cout << "smoothed contours processed" << std::endl;
     };
     [[maybe_unused]] const auto calcSmoothedGradient = [&]() {
-      frame_data.smoothed_gradient_mat = od::smooth_angles(
-          frame_data.gradient, rings, false, gradient_threshold, rectangle);
+      od::smooth_angles(frame_data.smoothed_gradient_mat, frame_data.gradient,
+                        rings, false, gradient_threshold, rectangle);
       // std::cout << "smoothed gradient processed" << std::endl;
     };
 
@@ -140,7 +140,7 @@ FrameData process_frame_quadview(const cv::Mat &imgOriginal,
   auto frame_data = FrameData{imgOriginal};
   const auto rectangles = split_rectangle(rectangle, nb_splits);
   process_frame(frame_data, imgOriginal, rectangle, executor, rings,
-                       gradient_threshold);
+                gradient_threshold);
   return frame_data;
 }
 

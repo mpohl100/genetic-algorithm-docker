@@ -97,8 +97,9 @@ int main(int argc, char **argv) {
     if (retflag == 2) {
       break;
     }
-    const auto frame_data = webcam::process_frame(
-        imgOriginal, rectangle, executor, rings, gradient_threshold);
+    auto frame_data = webcam::FrameData{imgOriginal};
+    webcam::process_frame(frame_data, imgOriginal, rectangle, executor, rings,
+                          gradient_threshold);
 
     // draw all rectangles on copy of imgOriginal
     auto imgOriginalResult = imgOriginal.clone();

@@ -37,13 +37,14 @@ TEST_CASE("Webcam", "[webcam]") {
 
     const auto rectangle =
         bubbles::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
-    const auto frame_data = webcam::process_frame(
-        imgOriginal, rectangle, executor, rings, gradient_threshold);
+    auto frame_data = webcam::FrameData{imgOriginal};
+    webcam::process_frame(frame_data, imgOriginal, rectangle, executor, rings,
+                          gradient_threshold);
 
     CHECK(frame_data.all_rectangles.rectangles.size() == 3335);
   }
 
-    SECTION("WebcamProcessFrameQuadView") {
+  SECTION("WebcamProcessFrameQuadView") {
     tf::Executor executor(4);
     int rings = 1;
     int gradient_threshold = 20;

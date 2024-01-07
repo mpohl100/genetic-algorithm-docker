@@ -5,6 +5,7 @@
 #include "opencv2/imgproc.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 namespace detail {
 
@@ -67,12 +68,10 @@ inline auto gradient(int tl, int tc, int tr, int cl, int cc, int cr, int bl,
  * super high descent and a black pixel means a planar surface
  */
 template <DetectionType detectionType>
-inline cv::Mat detect_edges(cv::Mat const &bgrImg, const od::Rectangle& rectangle) {
-  cv::Mat ret;
-  if constexpr (detectionType == DetectionType::Edge)
-    cv::cvtColor(bgrImg, ret, cv::COLOR_BGR2GRAY);
-  else
-    ret = bgrImg.clone();
+inline void detect_edges(cv::Mat& ret, cv::Mat const &bgrImg, const od::Rectangle& rectangle){
+  if(ret.rows != bgrImg.rows || ret.cols != bgrImg.cols){
+    throw std::runtime_error("uninitialized ret mat");
+  }
   cv::Vec3b *retCenter;
   const cv::Vec3b *imgUpper;
   const cv::Vec3b *imgCenter;
@@ -137,6 +136,5 @@ inline cv::Mat detect_edges(cv::Mat const &bgrImg, const od::Rectangle& rectangl
       }
     }
   }
-  return ret;
 }
 }; // namespace detail

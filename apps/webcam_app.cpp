@@ -98,8 +98,9 @@ int main(int argc, char **argv) {
       break;
     }
     auto frame_data = webcam::FrameData{imgOriginal};
-    webcam::process_frame(frame_data, imgOriginal, rectangle, executor, rings,
+    auto [fut, taskflow] = webcam::process_frame(frame_data, imgOriginal, rectangle, executor, rings,
                           gradient_threshold);
+    fut.wait();
 
     // draw all rectangles on copy of imgOriginal
     auto imgOriginalResult = imgOriginal.clone();

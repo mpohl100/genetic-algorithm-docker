@@ -20,6 +20,6 @@ struct AllRectangles {
 
 AllRectangles establishing_shot(const Canvas2D &canvas);
 
-AllRectangles establishing_shot_slices(const Canvas2D &canvas, const Rectangle& rectangle);
+void establishing_shot_slices(AllRectangles &ret, const Canvas2D &canvas, const Rectangle& rectangle);
 
 } // namespace bubbles

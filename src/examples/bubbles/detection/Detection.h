@@ -13,6 +13,6 @@ void detect_angles(cv::Mat &ret, cv::Mat const &bgrImg, const Rectangle& rectang
 
 void smooth_angles(cv::Mat &result, cv::Mat const &angles, int rings, bool onlyRecordAngles, int threshold, const Rectangle& rectangle);
 
-bubbles::Canvas2D create_canvas(const cv::Mat &contours, const Rectangle& rectangle);
+void create_canvas(bubbles::Canvas2D &ret, const cv::Mat &contours, const Rectangle& rectangle);
 
 } // namespace od

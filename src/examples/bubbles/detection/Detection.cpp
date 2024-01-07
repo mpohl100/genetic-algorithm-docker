@@ -19,9 +19,11 @@ void detect_angles(cv::Mat &ret, cv::Mat const &bgrImg, const Rectangle& rectang
   detail::detect_edges<detail::DetectionType::Angle>(ret, bgrImg, rectangle);
 }
 
-cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles,
+void smooth_angles(cv::Mat& result, cv::Mat const &angles, int rings, bool onlyRecordAngles,
                       int threshold, const Rectangle& rectangle) {
-  cv::Mat result = angles.clone();
+  if(result.rows != angles.rows || result.cols != angles.cols){
+    throw std::runtime_error("uninitialized result mat");
+  }
   std::vector<const cv::Vec3b *> rows;
   cv::Vec3b *resultRow = nullptr;
   for (int i = 0; i < 2 * rings + 1; ++i)
@@ -82,7 +84,6 @@ cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles,
       }
     }
   }
-  return result;
 }
 
 bubbles::Canvas2D create_canvas(const cv::Mat &angles, const Rectangle& rectangle) {

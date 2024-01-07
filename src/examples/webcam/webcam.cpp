@@ -84,8 +84,8 @@ void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
     };
 
     const auto populateCanvas = [&, rectangle]() {
-      frame_data.canvas =
-          od::create_canvas(frame_data.smoothed_contours_mat, rectangle);
+      od::create_canvas(frame_data.canvas, frame_data.smoothed_contours_mat,
+                        rectangle);
       // std::cout << "canvas processed" << std::endl;
     };
     const auto calcAllRectangles = [&, rectangle]() {

@@ -35,11 +35,24 @@ struct FrameData {
   cv::Mat smoothed_gradient_mat;
   bubbles::Canvas2D canvas;
   bubbles::AllRectangles all_rectangles;
+
+  FrameData() = default;
+  FrameData(const FrameData &) = delete;
+  FrameData(FrameData &&) = default;
+  FrameData &operator=(const FrameData &) = delete;
+  FrameData &operator=(FrameData &&) = default;
+
+  FrameData(const cv::Mat &imgOriginal);
 };
 
 FrameData process_frame(const cv::Mat &imgOriginal,
                         const bubbles::Rectangle &rectangle,
                         tf::Executor &executor, int rings,
                         int gradient_threshold);
+
+FrameData process_frame_quadview(const cv::Mat &imgOriginal,
+                                 const bubbles::Rectangle &rectangle,
+                                 tf::Executor &executor, int rings,
+                                 int gradient_threshold, int nb_splits = 2);
 
 } // namespace webcam

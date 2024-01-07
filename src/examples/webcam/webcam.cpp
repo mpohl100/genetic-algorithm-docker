@@ -1,5 +1,7 @@
 #include "webcam.h"
 
+#include "examples/bubbles/establishing_frame.h"
+
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include <string>
@@ -40,7 +42,8 @@ std::string VideoCollector::get_video_name(const std::string &path,
   return newVideoName;
 };
 
-void read_image_data(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag) {
+void read_image_data(cv::VideoCapture &cap, cv::Mat &imgOriginal,
+                     int &retflag) {
   retflag = 1;
   bool bSuccess = cap.read(imgOriginal); // read a new frame from video
   if (!bSuccess)                         // if not success, break loop
@@ -52,6 +55,12 @@ void read_image_data(cv::VideoCapture &cap, cv::Mat &imgOriginal, int &retflag) 
     };
   }
 }
+
+FrameData::FrameData(const cv::Mat &imgOriginal)
+    : contours{imgOriginal.clone()}, gradient{imgOriginal.clone()},
+      smoothed_contours_mat{imgOriginal.clone()},
+      smoothed_gradient_mat{imgOriginal.clone()},
+      canvas{imgOriginal.cols, imgOriginal.rows}, all_rectangles{} {}
 
 FrameData process_frame(const cv::Mat &imgOriginal,
                         const bubbles::Rectangle &rectangle,
@@ -108,6 +117,35 @@ FrameData process_frame(const cv::Mat &imgOriginal,
   executor.run(taskflow).wait();
 
   return frame_data;
+}
+
+std::vector<bubbles::Rectangle>
+split_rectangle(const bubbles::Rectangle &rectangle, int nb_splits) {
+  const auto width = rectangle.width;
+  const auto height = rectangle.height;
+  const auto x = rectangle.x;
+  const auto y = rectangle.y;
+  const auto width_per_thread = width / nb_splits;
+  const auto height_per_thread = height / nb_splits;
+  auto rectangles = std::vector<bubbles::Rectangle>{};
+  for (auto i = 0; i < nb_splits; ++i) {
+    for (auto j = 0; j < nb_splits; ++j) {
+      rectangles.emplace_back(x + i * width_per_thread,
+                              y + j * height_per_thread, width_per_thread,
+                              height_per_thread);
+    }
+  }
+  return rectangles;
+}
+
+FrameData process_frame_quadview(const cv::Mat &imgOriginal,
+                                 const bubbles::Rectangle &rectangle,
+                                 tf::Executor &executor, int rings,
+                                 int gradient_threshold, int nb_splits) {
+  auto frame_data = FrameData{imgOriginal};
+  const auto rectangles = split_rectangle(rectangle, nb_splits);
+  return process_frame(imgOriginal, rectangle, executor, rings,
+                       gradient_threshold);
 }
 
 } // namespace webcam

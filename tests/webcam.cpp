@@ -38,8 +38,9 @@ TEST_CASE("Webcam", "[webcam]") {
     const auto rectangle =
         bubbles::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
     auto frame_data = webcam::FrameData{imgOriginal};
-    webcam::process_frame(frame_data, imgOriginal, rectangle, executor, rings,
+    auto [fut, taskflow] = webcam::process_frame(frame_data, imgOriginal, rectangle, executor, rings,
                           gradient_threshold);
+    fut.wait();
 
     CHECK(frame_data.all_rectangles.rectangles.size() == 3335);
   }

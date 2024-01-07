@@ -62,9 +62,10 @@ FrameData::FrameData(const cv::Mat &imgOriginal)
       smoothed_gradient_mat{imgOriginal.clone()},
       canvas{imgOriginal.cols, imgOriginal.rows}, all_rectangles{} {}
 
-void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
-                   const bubbles::Rectangle &rectangle, tf::Executor &executor,
-                   int rings, int gradient_threshold) {
+std::pair<tf::Future<void>, tf::Taskflow>
+process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
+              const bubbles::Rectangle &rectangle, tf::Executor &executor,
+              int rings, int gradient_threshold) {
   const auto create_task_flow = [&](const bubbles::Rectangle &rectangle) {
     const auto calcGradient = [&, rectangle]() {
       od::detect_directions(frame_data.gradient, imgOriginal, rectangle);
@@ -89,8 +90,8 @@ void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
       // std::cout << "canvas processed" << std::endl;
     };
     const auto calcAllRectangles = [&, rectangle]() {
-      frame_data.all_rectangles =
-          bubbles::establishing_shot_slices(frame_data.canvas, rectangle);
+      bubbles::establishing_shot_slices(frame_data.all_rectangles,
+                                        frame_data.canvas, rectangle);
       // std::cout << "all rectangles processed" << std::endl;
     };
 
@@ -111,7 +112,8 @@ void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
 
   auto taskflow = create_task_flow(rectangle);
 
-  executor.run(taskflow).wait();
+  auto fut = executor.run(taskflow);
+  return {std::move(fut), std::move(taskflow)};
 }
 
 std::vector<bubbles::Rectangle>
@@ -139,8 +141,12 @@ FrameData process_frame_quadview(const cv::Mat &imgOriginal,
                                  int gradient_threshold, int nb_splits) {
   auto frame_data = FrameData{imgOriginal};
   const auto rectangles = split_rectangle(rectangle, nb_splits);
-  process_frame(frame_data, imgOriginal, rectangle, executor, rings,
-                gradient_threshold);
+  std::vector<std::pair<tf::Future<void>, tf::Taskflow>> futs;
+  for (const auto &rect : rectangles) {
+    futs.emplace_back(process_frame(frame_data, imgOriginal, rect, executor,
+                                    rings, gradient_threshold));
+  }
+  executor.wait_for_all();
   return frame_data;
 }
 

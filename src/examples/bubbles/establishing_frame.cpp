@@ -219,7 +219,7 @@ AllRectangles deduce_rectangles(std::vector<Slices> objects) {
   return ret;
 }
 
-AllRectangles establishing_shot_slices(const Canvas2D &canvas,
+void establishing_shot_slices(AllRectangles &ret, const Canvas2D &canvas,
                                        const Rectangle &rectangle) {
   constexpr auto debug = false;
   if constexpr (debug) {
@@ -242,7 +242,11 @@ AllRectangles establishing_shot_slices(const Canvas2D &canvas,
   if constexpr (debug) {
     std::cout << "deducing rectangles ..." << std::endl;
   }
-  return deduce_rectangles(objects);
+  const auto all_rectangles = deduce_rectangles(objects);
+  static std::mutex mutex;
+  std::lock_guard<std::mutex> lock(mutex);
+  ret.rectangles.insert(ret.rectangles.end(), all_rectangles.rectangles.begin(),
+                        all_rectangles.rectangles.end());
 }
 
 } // namespace bubbles

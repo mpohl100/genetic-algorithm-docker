@@ -62,15 +62,12 @@ FrameData::FrameData(const cv::Mat &imgOriginal)
       smoothed_gradient_mat{imgOriginal.clone()},
       canvas{imgOriginal.cols, imgOriginal.rows}, all_rectangles{} {}
 
-FrameData process_frame(const cv::Mat &imgOriginal,
-                        const bubbles::Rectangle &rectangle,
-                        tf::Executor &executor, int rings,
-                        int gradient_threshold) {
-  auto frame_data = FrameData{};
-
+void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
+                   const bubbles::Rectangle &rectangle, tf::Executor &executor,
+                   int rings, int gradient_threshold) {
   const auto create_task_flow = [&](const bubbles::Rectangle &rectangle) {
     const auto calcGradient = [&, rectangle]() {
-      frame_data.gradient = od::detect_directions(imgOriginal, rectangle);
+      od::detect_directions(frame_data.gradient, imgOriginal, rectangle);
       // std::cout << "gradient processed" << std::endl;
     };
 
@@ -115,8 +112,6 @@ FrameData process_frame(const cv::Mat &imgOriginal,
   auto taskflow = create_task_flow(rectangle);
 
   executor.run(taskflow).wait();
-
-  return frame_data;
 }
 
 std::vector<bubbles::Rectangle>
@@ -144,8 +139,9 @@ FrameData process_frame_quadview(const cv::Mat &imgOriginal,
                                  int gradient_threshold, int nb_splits) {
   auto frame_data = FrameData{imgOriginal};
   const auto rectangles = split_rectangle(rectangle, nb_splits);
-  return process_frame(imgOriginal, rectangle, executor, rings,
+  process_frame(frame_data, imgOriginal, rectangle, executor, rings,
                        gradient_threshold);
+  return frame_data;
 }
 
 } // namespace webcam

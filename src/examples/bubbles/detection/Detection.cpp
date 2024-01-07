@@ -6,8 +6,8 @@
 
 namespace od {
 
-cv::Mat detect_directions(cv::Mat const &bgrImg, const Rectangle& rectangle) {
-  return detail::detect_edges<detail::DetectionType::Gradient>(bgrImg, rectangle);
+void detect_directions(cv::Mat &ret, cv::Mat const &bgrImg, const Rectangle& rectangle) {
+  detail::detect_edges<detail::DetectionType::Gradient>(ret, bgrImg, rectangle);
 }
 
 // cv::Mat detect_edges_gray(cv::Mat const& bgrImg)
@@ -15,8 +15,8 @@ cv::Mat detect_directions(cv::Mat const &bgrImg, const Rectangle& rectangle) {
 //	return detail::detect_edges<detail::DetectionType::Edge>(bgrImg);
 // }
 
-cv::Mat detect_angles(cv::Mat const &bgrImg, const Rectangle& rectangle) {
-  return detail::detect_edges<detail::DetectionType::Angle>(bgrImg, rectangle);
+void detect_angles(cv::Mat &ret, cv::Mat const &bgrImg, const Rectangle& rectangle) {
+  detail::detect_edges<detail::DetectionType::Angle>(ret, bgrImg, rectangle);
 }
 
 cv::Mat smooth_angles(cv::Mat const &angles, int rings, bool onlyRecordAngles,

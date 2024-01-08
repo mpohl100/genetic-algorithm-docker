@@ -62,11 +62,9 @@ FrameData::FrameData(const cv::Mat &imgOriginal)
       smoothed_gradient_mat{imgOriginal.clone()},
       canvas{imgOriginal.cols, imgOriginal.rows}, all_rectangles{} {}
 
-tf::Future<void> process_frame(FrameData &frame_data,
-                               const cv::Mat &imgOriginal,
-                               const bubbles::Rectangle &rectangle,
-                               tf::Executor &executor, tf::Taskflow &taskflow,
-                               int rings, int gradient_threshold) {
+void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
+                   const bubbles::Rectangle &rectangle, [[maybe_unused]] tf::Executor &executor,
+                   tf::Taskflow &taskflow, int rings, int gradient_threshold) {
   const auto create_task_flow = [&](const bubbles::Rectangle &rectangle) {
     const auto calcGradient = [&, rectangle]() {
       od::detect_directions(frame_data.gradient, imgOriginal, rectangle);
@@ -108,10 +106,7 @@ tf::Future<void> process_frame(FrameData &frame_data,
     calcAllRectanglesTask.succeed(populateCanvasTask);
   };
 
-  create_task_flow(rectangle);
-
-  auto fut = executor.run(taskflow);
-  return fut;
+  return create_task_flow(rectangle);
 }
 
 std::vector<bubbles::Rectangle>
@@ -139,19 +134,19 @@ FrameData process_frame_quadview(const cv::Mat &imgOriginal,
                                  int gradient_threshold, int nb_splits) {
   auto frame_data = FrameData{imgOriginal};
   const auto rectangles = split_rectangle(rectangle, nb_splits);
-  std::vector<tf::Future<void>> futs;
   std::vector<tf::Taskflow> taskflows;
   for (const auto &rect : rectangles) {
     taskflows.emplace_back(tf::Taskflow{});
-    futs.emplace_back(process_frame(frame_data, imgOriginal, rect, executor,
+    process_frame(frame_data, imgOriginal, rect, executor,
                                     taskflows.back(), rings,
-                                    gradient_threshold));
+                                    gradient_threshold);
   }
-  std::cout << "kicked off all tasks" << std::endl;
-  for (auto &fut : futs) {
-    std::cout << "waiting for task to finish" << std::endl;
-    fut.wait();
+  std::cout << "kicking off all tasks" << std::endl;
+  for (auto &taskflow : taskflows) {
+    std::cout << "kicking off task" << std::endl;
+    executor.run(taskflow);
   }
+  executor.wait_for_all();
   return frame_data;
 }
 

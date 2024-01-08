@@ -14,7 +14,7 @@ namespace {
 TEST_CASE("Webcam", "[webcam]") {
 
   SECTION("WebcamProcessFrame") {
-    tf::Executor executor(4);
+    par::Executor executor(4);
     int rings = 1;
     int gradient_threshold = 20;
     const auto path = "../video/BillardTakeoff.mp4";
@@ -38,16 +38,16 @@ TEST_CASE("Webcam", "[webcam]") {
     const auto rectangle =
         bubbles::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
     auto frame_data = webcam::FrameData{imgOriginal};
-    tf::Taskflow taskflow;
-    webcam::process_frame(frame_data, imgOriginal, rectangle, executor, taskflow, rings,
+    auto flow = webcam::process_frame(frame_data, imgOriginal, rectangle, rings,
                           gradient_threshold);
-    executor.run(taskflow).wait();
+    executor.run(&flow);
+    executor.wait_for(&flow);
 
     CHECK(frame_data.all_rectangles.rectangles.size() == 3335);
   }
 
   SECTION("WebcamProcessFrameQuadView") {
-    tf::Executor executor(4);
+    par::Executor executor(4);
     int rings = 1;
     int gradient_threshold = 20;
     const auto path = "../video/BillardTakeoff.mp4";

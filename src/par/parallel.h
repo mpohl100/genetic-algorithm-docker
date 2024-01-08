@@ -42,8 +42,8 @@ public:
     Flow& operator=(Flow&&) = default;
     virtual ~Flow() = default;
 
-    void add(Work* work){
-        _work.push_back(work);
+    void add(std::unique_ptr<Work> work){
+        _work.push_back(std::move(work));
     }
 
     void call() override{ 
@@ -52,17 +52,14 @@ public:
         }
     }
 private:
-    std::vector<Work*> _work;
+    std::vector<std::unique_ptr<Work>> _work;
 
 };
-}
 
 class Executor{
 public:
     Executor() = default;
-    Executor(const Executor&) = default;
     Executor(Executor&&) = default;
-    Executor& operator=(const Executor&) = default;
     Executor& operator=(Executor&&) = default;
     ~Executor(){
         for(auto& thread : _worker_threads){
@@ -79,7 +76,21 @@ public:
     void run(Work* work)
     {
         std::unique_lock<std::mutex> lock(*_mutex);
-        _work.push_back(&work);
+        _scheduled_work.push_back(work);
+    }
+
+    void wait_for(Work* work){
+        std::unique_lock<std::mutex> lock(*_mutex);
+
+        while(true){
+            auto it = std::find(_finished_work.begin(), _finished_work.end(), work);
+            if(it != _finished_work.end()){
+                std::unique_lock<std::mutex> lock(*_mutex);
+                _finished_work.erase(it);
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
     }
 
 private:
@@ -101,6 +112,9 @@ private:
             }
             if(work){
                 work->call();
+                std::unique_lock<std::mutex> lock(*_mutex);
+                _started_work.erase(std::remove(_started_work.begin(), _started_work.end(), work), _started_work.end());
+                _finished_work.push_back(work);
             }
         }
     }
@@ -108,14 +122,19 @@ private:
     Work* pop_work()
     {
         std::unique_lock<std::mutex> lock(*_mutex);
-        auto* work = _work.back();
-        _work.pop_back();
+        auto* work = _scheduled_work.back();
+        _scheduled_work.pop_back();
+        _started_work.push_back(work);
         return work;
     }
 
     std::thread _main_thread;
     std::vector<std::thread> _worker_threads;
-    std::vector<Work*> _work;
+    std::vector<Work*> _scheduled_work;
+    std::vector<Work*> _started_work;
+    std::vector<Work*> _finished_work;
+
+
     std::shared_ptr<std::mutex> _mutex = std::make_shared<std::mutex>();
 
 };

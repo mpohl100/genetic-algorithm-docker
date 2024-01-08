@@ -68,28 +68,33 @@ par::Flow process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
                         int gradient_threshold) {
   const auto create_flow = [&](const bubbles::Rectangle &rectangle) {
     const auto calcGradient = [&, rectangle]() {
+      std::cout << "calculating gradient" << std::endl;
       od::detect_directions(frame_data.gradient, imgOriginal, rectangle);
       std::cout << "gradient processed" << std::endl;
     };
 
     const auto calcSmoothedContours = [&, rectangle, rings,
                                        gradient_threshold]() {
+      std::cout << "calculating smoothed contours" << std::endl;
       od::smooth_angles(frame_data.smoothed_contours_mat, frame_data.gradient,
                         rings, true, gradient_threshold, rectangle);
       std::cout << "smoothed contours processed" << std::endl;
     };
     [[maybe_unused]] const auto calcSmoothedGradient = [&]() {
+      std::cout << "calculating smoothed gradient" << std::endl;
       od::smooth_angles(frame_data.smoothed_gradient_mat, frame_data.gradient,
                         rings, false, gradient_threshold, rectangle);
       std::cout << "smoothed gradient processed" << std::endl;
     };
 
     const auto populateCanvas = [&, rectangle]() {
+      std::cout << "calculating canvas" << std::endl;
       od::create_canvas(frame_data.canvas, frame_data.smoothed_contours_mat,
                         rectangle);
       std::cout << "canvas processed" << std::endl;
     };
     const auto calcAllRectangles = [&, rectangle]() {
+      std::cout << "calculating all rectangles" << std::endl;
       bubbles::establishing_shot_slices(frame_data.all_rectangles,
                                         frame_data.canvas, rectangle);
       std::cout << "all rectangles processed" << std::endl;
@@ -135,14 +140,15 @@ FrameData process_frame_quadview(const cv::Mat &imgOriginal,
   const auto rectangles = split_rectangle(rectangle, nb_splits);
   std::vector<par::Flow> flows;
   for (const auto &rect : rectangles) {
-    flows.emplace_back(process_frame(frame_data, imgOriginal, rect, rings, gradient_threshold));
+    flows.emplace_back(process_frame(frame_data, imgOriginal, rect, rings,
+                                     gradient_threshold));
   }
   std::cout << "kicking off all tasks" << std::endl;
   for (auto &flow : flows) {
     std::cout << "kicking off task" << std::endl;
     executor.run(&flow);
   }
-  for(auto& flow : flows){
+  for (auto &flow : flows) {
     executor.wait_for(&flow);
   }
   return frame_data;

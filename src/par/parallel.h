@@ -7,7 +7,7 @@
 #include <mutex>
 #include <thread>
 
-#define DO_LOG 1
+#define DO_LOG 0
 
 namespace par {
 

@@ -11,6 +11,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#define SINGLE_THREADED 1
+
 int main(int argc, char **argv) {
   using namespace clara;
 
@@ -97,7 +99,7 @@ int main(int argc, char **argv) {
     if (retflag == 2) {
       break;
     }
-#if SINGLE_THREADED
+#ifdef SINGLE_THREADED
     auto frame_data = webcam::FrameData{imgOriginal};
     tf::Taskflow taskflow;
     webcam::process_frame(frame_data, imgOriginal, rectangle, executor,

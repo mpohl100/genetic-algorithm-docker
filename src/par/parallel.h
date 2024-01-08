@@ -111,9 +111,9 @@ public:
         break;
       }
 #if DO_LOG
-    std::cout << "Executor::wait_for() sleep 1s" << std::endl;
+    std::cout << "Executor::wait_for() sleep 1ms" << std::endl;
 #endif
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 #if DO_LOG
     std::cout << "Executor::wait_for() return" << std::endl;
@@ -156,9 +156,9 @@ private:
       auto *work = pop_work();
       if (work == nullptr) {
 #if DO_LOG
-        std::cout << "Executor::execute_worker_thread() sleep 1s" << std::endl;
+        std::cout << "Executor::execute_worker_thread() sleep 1ms" << std::endl;
 #endif
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
       if (work) {
 #if DO_LOG

@@ -11,7 +11,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#define SINGLE_THREADED 1
+#define SINGLE_THREADED 0
 
 int main(int argc, char **argv) {
   using namespace clara;
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     if (retflag == 2) {
       break;
     }
-#ifdef SINGLE_THREADED
+#if SINGLE_THREADED == 1
     auto frame_data = webcam::FrameData{imgOriginal};
     auto flow = webcam::process_frame(frame_data, imgOriginal, rectangle, rings, gradient_threshold);
     executor.run(&flow);

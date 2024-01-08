@@ -39,9 +39,9 @@ TEST_CASE("Webcam", "[webcam]") {
         bubbles::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
     auto frame_data = webcam::FrameData{imgOriginal};
     tf::Taskflow taskflow;
-    auto fut = webcam::process_frame(frame_data, imgOriginal, rectangle, executor, taskflow, rings,
+    webcam::process_frame(frame_data, imgOriginal, rectangle, executor, taskflow, rings,
                           gradient_threshold);
-    fut.wait();
+    executor.run(taskflow).wait();
 
     CHECK(frame_data.all_rectangles.rectangles.size() == 3335);
   }

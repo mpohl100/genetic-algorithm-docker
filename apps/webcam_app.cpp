@@ -100,10 +100,9 @@ int main(int argc, char **argv) {
 #if SINGLE_THREADED
     auto frame_data = webcam::FrameData{imgOriginal};
     tf::Taskflow taskflow;
-    auto fut =
-        webcam::process_frame(frame_data, imgOriginal, rectangle, executor,
-                              taskflow, rings, gradient_threshold);
-    fut.wait();
+    webcam::process_frame(frame_data, imgOriginal, rectangle, executor,
+                          taskflow, rings, gradient_threshold);
+    executor.run(taskflow).wait();
 #else
     auto frame_data = webcam::process_frame_quadview(
         imgOriginal, rectangle, executor, rings, gradient_threshold);

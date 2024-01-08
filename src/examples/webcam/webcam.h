@@ -1,10 +1,10 @@
 #include "examples/bubbles/Canvas2D.h"
 #include "examples/bubbles/establishing_frame.h"
 
+#include "par/parallel.h"
+
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
-
-#include <taskflow/taskflow.hpp>
 
 #include <string>
 
@@ -45,13 +45,13 @@ struct FrameData {
   FrameData(const cv::Mat &imgOriginal);
 };
 
-void process_frame(FrameData &frameData, const cv::Mat &imgOriginal,
-                   const bubbles::Rectangle &rectangle, tf::Executor &executor,
-                   tf::Taskflow &taskflow, int rings, int gradient_threshold);
+par::Flow process_frame(FrameData &frameData, const cv::Mat &imgOriginal,
+                        const bubbles::Rectangle &rectangle, int rings,
+                        int gradient_threshold);
 
 FrameData process_frame_quadview(const cv::Mat &imgOriginal,
                                  const bubbles::Rectangle &rectangle,
-                                 tf::Executor &executor, int rings,
+                                 par::Executor &executor, int rings,
                                  int gradient_threshold, int nb_splits = 2);
 
 } // namespace webcam

@@ -4,6 +4,7 @@
 
 #include "opencv2/imgproc/imgproc.hpp"
 
+#include <iostream>
 #include <string>
 
 namespace webcam {
@@ -62,10 +63,10 @@ FrameData::FrameData(const cv::Mat &imgOriginal)
       smoothed_gradient_mat{imgOriginal.clone()},
       canvas{imgOriginal.cols, imgOriginal.rows}, all_rectangles{} {}
 
-void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
-                   const bubbles::Rectangle &rectangle, [[maybe_unused]] tf::Executor &executor,
-                   tf::Taskflow &taskflow, int rings, int gradient_threshold) {
-  const auto create_task_flow = [&](const bubbles::Rectangle &rectangle) {
+par::Flow process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
+                        const bubbles::Rectangle &rectangle, int rings,
+                        int gradient_threshold) {
+  const auto create_flow = [&](const bubbles::Rectangle &rectangle) {
     const auto calcGradient = [&, rectangle]() {
       od::detect_directions(frame_data.gradient, imgOriginal, rectangle);
       std::cout << "gradient processed" << std::endl;
@@ -94,19 +95,17 @@ void process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
       std::cout << "all rectangles processed" << std::endl;
     };
 
+    auto flow = par::Flow{};
     // const auto calcCountoursTask = executor.emplace(calcCountours);
-    auto calcGradientTask = taskflow.emplace(calcGradient);
-    auto calcSmoothedContoursTask = taskflow.emplace(calcSmoothedContours);
+    flow.add(std::make_unique<par::Calculation>(calcGradient));
+    flow.add(std::make_unique<par::Calculation>(calcSmoothedContours));
     // auto calcSmoothedGradientTask = taskflow.emplace(calcSmoothedGradient);
-    auto populateCanvasTask = taskflow.emplace(populateCanvas);
-    auto calcAllRectanglesTask = taskflow.emplace(calcAllRectangles);
-
-    calcSmoothedContoursTask.succeed(calcGradientTask);
-    populateCanvasTask.succeed(calcSmoothedContoursTask);
-    calcAllRectanglesTask.succeed(populateCanvasTask);
+    flow.add(std::make_unique<par::Calculation>(populateCanvas));
+    flow.add(std::make_unique<par::Calculation>(calcAllRectangles));
+    return flow;
   };
 
-  return create_task_flow(rectangle);
+  return create_flow(rectangle);
 }
 
 std::vector<bubbles::Rectangle>
@@ -130,23 +129,22 @@ split_rectangle(const bubbles::Rectangle &rectangle, int nb_splits) {
 
 FrameData process_frame_quadview(const cv::Mat &imgOriginal,
                                  const bubbles::Rectangle &rectangle,
-                                 tf::Executor &executor, int rings,
+                                 par::Executor &executor, int rings,
                                  int gradient_threshold, int nb_splits) {
   auto frame_data = FrameData{imgOriginal};
   const auto rectangles = split_rectangle(rectangle, nb_splits);
-  std::vector<tf::Taskflow> taskflows;
+  std::vector<par::Flow> flows;
   for (const auto &rect : rectangles) {
-    taskflows.emplace_back(tf::Taskflow{});
-    process_frame(frame_data, imgOriginal, rect, executor,
-                                    taskflows.back(), rings,
-                                    gradient_threshold);
+    flows.emplace_back(process_frame(frame_data, imgOriginal, rect, rings, gradient_threshold));
   }
   std::cout << "kicking off all tasks" << std::endl;
-  for (auto &taskflow : taskflows) {
+  for (auto &flow : flows) {
     std::cout << "kicking off task" << std::endl;
-    executor.run(taskflow);
+    executor.run(&flow);
   }
-  executor.wait_for_all();
+  for(auto& flow : flows){
+    executor.wait_for(&flow);
+  }
   return frame_data;
 }
 

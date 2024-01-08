@@ -1,12 +1,12 @@
 #include "examples/bubbles/detection/Detection.h"
 #include "examples/bubbles/establishing_frame.h"
 #include "examples/webcam/webcam.h"
+#include "par/parallel.h"
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include <clara.hpp>
-#include <taskflow/taskflow.hpp>
 
 #include <iostream>
 #include <stdexcept>
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
   // namedWindow(smoothed_gradient, cv::WINDOW_AUTOSIZE);
 
   int i = 0;
-  tf::Executor executor(4);
+  par::Executor executor(4);
   while (true) {
     cv::Mat imgOriginal;
     int retflag;
@@ -101,10 +101,9 @@ int main(int argc, char **argv) {
     }
 #ifdef SINGLE_THREADED
     auto frame_data = webcam::FrameData{imgOriginal};
-    tf::Taskflow taskflow;
-    webcam::process_frame(frame_data, imgOriginal, rectangle, executor,
-                          taskflow, rings, gradient_threshold);
-    executor.run(taskflow).wait();
+    auto flow = webcam::process_frame(frame_data, imgOriginal, rectangle, rings, gradient_threshold);
+    executor.run(&flow);
+    executor.wait_for(&flow);
 #else
     auto frame_data = webcam::process_frame_quadview(
         imgOriginal, rectangle, executor, rings, gradient_threshold);

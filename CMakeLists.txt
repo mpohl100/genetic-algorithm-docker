@@ -28,7 +28,7 @@ if( NOT CMAKE_BUILD_TYPE )
      set( CMAKE_BUILD_TYPE Release )
 endif()
 
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 set( CMAKE_CXX_FLAGS_RELEASE "-O3")
 set( CMAKE_CXX_FLAGS_DEBUG "-g") 
 

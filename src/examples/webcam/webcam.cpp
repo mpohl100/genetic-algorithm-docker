@@ -59,7 +59,7 @@ FrameData::FrameData(const cv::Mat &imgOriginal)
     : contours{imgOriginal.clone()}, gradient{imgOriginal.clone()},
       smoothed_contours_mat{imgOriginal.clone()},
       smoothed_gradient_mat{imgOriginal.clone()},
-      canvas{imgOriginal.cols, imgOriginal.rows}, all_rectangles{} {}
+      all_rectangles{} {}
 
 par::Flow process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
                         const od::Rectangle &rectangle, int rings,

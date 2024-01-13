@@ -5,6 +5,10 @@
 #include "examples/bubbles/Matrix.h"
 #include "value_test.h"
 
+#include "examples/bubbles/detection/Rectangle.h"
+
+#include "opencv2/core/mat.hpp"
+
 #include <cmath>
 #include <set>
 #include <string>
@@ -42,5 +46,7 @@ private:
   std::set<math2d::Point> _points;
   tiles::Tiles<math2d::Point> _tiles;
 };
+
+void create_canvas(bubbles::Canvas2D &ret, const cv::Mat &contours, const od::Rectangle& rectangle);
 
 } // namespace bubbles

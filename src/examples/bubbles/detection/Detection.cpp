@@ -86,17 +86,4 @@ void smooth_angles(cv::Mat& result, cv::Mat const &angles, int rings, bool onlyR
   }
 }
 
-void create_canvas(bubbles::Canvas2D &canvas, const cv::Mat &angles, const Rectangle& rectangle) {
-  if(canvas.width() != angles.cols || canvas.height() != angles.rows){
-    throw std::runtime_error("uninitialized canvas");
-  }
-  for (int x = row_min(0, rectangle); x < row_max(angles.rows, rectangle); ++x) {
-    for (int y = col_min(0, rectangle); y < col_max(angles.cols, rectangle); ++y) {
-      if (angles.at<cv::Vec3b>(x, y)[0] == 255) {
-        canvas.draw_pixel(y, x, 1);
-      }
-    }
-  }
-}
-
 } // namespace od

@@ -33,7 +33,6 @@ struct FrameData {
   cv::Mat gradient;
   cv::Mat smoothed_contours_mat;
   cv::Mat smoothed_gradient_mat;
-  bubbles::Canvas2D canvas;
   od::AllRectangles all_rectangles;
 
   FrameData() = default;

@@ -3,7 +3,6 @@ link_directories(${CMAKE_SOURCE_DIR}/src)
 
 find_package(clara REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(Taskflow REQUIRED)
 
 set( EXCEUTABLE_NAME main)
 

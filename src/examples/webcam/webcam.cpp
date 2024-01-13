@@ -1,7 +1,5 @@
 #include "webcam.h"
 
-#include "examples/bubbles/establishing_frame.h"
-
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include <iostream>
@@ -64,9 +62,9 @@ FrameData::FrameData(const cv::Mat &imgOriginal)
       canvas{imgOriginal.cols, imgOriginal.rows}, all_rectangles{} {}
 
 par::Flow process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
-                        const bubbles::Rectangle &rectangle, int rings,
+                        const od::Rectangle &rectangle, int rings,
                         int gradient_threshold) {
-  const auto create_flow = [&](const bubbles::Rectangle &rectangle) {
+  const auto create_flow = [&](const od::Rectangle &rectangle) {
     const auto calcGradient = [&, rectangle]() {
       std::cout << "calculating gradient" << std::endl;
       od::detect_directions(frame_data.gradient, imgOriginal, rectangle);
@@ -105,15 +103,15 @@ par::Flow process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
   return create_flow(rectangle);
 }
 
-std::vector<bubbles::Rectangle>
-split_rectangle(const bubbles::Rectangle &rectangle, int nb_splits) {
+std::vector<od::Rectangle>
+split_rectangle(const od::Rectangle &rectangle, int nb_splits) {
   const auto width = rectangle.width;
   const auto height = rectangle.height;
   const auto x = rectangle.x;
   const auto y = rectangle.y;
   const auto width_per_thread = width / nb_splits;
   const auto height_per_thread = height / nb_splits;
-  auto rectangles = std::vector<bubbles::Rectangle>{};
+  auto rectangles = std::vector<od::Rectangle>{};
   for (auto i = 0; i < nb_splits; ++i) {
     for (auto j = 0; j < nb_splits; ++j) {
       rectangles.emplace_back(x + i * width_per_thread,
@@ -125,7 +123,7 @@ split_rectangle(const bubbles::Rectangle &rectangle, int nb_splits) {
 }
 
 FrameData process_frame_quadview(const cv::Mat &imgOriginal,
-                                 const bubbles::Rectangle &rectangle,
+                                 const od::Rectangle &rectangle,
                                  par::Executor &executor, int rings,
                                  int gradient_threshold, int nb_splits) {
   auto frame_data = FrameData{imgOriginal};

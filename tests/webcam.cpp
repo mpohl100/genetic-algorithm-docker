@@ -5,8 +5,6 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
-#include <taskflow/taskflow.hpp>
-
 #include <iostream>
 
 namespace {
@@ -36,10 +34,10 @@ TEST_CASE("Webcam", "[webcam]") {
     }
 
     const auto rectangle =
-        bubbles::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
+        od::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
     auto frame_data = webcam::FrameData{imgOriginal};
     auto flow = webcam::process_frame(frame_data, imgOriginal, rectangle, rings,
-                          gradient_threshold);
+                                      gradient_threshold);
     executor.run(&flow);
     executor.wait_for(&flow);
 
@@ -69,7 +67,7 @@ TEST_CASE("Webcam", "[webcam]") {
     }
 
     const auto rectangle =
-        bubbles::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
+        od::Rectangle{0, 0, imgOriginal.cols, imgOriginal.rows};
     const auto frame_data = webcam::process_frame_quadview(
         imgOriginal, rectangle, executor, rings, gradient_threshold);
 

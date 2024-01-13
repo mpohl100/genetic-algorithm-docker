@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Rectangle.h"
-#include "examples/bubbles/Canvas2D.h"
 #include "opencv2/core/mat.hpp"
 #include <cmath>
 
@@ -12,7 +11,5 @@ void detect_directions(cv::Mat &ret, cv::Mat const &bgrImg, const Rectangle& rec
 void detect_angles(cv::Mat &ret, cv::Mat const &bgrImg, const Rectangle& rectangle);
 
 void smooth_angles(cv::Mat &result, cv::Mat const &angles, int rings, bool onlyRecordAngles, int threshold, const Rectangle& rectangle);
-
-void create_canvas(bubbles::Canvas2D &ret, const cv::Mat &contours, const Rectangle& rectangle);
 
 } // namespace od

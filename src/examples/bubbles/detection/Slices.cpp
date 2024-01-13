@@ -1,6 +1,7 @@
+#include "Slices.h"
+
 #include "examples/bubbles/math2d.h"
 
-#include "Detection.h"
 #include "Rectangle.h"
 
 #include <algorithm>

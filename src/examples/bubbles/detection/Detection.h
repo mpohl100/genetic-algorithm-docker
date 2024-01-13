@@ -15,10 +15,4 @@ void smooth_angles(cv::Mat &result, cv::Mat const &angles, int rings, bool onlyR
 
 void create_canvas(bubbles::Canvas2D &ret, const cv::Mat &contours, const Rectangle& rectangle);
 
-struct AllRectangles {
-  std::vector<Rectangle> rectangles;
-};
-
-void establishing_shot_slices(AllRectangles &ret, const cv::Mat &contours, const Rectangle& rectangle);
-
 } // namespace od

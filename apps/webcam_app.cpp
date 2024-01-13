@@ -1,5 +1,4 @@
 #include "examples/bubbles/detection/Detection.h"
-#include "examples/bubbles/establishing_frame.h"
 #include "examples/webcam/webcam.h"
 #include "par/parallel.h"
 
@@ -91,7 +90,7 @@ int main(int argc, char **argv) {
     cv::Mat imgOriginal;
     int retflag;
     webcam::read_image_data(cap, imgOriginal, retflag);
-    auto rectangle = bubbles::Rectangle{
+    auto rectangle = od::Rectangle{
         rectangle_tl_x, rectangle_tl_y,
         rectangle_width == -1 ? imgOriginal.cols : rectangle_width,
         rectangle_height == -1 ? imgOriginal.rows : rectangle_height};

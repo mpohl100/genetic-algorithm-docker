@@ -86,17 +86,10 @@ par::Flow process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
                         rings, false, gradient_threshold, rectangle);
       std::cout << "smoothed gradient processed" << std::endl;
     };
-
-    const auto populateCanvas = [&, rectangle]() {
-      std::cout << "calculating canvas" << std::endl;
-      od::create_canvas(frame_data.canvas, frame_data.smoothed_contours_mat,
-                        rectangle);
-      std::cout << "canvas processed" << std::endl;
-    };
     const auto calcAllRectangles = [&, rectangle]() {
       std::cout << "calculating all rectangles" << std::endl;
-      bubbles::establishing_shot_slices(frame_data.all_rectangles,
-                                        frame_data.canvas, rectangle);
+      od::establishing_shot_slices(frame_data.all_rectangles,
+                                        frame_data.smoothed_contours_mat, rectangle);
       std::cout << "all rectangles processed" << std::endl;
     };
 
@@ -105,7 +98,6 @@ par::Flow process_frame(FrameData &frame_data, const cv::Mat &imgOriginal,
     flow.add(std::make_unique<par::Calculation>(calcGradient));
     flow.add(std::make_unique<par::Calculation>(calcSmoothedContours));
     // auto calcSmoothedGradientTask = taskflow.emplace(calcSmoothedGradient);
-    flow.add(std::make_unique<par::Calculation>(populateCanvas));
     flow.add(std::make_unique<par::Calculation>(calcAllRectangles));
     return flow;
   };

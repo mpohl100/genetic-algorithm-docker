@@ -1,5 +1,6 @@
 #include "examples/bubbles/Canvas2D.h"
 #include "examples/bubbles/establishing_frame.h"
+#include "examples/bubbles/detection/Detection.h"
 
 #include "par/parallel.h"
 
@@ -34,7 +35,7 @@ struct FrameData {
   cv::Mat smoothed_contours_mat;
   cv::Mat smoothed_gradient_mat;
   bubbles::Canvas2D canvas;
-  bubbles::AllRectangles all_rectangles;
+  od::AllRectangles all_rectangles;
 
   FrameData() = default;
   FrameData(const FrameData &) = delete;

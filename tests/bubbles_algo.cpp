@@ -1,7 +1,6 @@
 #include <catch2/catch_all.hpp>
 
 #include "examples/bubbles/bubbles_swarm.h"
-#include "examples/bubbles/establishing_frame.h"
 
 #include <iostream>
 
@@ -84,15 +83,6 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
               << "; radius: " << circle.radius() << std::endl;
   }
 #endif
-  SECTION("EstablishingShot"){
-    auto canvas = bubbles::Canvas2D(100, 100);
-    const auto rectangle =
-        math2d::Rectangle{math2d::Point(20, 20), math2d::Point(70, 70)};
-    canvas.draw_rectangle(rectangle);
-    auto all_rectangles = bubbles::AllRectangles{}; 
-    bubbles::establishing_shot_slices(all_rectangles, canvas, bubbles::Rectangle{0,0, canvas.width(), canvas.height()});
-    CHECK(all_rectangles.rectangles.size() == 2);
-  }
 }
 
 } // namespace

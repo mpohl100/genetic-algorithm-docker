@@ -1,18 +1,17 @@
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 
-class ParallelConan(ConanFile):
-    name = "ParallelProject"
+class GeneticAlgorithmConan(ConanFile):
+    name = "GeneticAlgorithmProject"
     version = "1.0.0"
     license = "Apache License v2.0"
     author = "Michael Pohl"
-    description = "A default project for a C++ application which has a library for parallelization"
+    description = "A C++ library to ease implementation of genetic algorithms."
     topics = ()
     settings = "os", "compiler", "build_type", "arch"
     requires = [
         "catch2/3.1.0",
         "clara/1.1.5",
-        "range-v3/0.10.0",
     ]
     options = {"coverage": [True, False]}
     default_options = {"coverage": False}

@@ -24,7 +24,7 @@ TEST_CASE("Canvas", "[canvas]") {
     CHECK(canvas_pixels == result);
   }
   SECTION("Canvas_Rectangle") {
-    auto canvas = bubbles::Canvas2D(5, 5);
+    auto canvas = bubbles::Canvas2D(5, 5, 5);
     canvas.draw_rectangle(
         math2d::Rectangle{math2d::Point(1, 1), math2d::Point(3, 3)});
     const auto canvas_pixels = canvas.getPixels();

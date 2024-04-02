@@ -4,7 +4,6 @@
         "conan": {}
     },
     "include": [
-        "/workspaces/cpp-docker/build/Debug/generators/CMakePresets.json",
-        "/workspaces/cpp-docker/build/Release/generators/CMakePresets.json"
+        "/workspaces/genetic-algorithm-docker/build/Debug/generators/CMakePresets.json"
     ]
 }

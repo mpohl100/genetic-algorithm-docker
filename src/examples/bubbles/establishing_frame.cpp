@@ -5,6 +5,7 @@
 #include "math2d.h"
 
 #include <algorithm>
+#include <mutex>
 #include <optional>
 #include <vector>
 
@@ -42,7 +43,7 @@ AllRectangles establishing_shot(const Canvas2D &canvas) {
           std::cout << "Found rectangle: " << found_rectangle.toString()
                     << std::endl;
         }
-        allRectangles.rectangles.push_back(Rectangle{found_rectangle});
+        allRectangles.rectangles.push_back(found_rectangle);
       }
     }
   }
@@ -131,7 +132,7 @@ struct Slices {
     return ret;
   }
 
-  Rectangle to_rectangle() const {
+  math2d::Rectangle to_rectangle() const {
     int min_x = 10000000;
     int max_x = 0;
     int min_y = 10000000;
@@ -144,7 +145,7 @@ struct Slices {
         max_y = std::max(max_y, static_cast<int>(slice.slice.end.y));
       }
     }
-    return Rectangle{min_x, min_y, max_x - min_x, max_y - min_y};
+    return math2d::Rectangle{min_x, min_y, max_x - min_x, max_y - min_y};
   }
 
 private:
@@ -153,7 +154,7 @@ private:
   }
 };
 
-Slices deduce_slices(const Canvas2D &canvas, const Rectangle &rectangle) {
+Slices deduce_slices(const Canvas2D &canvas, const math2d::Rectangle &rectangle) {
   auto slices =
       Slices{math2d::Point{static_cast<math2d::number_type>(rectangle.x),
                            static_cast<math2d::number_type>(rectangle.y)}};

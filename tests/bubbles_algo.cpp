@@ -60,7 +60,7 @@ TEST_CASE("BubblesAlgo", "[bubbles_algo]") {
     CHECK((angle_330.degrees() - 330.0) < 1e-7);
     CHECK(!angle_area_5.is_within(math2d::Angle{299}));
     CHECK(angle_area_5.is_within(math2d::Angle{300}));
-    CHECK(angle_area_5.is_within(math2d::Angle{360}));
+    CHECK(!angle_area_5.is_within(math2d::Angle{360}));
     CHECK(!angle_area_5.is_within(math2d::Angle{361}));
   }
 #if 0

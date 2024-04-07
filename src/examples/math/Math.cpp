@@ -28,6 +28,11 @@ double XCoordinate::magnitude() const {
 
 double XCoordinate::x() const { return _x; }
 
+double MathFunctionAdjust::score(XCoordinate xCoordinate,
+                                 [[maybe_unused]] evol::Rng &rng) const {
+  return 1.0 / std::pow(xCoordinate.x() - 2, 2.0);
+}
+
 double MathFunctionPartial::score(XCoordinate xCoordinate,
                                   [[maybe_unused]] evol::Rng &rng) const {
   return 1.0 / std::pow(xCoordinate.x() - 2, 2.0);

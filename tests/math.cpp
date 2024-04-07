@@ -38,6 +38,22 @@ auto calculatePartialEvolution(math::XCoordinate xCoordinate,
                                   evolParams, rng);
 }
 
+auto calculateAdjustEvolution(math::XCoordinate xCoordinate, size_t random_seed,
+                              int num_parents) {
+  auto evolParams = evol::adjust::AdjustEvolutionOptions{};
+  evolParams.num_generations = 100;
+  evolParams.log_level = 0;
+  evolParams.num_parents = num_parents;
+  evolParams.out = &std::cout;
+  evolParams.max_num_mutations = 10000;
+
+  auto rng = evol::Rng{random_seed};
+
+  auto starting_chrom = xCoordinate;
+  return evol::adjust::evolution(starting_chrom, math::MathFunctionAdjust{}, evolParams, rng);
+}
+
+
 TEST_CASE("Evol", "[evol]") {
   SECTION("Evolution") {
     const auto starting_values = std::vector<double>{0.0, 10.0, 20.0};
@@ -77,6 +93,21 @@ TEST_CASE("Evol", "[evol]") {
                              [](const auto &l, const auto &r) {
                                return l.fitness > r.fitness;
                              }));
+      }
+    }
+  }
+  SECTION("AdjustEvolution") {
+    const auto starting_values = std::vector<double>{0.0, 1e6, 1e7};
+    const auto num_parents = std::vector<int>{1, 2, 3};
+    const auto random_seeds = std::vector<size_t>{0, 1, 2, 3, 4};
+    for (const auto random_seed : random_seeds) {
+      for (const auto num_parent : num_parents) {
+        for (const auto starting_value : starting_values) {
+          const auto evolutionResult = calculateAdjustEvolution(
+              math::XCoordinate{starting_value}, random_seed, num_parent);
+          CHECK(std::abs(evolutionResult.winner.x() - 2.0) <= 0.05);
+          CHECK(evolutionResult.fitness >= 400);
+        }
       }
     }
   }

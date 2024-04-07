@@ -129,8 +129,6 @@ struct AdjustEvolutionOptions : public EvolutionOptions {
 
 } // namespace adjust
 
-}
-
 #if EVOL_USE_CONCEPTS == 1
 // -----------------------------------------------------------------------------------------------
 // Evolution concepts
@@ -183,7 +181,7 @@ concept PartialChallenge = std::semiregular<T> && PartialPhenotype<C, RNG> &&
 namespace adjust {
 
 template <class T, class C, class RNG>
-concept AdjustChallenge = std::semiregular<T> && PartialPhenotype<C, RNG> &&
+concept AdjustChallenge = std::semiregular<T> && evol::partial::PartialPhenotype<C, RNG> &&
     requires(T const t, C c, RNG &rng,
              const EvolutionCoordinator &evolCoordinator,
              const AdjustEvolutionOptions &adjustEvolOpts) {
@@ -210,7 +208,8 @@ namespace detail {
 template <class Pheno, class Chall, class RNG>
 #if EVOL_USE_CONCEPTS == 1
 requires Phenotype<Pheno, RNG> &&(Challenge<Chall, Pheno, RNG> ||
-                                  partial::PartialChallenge<Chall, Pheno, RNG>)
+                                  partial::PartialChallenge<Chall, Pheno, RNG> ||
+                                  adjust::AdjustChallenge<Chall, Pheno, RNG>)
 #endif
     std::multimap<double, const Pheno *> fitnessCalculation(
         std::vector<Pheno> const &candidates, Chall const &challenge,
@@ -486,7 +485,7 @@ namespace adjust {
 // generation
 template <class Pheno, class RNG>
 #if EVOL_USE_CONCEPTS == 1
-requires PartialPhenotype<Pheno, RNG>
+requires evol::partial::PartialPhenotype<Pheno, RNG>
 #endif
 struct DefaultAdjustChallenge {
   std::vector<Pheno> breed(std::vector<Pheno> parents, RNG &rng,
@@ -497,7 +496,7 @@ struct DefaultAdjustChallenge {
       return {};
     }
     std::vector<Pheno> ret;
-    const auto develop = [&options](Pheno &pheno, RNG &rng,
+    const auto develop = [this, &options](Pheno &pheno, RNG &rng,
                                     const EvolutionCoordinator &evolCoordinator,
                                     bool initialMutate) {
       if (initialMutate) {
@@ -558,7 +557,7 @@ private:
 
 template <class Pheno, class Chall, class RNG>
 #if EVOL_USE_CONCEPTS == 1
-requires PartialPhenotype<Pheno, RNG> && AdjustChallenge<Chall, Pheno, RNG>
+requires evol::partial::PartialPhenotype<Pheno, RNG> && AdjustChallenge<Chall, Pheno, RNG>
 #endif
     EvolutionResult<Pheno>
     evolution(const Pheno &starting_value,           // the starting value

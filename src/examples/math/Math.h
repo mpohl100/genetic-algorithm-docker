@@ -26,6 +26,16 @@ private:
 static_assert(evol::partial::PartialPhenotype<XCoordinate, evol::Rng>);
 #endif
 
+class MathFunctionAdjust
+    : public evol::adjust::DefaultAdjustChallenge<XCoordinate, evol::Rng> {
+public:
+  double score(XCoordinate xCoordinate, evol::Rng &rng) const;
+};
+#if EVOL_USE_CONCEPTS == 1
+static_assert(evol::adjust::AdjustChallenge<MathFunctionAdjust, XCoordinate,
+                                              evol::Rng>);
+#endif
+
 class MathFunctionPartial
     : public evol::partial::DefaultPartialChallenge<XCoordinate, evol::Rng> {
 public:

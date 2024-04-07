@@ -77,13 +77,31 @@ public:
 
   void set_generation_nr(size_t num) { current_generation_ = num; }
 
+  void set_fitness(double fitness) { fitness_.push_back(fitness); }
+
   double progress() const {
     return double(current_generation_) / double(nb_generations_);
+  }
+
+  double get_improvement_factor() const {
+    if (fitness_.size() < 2) {
+      return 1.0;
+    }
+    const auto fitness_improvement = fitness_.back() / *(++fitness_.rbegin());
+    if (std::abs(fitness_improvement) < 1e-4) {
+      return 1.0;
+    }
+    constexpr const auto normal_improvement = 0.01;
+    // this yields a number which smaller than 1 if the fitness improvement is
+    // higher than normal
+    const auto improvement_factor = normal_improvement / fitness_improvement;
+    return std::clamp(improvement_factor, 0.0, 1.0);
   }
 
 private:
   size_t current_generation_ = 0;
   size_t nb_generations_;
+  std::vector<double> fitness_;
 };
 
 struct EvolutionOptions {
@@ -102,6 +120,16 @@ struct PartialEvolutionOptions : public EvolutionOptions {
 };
 
 } // namespace partial
+
+namespace adjust {
+
+struct AdjustEvolutionOptions : public EvolutionOptions {
+  size_t max_num_mutations = 100;
+};
+
+} // namespace adjust
+
+}
 
 #if EVOL_USE_CONCEPTS == 1
 // -----------------------------------------------------------------------------------------------
@@ -152,6 +180,21 @@ concept PartialChallenge = std::semiregular<T> && PartialPhenotype<C, RNG> &&
 
 } // namespace partial
 
+namespace adjust {
+
+template <class T, class C, class RNG>
+concept AdjustChallenge = std::semiregular<T> && PartialPhenotype<C, RNG> &&
+    requires(T const t, C c, RNG &rng,
+             const EvolutionCoordinator &evolCoordinator,
+             const AdjustEvolutionOptions &adjustEvolOpts) {
+  { t.score(c, rng) } -> std::same_as<double>;
+  {
+    t.breed(std::vector<C>{}, rng, evolCoordinator, adjustEvolOpts)
+    } -> std::same_as<std::vector<C>>;
+};
+
+}
+
 #endif
 
 // -----------------------------------------------------------------------------------------------
@@ -195,6 +238,7 @@ evolution_impl(const Pheno &starting_value,  // the starting value
     candidates = challenge.breed(parents, rng, evolCoordinator, options);
     // let the Phenotypes face the challenge
     fitness = fitnessCalculation(candidates, challenge, rng);
+    evolCoordinator.set_fitness(fitness.rbegin()->first);
     // logging
     if (options.log_level >= 1) {
       if (options.out)
@@ -297,11 +341,10 @@ struct DefaultChallenge {
 // optimize)
 // struct Phenotype {
 //	void crossover(Phenotype const& other); make sure to randomly choose
-// what data members should be taken from this or other 	void mutate(); make
-// sure to not randomly mutate too much of your Phenotype type (only one data
-// member at a time is recommended)
-// std::string toString() const; provide some output for the shape of the
-// Phenotype
+// what data members should be taken from this or other 	void mutate();
+// make sure to not randomly mutate too much of your Phenotype type (only one
+// data member at a time is recommended) std::string toString() const; provide
+// some output for the shape of the Phenotype
 //};
 
 // These functions must be added to your challenge type
@@ -407,9 +450,9 @@ struct DefaultPartialChallenge {
 // optimize)
 // struct PartialPhenotype {
 //	void crossover(Phenotype const& other); make sure to randomly choose
-// what data members should be taken from this or other 	void mutate(); make
-// sure to not randomly mutate too much of your Phenotype type (only one data
-// member at a time is recommended)
+// what data members should be taken from this or other 	void mutate();
+// make sure to not randomly mutate too much of your Phenotype type (only one
+// data member at a time is recommended)
 //  std::string toString() const; provide some output for the shape of the
 //  Phenotype double magnitude() const; the square root of the sum of the
 //  squares of all members
@@ -436,5 +479,96 @@ requires PartialPhenotype<Pheno, RNG> && PartialChallenge<Chall, Pheno, RNG>
 }
 
 } // namespace partial
+
+namespace adjust {
+
+// inherit from this type in order to use the default implementation of grow
+// generation
+template <class Pheno, class RNG>
+#if EVOL_USE_CONCEPTS == 1
+requires PartialPhenotype<Pheno, RNG>
+#endif
+struct DefaultAdjustChallenge {
+  std::vector<Pheno> breed(std::vector<Pheno> parents, RNG &rng,
+                           const EvolutionCoordinator &evolCoordinator,
+                           const AdjustEvolutionOptions &options) const {
+    if (parents.empty()) {
+      throw std::runtime_error("no parents passed to breed adjust.");
+      return {};
+    }
+    std::vector<Pheno> ret;
+    const auto develop = [&options](Pheno &pheno, RNG &rng,
+                                    const EvolutionCoordinator &evolCoordinator,
+                                    bool initialMutate) {
+      if (initialMutate) {
+        pheno.mutate(rng, evolCoordinator);
+      }
+      const auto number_mutates =
+          calculate_number_mutates(options, evolCoordinator);
+      for (size_t i = 0; i < number_mutates; ++i) {
+        pheno.mutate(rng, evolCoordinator);
+      }
+    };
+    return detail::breed<Pheno, RNG>(parents, rng, evolCoordinator,
+                                     options.num_children, develop);
+  }
+
+private:
+  size_t
+  calculate_number_mutates(const AdjustEvolutionOptions &options,
+                           const EvolutionCoordinator &evolCoordinator) const {
+    // result between 0 and 1
+    double result = evolCoordinator.get_improvement_factor();
+    double number_mutates = options.max_num_mutations * result;
+    return static_cast<size_t>(number_mutates);
+  }
+};
+
+// -----------------------------------------------------------------------------------------------
+// Adjust Evolution challenge
+
+// This library encapsulates evolutional learning through genetic algorithms
+// The library is header only and easy to use.
+// You have a type (the partial Phenotype) whose values you want to optimize
+// through evolutional learning and you have a partial challenge your type needs
+// to master the difference from partial Phenotypes to Phenotypes is that only
+// partial Phenosomes that are in a defined magnitude range are considered this
+// enables parallelization of the evolution on multiple threads or processes and
+// ensuring that no redundant work is done
+//
+
+// These functions must be added to your Phenotype type (the one you want to
+// optimize)
+// struct PartialPhenotype {
+//	void crossover(Phenotype const& other); make sure to randomly choose
+// what data members should be taken from this or other 	void mutate();
+// make sure to not randomly mutate too much of your Phenotype type (only one
+// data member at a time is recommended)
+//  std::string toString() const; provide some output for the shape of the
+//  Phenotype double magnitude() const; the square root of the sum of the
+//  squares of all members
+//};
+
+// These functions must be added to your challenge type
+// struct AdjustChallenge {
+//	double score(PatialPhenotype const& Phenotype); the Phenotype faces the
+// challenge and its performance needs to be evaluated with a double (0 means
+// bad, the higher the better the performance)
+//};
+
+template <class Pheno, class Chall, class RNG>
+#if EVOL_USE_CONCEPTS == 1
+requires PartialPhenotype<Pheno, RNG> && AdjustChallenge<Chall, Pheno, RNG>
+#endif
+    EvolutionResult<Pheno>
+    evolution(const Pheno &starting_value,           // the starting value
+              const Chall &challenge,                // the challenge
+              const AdjustEvolutionOptions &options, // the evolution options
+              RNG &rng // the random number generator
+    ) {
+  return detail::evolution_impl(starting_value, challenge, options, rng);
+}
+
+} // namespace adjust
 
 } // namespace evol

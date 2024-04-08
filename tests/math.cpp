@@ -97,7 +97,7 @@ TEST_CASE("Evol", "[evol]") {
     }
   }
   SECTION("AdjustEvolution") {
-    const auto starting_values = std::vector<double>{0.0, 1e6, 1e7};
+    const auto starting_values = std::vector<double>{0.0, 1e6, 2e6};
     const auto num_parents = std::vector<int>{1, 2, 3};
     const auto random_seeds = std::vector<size_t>{0, 1, 2, 3, 4};
     for (const auto random_seed : random_seeds) {

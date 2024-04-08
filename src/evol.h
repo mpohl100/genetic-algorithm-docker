@@ -502,6 +502,9 @@ struct DefaultAdjustChallenge {
       if (initialMutate) {
         pheno.mutate(rng, evolCoordinator);
       }
+      else{
+        return;
+      }
       const auto number_mutates =
           calculate_number_mutates(options, evolCoordinator);
       for (size_t i = 0; i < number_mutates; ++i) {

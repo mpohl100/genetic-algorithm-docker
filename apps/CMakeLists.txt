@@ -16,7 +16,3 @@ target_include_directories(partial PUBLIC ${CMAKE_SOURCE_DIR}/src)
 add_executable(adjust adjust.cpp)
 target_link_libraries(adjust math clara::clara)
 target_include_directories(adjust PUBLIC ${CMAKE_SOURCE_DIR}/src)
-
-add_executable(bubble bubbles.cpp)
-target_link_libraries(bubble bubbles math2d clara::clara)
-target_include_directories(bubble PUBLIC ${CMAKE_SOURCE_DIR}/src)
